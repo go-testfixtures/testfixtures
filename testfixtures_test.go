@@ -2,6 +2,7 @@ package testfixtures
 
 import (
     "database/sql"
+    "fmt"
     "io/ioutil"
     "log"
     "os"
@@ -45,9 +46,24 @@ func TestFixtureFile(t *testing.T) {
     }
 }
 
+func assertCount(t *testing.T, table string, expectedCount int) {
+    var count int
+
+    row := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table))
+    row.Scan(&count)
+    if count != expectedCount {
+        t.Errorf("%s should have %d, but has %d", table, expectedCount, count)
+    }
+}
+
 func TestLoadFixtures(t *testing.T) {
     err := LoadFixtures("test_fixtures", db, &PostgreSQLHelper{})
     if err != nil {
         t.Errorf("Error on loading fixtures: %v", err)
     }
+
+    assertCount(t, "posts", 2)
+    assertCount(t, "comments", 4)
+    assertCount(t, "tags", 3)
+    assertCount(t, "posts_tags", 2)
 }
