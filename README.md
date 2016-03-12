@@ -113,3 +113,7 @@ func TestZ(t *testing.T) {
 ## Compatible databases
 
 For now, only PostgreSQL.
+
+## API Documentation
+
+https://godoc.org/github.com/go-testfixtures/testfixtures
