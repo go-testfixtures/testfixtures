@@ -9,23 +9,28 @@ import (
 	"strings"
 )
 
+// FixtureFile represents a fixture file
 type FixtureFile struct {
 	Path     string
 	FileName string
 	Content  []byte
 }
 
+// FileNameWithoutExtension returns the filename without the extension
+// e.g.: posts.yml -> posts
 func (f *FixtureFile) FileNameWithoutExtension() string {
 	return strings.Replace(f.FileName, filepath.Ext(f.FileName), "", 1)
 }
 
+// Delete deletes all records of the table
 func (f *FixtureFile) Delete(tx *sql.Tx) error {
 	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", f.FileNameWithoutExtension()))
 	return err
 }
 
+// Insert insert the records in the file in the database
 func (f *FixtureFile) Insert(tx *sql.Tx) error {
-	rows := make([]interface{}, 0)
+	var rows []interface{}
 	err := yaml.Unmarshal(f.Content, &rows)
 	if err != nil {
 		return err
@@ -33,7 +38,7 @@ func (f *FixtureFile) Insert(tx *sql.Tx) error {
 
 	for _, row := range rows {
 		record := row.(map[interface{}]interface{})
-		values := make([]interface{}, 0)
+		var values []interface{}
 
 		sqlColumns := ""
 		sqlValues := ""
@@ -59,7 +64,7 @@ func (f *FixtureFile) Insert(tx *sql.Tx) error {
 }
 
 func getYmlFiles(foldername string) ([]*FixtureFile, error) {
-	files := make([]*FixtureFile, 0)
+	var files []*FixtureFile
 	fileinfos, err := ioutil.ReadDir(foldername)
 	if err != nil {
 		return nil, err
@@ -81,6 +86,7 @@ func getYmlFiles(foldername string) ([]*FixtureFile, error) {
 	return files, nil
 }
 
+// LoadFixtures loads all fixtures in a given folder in the database
 func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 	files, err := getYmlFiles(foldername)
 	if err != nil {

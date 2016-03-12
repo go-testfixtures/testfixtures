@@ -5,9 +5,11 @@ import (
 	"fmt"
 )
 
+// PostgreSQLHelper is the PG helper for this package
 type PostgreSQLHelper struct {
 }
 
+// GetTables get all tables of the database
 func (h *PostgreSQLHelper) GetTables(db *sql.DB) ([]string, error) {
 	sql := `
 SELECT table_name
@@ -20,7 +22,7 @@ WHERE table_schema='public'
 		return nil, err
 	}
 
-	tables := make([]string, 0)
+	var tables []string
 	defer rows.Close()
 	for rows.Next() {
 		var table string
@@ -30,6 +32,7 @@ WHERE table_schema='public'
 	return tables, nil
 }
 
+// DisableTriggers disable referential integrity triggers
 func (h *PostgreSQLHelper) DisableTriggers(db *sql.DB) error {
 	tables, err := h.GetTables(db)
 	if err != nil {
@@ -45,6 +48,7 @@ func (h *PostgreSQLHelper) DisableTriggers(db *sql.DB) error {
 	return err
 }
 
+// EnableTriggers enable referential integrity triggers
 func (h *PostgreSQLHelper) EnableTriggers(db *sql.DB) error {
 	tables, err := h.GetTables(db)
 	if err != nil {
