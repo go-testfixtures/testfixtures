@@ -1,10 +1,10 @@
 package testfixtures
 
 import (
-    "database/sql"
+	"database/sql"
 )
 
 type DataBaseHelper interface {
-    DisableTriggers(db *sql.DB) error
-    EnableTriggers(db *sql.DB) error
+	DisableTriggers(db *sql.DB) error
+	EnableTriggers(db *sql.DB) error
 }
