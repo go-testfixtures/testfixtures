@@ -1,5 +1,9 @@
 # Go Test Fixtures
 
+> ***Warning***: this package will wipe the database data before loading the
+fixtures! It is supposed to be used on a test database. Please, double check
+if you are running it against the correct database.
+
 Writing tests is hard, even more when you have to deal with an SQL database.
 This package aims to make writing functional tests for web apps written in
 Go easier.
@@ -80,9 +84,9 @@ const FIXTURES_PATH = "fixtures"
 
 func TestMain(m *testing.M) {
     // Open connection with the test database.
-    // Do NOT import fixtures in production code!
+    // Do NOT import fixtures in a production database!
     // Existing data would be deleted
-    db, _ := sql.Open("postgres", "dbname=myapp-test")
+    db, _ := sql.Open("postgres", "dbname=myapp_test")
 
     os.Exit(m.Run())
 }
@@ -114,6 +118,4 @@ func TestZ(t *testing.T) {
 
 For now, only PostgreSQL.
 
-## API Documentation
-
-https://godoc.org/github.com/go-testfixtures/testfixtures
+[godoc]: https://godoc.org/github.com/go-testfixtures/testfixtures
