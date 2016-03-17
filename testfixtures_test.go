@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -66,4 +67,16 @@ func TestLoadFixtures(t *testing.T) {
 	assertCount(t, "comments", 4)
 	assertCount(t, "tags", 3)
 	assertCount(t, "posts_tags", 2)
+
+	// this insert is to test if the PostgreSQL sequences were reset
+	_, err = db.Exec(
+		"INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)",
+		"Post title",
+		"Post content",
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		t.Errorf("Error inserting post: %v", err)
+	}
 }

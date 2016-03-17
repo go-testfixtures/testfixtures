@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // PostgreSQLHelper is the PG helper for this package
@@ -30,6 +31,24 @@ WHERE table_schema='public'
 		tables = append(tables, table)
 	}
 	return tables, nil
+}
+
+// GetSequences get all sequences of the database
+func (h *PostgreSQLHelper) GetSequences(db *sql.DB) ([]string, error) {
+	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
+	rows, err := db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+
+	var sequences []string
+	defer rows.Close()
+	for rows.Next() {
+		var sequence string
+		rows.Scan(&sequence)
+		sequences = append(sequences, sequence)
+	}
+	return sequences, nil
 }
 
 // DisableTriggers disable referential integrity triggers
@@ -62,4 +81,40 @@ func (h *PostgreSQLHelper) EnableTriggers(db *sql.DB) error {
 
 	_, err = db.Exec(sql)
 	return err
+}
+
+// ResetSequences resets the sequences of "id"s columns
+// assumes the primery key is "id" and sequence is "<tablename>_id_seq",
+// the default when using the SERIAL column type
+func (h *PostgreSQLHelper) ResetSequences(db *sql.DB) error {
+	sequences, err := h.GetSequences(db)
+	if err != nil {
+		return err
+	}
+
+	for _, sequence := range sequences {
+		var max int
+		table := strings.Replace(sequence, "_id_seq", "", 1)
+		row := db.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", table))
+		err = row.Scan(&max)
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, max))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// BeforeLoad runs before the fixture load
+// by now, does nothing
+func (h *PostgreSQLHelper) BeforeLoad(db *sql.DB) error {
+	return nil
+}
+
+// AfterLoad runs after the fixture load
+func (h *PostgreSQLHelper) AfterLoad(db *sql.DB) error {
+	return h.ResetSequences(db)
 }

@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS tags;
 
 CREATE TABLE posts (
-	id INTEGER PRIMARY KEY
+	id SERIAL PRIMARY KEY
 	,title VARCHAR(255) NOT NULL
 	,content TEXT NOT NULL
 	,created_at TIMESTAMP NOT NULL
@@ -12,7 +12,7 @@ CREATE TABLE posts (
 );
 
 CREATE TABLE tags (
-	id INTEGER PRIMARY KEY
+	id SERIAL PRIMARY KEY
 	,name VARCHAR(255) NOT NULL
 	,created_at TIMESTAMP NOT NULL
 	,updated_at TIMESTAMP NOT NULL
@@ -26,7 +26,7 @@ CREATE TABLE posts_tags (
 );
 
 CREATE TABLE comments (
-	id INTEGER NOT NULL
+	id SERIAL NOT NULL
 	,post_id INTEGER NOT NULL
 	,author_name VARCHAR(255) NOT NULL
 	,author_email VARCHAR(255) NOT NULL
@@ -34,4 +34,4 @@ CREATE TABLE comments (
 	,created_at TIMESTAMP NOT NULL
 	,updated_at TIMESTAMP NOT NULL
 	,FOREIGN KEY (post_id) REFERENCES posts (id)
-)
+);

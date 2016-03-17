@@ -93,6 +93,11 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		return err
 	}
 
+	err = h.BeforeLoad(db)
+	if err != nil {
+		return err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -115,5 +120,10 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		}
 	}
 	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	err = h.AfterLoad(db)
 	return err
 }
