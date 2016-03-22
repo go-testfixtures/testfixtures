@@ -23,10 +23,10 @@ First, get it:
 
 ```bash
 # for vanilla Go
-go get github.com/go-testfixtures/testfixtures
+go get gopkg.in/testfixtures.v0
 
 # or if you are using Glide
-glide get github.com/go-testfixtures/testfixtures
+glide get gopkg.in/testfixtures.v0
 ```
 
 Create a folder for the fixture files. Each file should contain data for a
@@ -91,7 +91,7 @@ func TestMain(m *testing.M) {
     os.Exit(m.Run())
 }
 
-func PrepareTestDatabase() {
+func prepareTestDatabase() {
     err = testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
@@ -99,23 +99,23 @@ func PrepareTestDatabase() {
 }
 
 func TestX(t *testing.T) {
-    PrepareTestDatabase()
+    prepareTestDatabase()
     // your test here ...
 }
 
 func TestY(t *testing.T) {
-    PrepareTestDatabase()
+    prepareTestDatabase()
     // your test here ...
 }
 
 func TestZ(t *testing.T) {
-    PrepareTestDatabase()
+    prepareTestDatabase()
     // your test here ...
 }
 ```
 
 ## Compatible databases
 
-For now, only PostgreSQL.
+For now, only PostgreSQL. Contributions are welcome.
 
 [godoc]: https://godoc.org/github.com/go-testfixtures/testfixtures
