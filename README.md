@@ -17,17 +17,15 @@ The idea is running tests in a real database, instead of relying in mocks,
 which is boring to setup and may lead to production bugs not to being catch in
 the tests.
 
-## How to use it
+## Installation
 
 First, get it:
 
 ```bash
-# for vanilla Go
-go get gopkg.in/testfixtures.v0
-
-# or if you are using Glide
-glide get gopkg.in/testfixtures.v0
+go get gopkg.in/testfixtures.v1
 ```
+
+## Usage
 
 Create a folder for the fixture files. Each file should contain data for a
 single table and have the name `<table-name>.yml`:
@@ -36,6 +34,7 @@ single table and have the name `<table-name>.yml`:
 myapp
   - myapp.go
   - myapp_test.go
+  - ...
   - fixtures:
     - posts.yml
     - comments.yml
@@ -77,7 +76,7 @@ import (
     "log"
 
     _ "github.com/lib/pq"
-    "github.com/go-testfixtures/testfixtures"
+    "gopkg.in/testfixtures.v1"
 )
 
 const FIXTURES_PATH = "fixtures"
@@ -116,6 +115,6 @@ func TestZ(t *testing.T) {
 
 ## Compatible databases
 
-For now, only PostgreSQL. Contributions are welcome.
+For now, only PostgreSQL. Contributions are welcome to add support for more.
 
-[godoc]: https://godoc.org/github.com/go-testfixtures/testfixtures
+[godoc]: https://godoc.org/gopkg.in/testfixtures.v1
