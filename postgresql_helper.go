@@ -100,6 +100,10 @@ func (h *PostgreSQLHelper) ResetSequences(db *sql.DB) error {
 		if err != nil {
 			return err
 		}
+
+		if max == 0 {
+			max = 1
+		}
 		_, err = db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, max))
 		if err != nil {
 			return err
