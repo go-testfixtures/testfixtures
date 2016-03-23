@@ -1,8 +1,0 @@
-hash: 06d673cdaf597bb12db28622c672532d8d9e28341a8450654c0182d5f213b0ed
-updated: 2016-03-12T15:47:34.061388351-03:00
-imports:
-- name: github.com/lib/pq
-  version: 165a3529e799da61ab10faed1fabff3662d6193f
-- name: gopkg.in/yaml.v2
-  version: a83829b6f1293c91addabc89d0571c246397bbf4
-devImports: []

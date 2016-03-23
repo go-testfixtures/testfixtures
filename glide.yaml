@@ -1,4 +1,0 @@
-package: github.com/go-testfixtures/testfixtures
-import:
-- package: gopkg.in/yaml.v2
-- package: github.com/lib/pq
