@@ -1,5 +1,7 @@
 # Go Test Fixtures
 
+[![GoDoc](https://godoc.org/gopkg.in/testfixtures.v1?status.svg)](https://godoc.org/gopkg.in/testfixtures.v1)
+
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
 if you are running it against the correct database.
@@ -91,6 +93,7 @@ func TestMain(m *testing.M) {
 }
 
 func prepareTestDatabase() {
+    // use &testfixtures.MySQLHelper{} if you are using MySQL
     err = testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
@@ -115,6 +118,7 @@ func TestZ(t *testing.T) {
 
 ## Compatible databases
 
-For now, only PostgreSQL. Contributions are welcome to add support for more.
+- PostgreSQL: Use `&testfixtures.PostgreSQLHelper{}`
+- MySQL: Use `&testfixtures.MySQLHelper{}`
 
-[godoc]: https://godoc.org/gopkg.in/testfixtures.v1
+Contributions are welcome to add support for more.
