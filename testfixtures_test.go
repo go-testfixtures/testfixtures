@@ -9,35 +9,9 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
-
-var (
-	db *sql.DB
-)
-
-func TestMain(m *testing.M) {
-	var bytes []byte
-	var err error
-
-	db, err = sql.Open("postgres", "dbname=testfixtures-test")
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-
-	bytes, err = ioutil.ReadFile("test_schema/postgresql.sql")
-	if err != nil {
-		log.Fatalf("Could not read file postgresql.sql: %v\n", err)
-	}
-
-	_, err = db.Exec(string(bytes))
-	if err != nil {
-		log.Fatalf("Failed to create schema: %v\n", err)
-	}
-
-	os.Exit(m.Run())
-}
 
 func TestFixtureFile(t *testing.T) {
 	f := &FixtureFile{FileName: "posts.yml"}
@@ -47,7 +21,7 @@ func TestFixtureFile(t *testing.T) {
 	}
 }
 
-func assertCount(t *testing.T, table string, expectedCount int) {
+func assertCount(t *testing.T, db *sql.DB, table string, expectedCount int) {
 	var count int
 
 	row := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table))
@@ -57,16 +31,16 @@ func assertCount(t *testing.T, table string, expectedCount int) {
 	}
 }
 
-func TestLoadFixtures(t *testing.T) {
-	err := LoadFixtures("test_fixtures", db, &PostgreSQLHelper{})
+func testLoadFixtures(t *testing.T, db *sql.DB, helper DataBaseHelper) {
+	err := LoadFixtures("test_fixtures", db, helper)
 	if err != nil {
 		t.Errorf("Error on loading fixtures: %v", err)
 	}
 
-	assertCount(t, "posts", 2)
-	assertCount(t, "comments", 4)
-	assertCount(t, "tags", 3)
-	assertCount(t, "posts_tags", 2)
+	assertCount(t, db, "posts", 2)
+	assertCount(t, db, "comments", 4)
+	assertCount(t, db, "tags", 3)
+	assertCount(t, db, "posts_tags", 2)
 
 	// this insert is to test if the PostgreSQL sequences were reset
 	_, err = db.Exec(
@@ -78,5 +52,44 @@ func TestLoadFixtures(t *testing.T) {
 	)
 	if err != nil {
 		t.Errorf("Error inserting post: %v", err)
+	}
+}
+
+func TestLoadFixtures(t *testing.T) {
+	databases := []struct {
+		name       string
+		connEnv    string
+		schemaFile string
+		helper     DataBaseHelper
+	}{
+		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
+	}
+
+	for _, database := range databases {
+		connString := os.Getenv(database.connEnv)
+		if connString == "" {
+			continue
+		}
+
+		var bytes []byte
+
+		fmt.Printf("Test for %s\n", database.name)
+
+		db, err := sql.Open(database.name, connString)
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v\n", err)
+		}
+
+		bytes, err = ioutil.ReadFile(database.schemaFile)
+		if err != nil {
+			log.Fatalf("Could not read file %s: %v\n", database.schemaFile, err)
+		}
+
+		_, err = db.Exec(string(bytes))
+		if err != nil {
+			log.Fatalf("Failed to create schema: %v\n", err)
+		}
+
+		testLoadFixtures(t, db, &PostgreSQLHelper{})
 	}
 }
