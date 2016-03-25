@@ -9,13 +9,14 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
 
 func TestFixtureFile(t *testing.T) {
-	f := &FixtureFile{FileName: "posts.yml"}
-	file := f.FileNameWithoutExtension()
+	f := &fixtureFile{fileName: "posts.yml"}
+	file := f.fileNameWithoutExtension()
 	if file != "posts" {
 		t.Errorf("Should be 'posts', but returned %s", file)
 	}
@@ -43,8 +44,14 @@ func testLoadFixtures(t *testing.T, db *sql.DB, helper DataBaseHelper) {
 	assertCount(t, db, "posts_tags", 2)
 
 	// this insert is to test if the PostgreSQL sequences were reset
+	var sql string
+	if helper.paramType() == paramTypeDollar {
+		sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)"
+	} else {
+		sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (?, ?, ?, ?)"
+	}
 	_, err = db.Exec(
-		"INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)",
+		sql,
 		"Post title",
 		"Post content",
 		time.Now(),
@@ -63,6 +70,7 @@ func TestLoadFixtures(t *testing.T) {
 		helper     DataBaseHelper
 	}{
 		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
+		{"mysql", "MYSQL_CONN_STRING", "test_schema/mysql.sql", &MySQLHelper{}},
 	}
 
 	for _, database := range databases {
@@ -90,6 +98,6 @@ func TestLoadFixtures(t *testing.T) {
 			log.Fatalf("Failed to create schema: %v\n", err)
 		}
 
-		testLoadFixtures(t, db, &PostgreSQLHelper{})
+		testLoadFixtures(t, db, database.helper)
 	}
 }

@@ -10,15 +10,18 @@ import (
 type PostgreSQLHelper struct {
 }
 
-// GetTables get all tables of the database
-func (h *PostgreSQLHelper) GetTables(db *sql.DB) ([]string, error) {
+func (PostgreSQLHelper) paramType() int {
+	return paramTypeDollar
+}
+
+func (h *PostgreSQLHelper) getTables(tx *sql.Tx) ([]string, error) {
 	sql := `
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema='public'
   AND table_type='BASE TABLE';
 `
-	rows, err := db.Query(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -33,8 +36,7 @@ WHERE table_schema='public'
 	return tables, nil
 }
 
-// GetSequences get all sequences of the database
-func (h *PostgreSQLHelper) GetSequences(db *sql.DB) ([]string, error) {
+func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
 	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -51,9 +53,8 @@ func (h *PostgreSQLHelper) GetSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-// DisableTriggers disable referential integrity triggers
-func (h *PostgreSQLHelper) DisableTriggers(db *sql.DB) error {
-	tables, err := h.GetTables(db)
+func (h *PostgreSQLHelper) disableTriggers(tx *sql.Tx) error {
+	tables, err := h.getTables(tx)
 	if err != nil {
 		return err
 	}
@@ -63,13 +64,12 @@ func (h *PostgreSQLHelper) DisableTriggers(db *sql.DB) error {
 		sql = sql + fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL;", table)
 	}
 
-	_, err = db.Exec(sql)
+	_, err = tx.Exec(sql)
 	return err
 }
 
-// EnableTriggers enable referential integrity triggers
-func (h *PostgreSQLHelper) EnableTriggers(db *sql.DB) error {
-	tables, err := h.GetTables(db)
+func (h *PostgreSQLHelper) enableTriggers(tx *sql.Tx) error {
+	tables, err := h.getTables(tx)
 	if err != nil {
 		return err
 	}
@@ -79,15 +79,12 @@ func (h *PostgreSQLHelper) EnableTriggers(db *sql.DB) error {
 		sql = sql + fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", table)
 	}
 
-	_, err = db.Exec(sql)
+	_, err = tx.Exec(sql)
 	return err
 }
 
-// ResetSequences resets the sequences of "id"s columns
-// assumes the primery key is "id" and sequence is "<tablename>_id_seq",
-// the default when using the SERIAL column type
-func (h *PostgreSQLHelper) ResetSequences(db *sql.DB) error {
-	sequences, err := h.GetSequences(db)
+func (h *PostgreSQLHelper) resetSequences(db *sql.DB) error {
+	sequences, err := h.getSequences(db)
 	if err != nil {
 		return err
 	}
@@ -112,13 +109,10 @@ func (h *PostgreSQLHelper) ResetSequences(db *sql.DB) error {
 	return nil
 }
 
-// BeforeLoad runs before the fixture load
-// by now, does nothing
-func (h *PostgreSQLHelper) BeforeLoad(db *sql.DB) error {
+func (PostgreSQLHelper) beforeLoad(db *sql.DB) error {
 	return nil
 }
 
-// AfterLoad runs after the fixture load
-func (h *PostgreSQLHelper) AfterLoad(db *sql.DB) error {
-	return h.ResetSequences(db)
+func (h *PostgreSQLHelper) afterLoad(db *sql.DB) error {
+	return h.resetSequences(db)
 }

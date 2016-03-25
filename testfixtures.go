@@ -9,29 +9,24 @@ import (
 	"strings"
 )
 
-// FixtureFile represents a fixture file
-type FixtureFile struct {
-	Path     string
-	FileName string
-	Content  []byte
+type fixtureFile struct {
+	path     string
+	fileName string
+	content  []byte
 }
 
-// FileNameWithoutExtension returns the filename without the extension
-// e.g.: posts.yml -> posts
-func (f *FixtureFile) FileNameWithoutExtension() string {
-	return strings.Replace(f.FileName, filepath.Ext(f.FileName), "", 1)
+func (f *fixtureFile) fileNameWithoutExtension() string {
+	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
 }
 
-// Delete deletes all records of the table
-func (f *FixtureFile) Delete(tx *sql.Tx) error {
-	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", f.FileNameWithoutExtension()))
+func (f *fixtureFile) delete(tx *sql.Tx) error {
+	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", f.fileNameWithoutExtension()))
 	return err
 }
 
-// Insert insert the records in the file in the database
-func (f *FixtureFile) Insert(tx *sql.Tx) error {
+func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 	var rows []interface{}
-	err := yaml.Unmarshal(f.Content, &rows)
+	err := yaml.Unmarshal(f.content, &rows)
 	if err != nil {
 		return err
 	}
@@ -49,12 +44,16 @@ func (f *FixtureFile) Insert(tx *sql.Tx) error {
 				sqlValues = sqlValues + ","
 			}
 			sqlColumns = sqlColumns + key.(string)
-			sqlValues = fmt.Sprintf("%s$%d", sqlValues, i)
+			if h.paramType() == paramTypeDollar {
+				sqlValues = fmt.Sprintf("%s$%d", sqlValues, i)
+			} else {
+				sqlValues = fmt.Sprintf("%s?", sqlValues)
+			}
 			i++
 			values = append(values, value)
 		}
 
-		sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", f.FileNameWithoutExtension(), sqlColumns, sqlValues)
+		sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", f.fileNameWithoutExtension(), sqlColumns, sqlValues)
 		_, err = tx.Exec(sql, values...)
 		if err != nil {
 			return err
@@ -63,8 +62,8 @@ func (f *FixtureFile) Insert(tx *sql.Tx) error {
 	return nil
 }
 
-func getYmlFiles(foldername string) ([]*FixtureFile, error) {
-	var files []*FixtureFile
+func getYmlFiles(foldername string) ([]*fixtureFile, error) {
+	var files []*fixtureFile
 	fileinfos, err := ioutil.ReadDir(foldername)
 	if err != nil {
 		return nil, err
@@ -72,11 +71,11 @@ func getYmlFiles(foldername string) ([]*FixtureFile, error) {
 
 	for _, fileinfo := range fileinfos {
 		if !fileinfo.IsDir() && filepath.Ext(fileinfo.Name()) == ".yml" {
-			fixture := &FixtureFile{
-				Path:     foldername + "/" + fileinfo.Name(),
-				FileName: fileinfo.Name(),
+			fixture := &fixtureFile{
+				path:     foldername + "/" + fileinfo.Name(),
+				fileName: fileinfo.Name(),
 			}
-			fixture.Content, err = ioutil.ReadFile(fixture.Path)
+			fixture.content, err = ioutil.ReadFile(fixture.path)
 			if err != nil {
 				return nil, err
 			}
@@ -93,7 +92,7 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		return err
 	}
 
-	err = h.BeforeLoad(db)
+	err = h.beforeLoad(db)
 	if err != nil {
 		return err
 	}
@@ -102,20 +101,20 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 	if err != nil {
 		return err
 	}
-	h.DisableTriggers(db)
+	h.disableTriggers(tx)
 
 	for _, file := range files {
-		err := file.Delete(tx)
+		err := file.delete(tx)
 		if err != nil {
 			tx.Rollback()
-			h.EnableTriggers(db)
+			h.enableTriggers(tx)
 			return err
 		}
 
-		err = file.Insert(tx)
+		err = file.insert(tx, h)
 		if err != nil {
 			tx.Rollback()
-			h.EnableTriggers(db)
+			h.enableTriggers(tx)
 			return err
 		}
 	}
@@ -124,6 +123,6 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		return err
 	}
 
-	err = h.AfterLoad(db)
+	err = h.afterLoad(db)
 	return err
 }
