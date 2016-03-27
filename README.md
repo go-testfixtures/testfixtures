@@ -93,7 +93,7 @@ func TestMain(m *testing.M) {
 }
 
 func prepareTestDatabase() {
-    // use &testfixtures.MySQLHelper{} if you are using MySQL
+    // see about compatible databases in this page below
     err = testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
@@ -118,7 +118,47 @@ func TestZ(t *testing.T) {
 
 ## Compatible databases
 
-- PostgreSQL: Use `&testfixtures.PostgreSQLHelper{}`
-- MySQL: Use `&testfixtures.MySQLHelper{}`
+### PostgreSQL
+
+This package has two approaches to import fixtures in PostgreSQL databases:
+
+#### With `DISABLE TRIGGER`
+
+This is the default approach. For that use:
+
+```go
+&testfixtures.PostgreSQLHelper{}
+// or
+&testfixtures.PostgreSQLHelper{UseAlterConstraint: false}
+```
+
+With the above snippet this package will use `DISABLE TRIGGER` to temporarily
+disabling foreign key constraints while loading fixtures. This work with any
+version of PostgreSQL, but it is **required** to be connected in the database
+as a SUPERUSER. You can make a PostgreSQL user a SUPERUSER with:
+
+```sql
+ALTER USER your_user SUPERUSER;
+```
+
+#### With `ALTER CONSTRAINT`
+
+This approach don't require to be connected as a SUPERUSER, but only work with
+PostgreSQL versions >= 9.4. Try this if you are getting foreign key violation
+errors with the previous approach. It is as simple as using:
+
+```go
+&testfixtures.PostgreSQLHelper{UseAlterConstraint: true}
+```
+
+### MySQL
+
+No secret, just use:
+
+```go
+&testfixtures.MySQLHelper{}
+```
+
+### Others
 
 Contributions are welcome to add support for more.
