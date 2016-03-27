@@ -3,10 +3,11 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 type fixtureFile struct {
@@ -92,37 +93,38 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		return err
 	}
 
-	err = h.beforeLoad(db)
-	if err != nil {
-		return err
-	}
-
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	h.disableTriggers(tx)
+
+	err = h.beforeLoad(tx)
+	if err != nil {
+		return err
+	}
+
+	h.disableReferentialIntegrity(tx)
 
 	for _, file := range files {
-		err := file.delete(tx)
+		err = file.delete(tx)
 		if err != nil {
 			tx.Rollback()
-			h.enableTriggers(tx)
+			h.enableReferentialIntegrity(tx)
 			return err
 		}
 
 		err = file.insert(tx, h)
 		if err != nil {
 			tx.Rollback()
-			h.enableTriggers(tx)
+			h.enableReferentialIntegrity(tx)
 			return err
 		}
 	}
-	err = tx.Commit()
+	err = h.afterLoad(tx)
 	if err != nil {
 		return err
 	}
 
-	err = h.afterLoad(db)
+	err = tx.Commit()
 	return err
 }

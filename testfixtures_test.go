@@ -70,6 +70,7 @@ func TestLoadFixtures(t *testing.T) {
 		helper     DataBaseHelper
 	}{
 		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
+		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{UseAlterConstraint: true}},
 		{"mysql", "MYSQL_CONN_STRING", "test_schema/mysql.sql", &MySQLHelper{}},
 	}
 

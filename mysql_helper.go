@@ -12,20 +12,20 @@ func (MySQLHelper) paramType() int {
 	return paramTypeQuestion
 }
 
-func (h *MySQLHelper) disableTriggers(tx *sql.Tx) error {
+func (h *MySQLHelper) disableReferentialIntegrity(tx *sql.Tx) error {
 	_, err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0")
 	return err
 }
 
-func (h *MySQLHelper) enableTriggers(tx *sql.Tx) error {
+func (h *MySQLHelper) enableReferentialIntegrity(tx *sql.Tx) error {
 	_, err := tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
 	return err
 }
 
-func (h *MySQLHelper) beforeLoad(db *sql.DB) error {
+func (h *MySQLHelper) beforeLoad(tx *sql.Tx) error {
 	return nil
 }
 
-func (h *MySQLHelper) afterLoad(db *sql.DB) error {
+func (h *MySQLHelper) afterLoad(tx *sql.Tx) error {
 	return nil
 }
