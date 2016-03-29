@@ -2,8 +2,6 @@ package testfixtures
 
 import (
 	"database/sql"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // SQLiteHelper is the SQLite Helper for this package
