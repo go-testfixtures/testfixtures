@@ -62,18 +62,20 @@ func testLoadFixtures(t *testing.T, db *sql.DB, helper DataBaseHelper) {
 	}
 }
 
-func TestLoadFixtures(t *testing.T) {
-	databases := []struct {
-		name       string
-		connEnv    string
-		schemaFile string
-		helper     DataBaseHelper
-	}{
-		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
-		{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{UseAlterConstraint: true}},
-		{"mysql", "MYSQL_CONN_STRING", "test_schema/mysql.sql", &MySQLHelper{}},
-	}
+type databaseTest struct {
+	name       string
+	connEnv    string
+	schemaFile string
+	helper     DataBaseHelper
+}
 
+var databases = []databaseTest{
+	{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
+	{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{UseAlterConstraint: true}},
+	{"mysql", "MYSQL_CONN_STRING", "test_schema/mysql.sql", &MySQLHelper{}},
+}
+
+func TestLoadFixtures(t *testing.T) {
 	for _, database := range databases {
 		connString := os.Getenv(database.connEnv)
 		if connString == "" {
