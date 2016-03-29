@@ -13,6 +13,11 @@ func (SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 		return err
 	}
 
+	_, err = tx.Exec("PRAGMA defer_foreign_keys = ON")
+	if err != nil {
+		return err
+	}
+
 	err = loadFn(tx)
 	if err != nil {
 		return err

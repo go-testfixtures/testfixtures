@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS posts_tags;
 DROP TABLE IF EXISTS posts;
