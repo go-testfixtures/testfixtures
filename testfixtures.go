@@ -41,8 +41,8 @@ func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 		i := 1
 		for key, value := range record {
 			if sqlColumns != "" {
-				sqlColumns = sqlColumns + ","
-				sqlValues = sqlValues + ","
+				sqlColumns += ","
+				sqlValues += ","
 			}
 			sqlColumns = sqlColumns + key.(string)
 			if h.paramType() == paramTypeDollar {
@@ -93,38 +93,19 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 		return err
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
+	err = h.disableReferentialIntegrity(db, func(tx *sql.Tx) error {
+		for _, file := range files {
+			err = file.delete(tx)
+			if err != nil {
+				return err
+			}
 
-	err = h.beforeLoad(tx)
-	if err != nil {
-		return err
-	}
-
-	h.disableReferentialIntegrity(tx)
-
-	for _, file := range files {
-		err = file.delete(tx)
-		if err != nil {
-			tx.Rollback()
-			h.enableReferentialIntegrity(tx)
-			return err
+			err = file.insert(tx, h)
+			if err != nil {
+				return err
+			}
 		}
-
-		err = file.insert(tx, h)
-		if err != nil {
-			tx.Rollback()
-			h.enableReferentialIntegrity(tx)
-			return err
-		}
-	}
-	err = h.afterLoad(tx)
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit()
+		return nil
+	})
 	return err
 }

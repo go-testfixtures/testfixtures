@@ -9,11 +9,10 @@ const (
 	paramTypeQuestion
 )
 
+type loadFunction func(tx *sql.Tx) error
+
 // DataBaseHelper is the generic interface for the database helper
 type DataBaseHelper interface {
-	disableReferentialIntegrity(tx *sql.Tx) error
-	enableReferentialIntegrity(tx *sql.Tx) error
-	beforeLoad(tx *sql.Tx) error
-	afterLoad(tx *sql.Tx) error
+	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
 }

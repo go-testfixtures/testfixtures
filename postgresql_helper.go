@@ -13,8 +13,6 @@ type PostgreSQLHelper struct {
 	// If false, the constraint disabling will use DISABLE TRIGGER ALL,
 	// which requires SUPERUSER privileges.
 	UseAlterConstraint bool
-
-	nonDeferrableConstraints []pgContraint
 }
 
 type pgContraint struct {
@@ -26,14 +24,14 @@ func (PostgreSQLHelper) paramType() int {
 	return paramTypeDollar
 }
 
-func (h *PostgreSQLHelper) getTables(tx *sql.Tx) ([]string, error) {
+func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
 	sql := `
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema='public'
   AND table_type='BASE TABLE';
 `
-	rows, err := tx.Query(sql)
+	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +46,9 @@ WHERE table_schema='public'
 	return tables, nil
 }
 
-func (h *PostgreSQLHelper) getSequences(tx *sql.Tx) ([]string, error) {
+func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
 	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
-	rows, err := tx.Query(sql)
+	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -70,13 +68,13 @@ func (h *PostgreSQLHelper) getSequences(tx *sql.Tx) ([]string, error) {
 	return sequences, nil
 }
 
-func (PostgreSQLHelper) getNonDeferrableConstraints(tx *sql.Tx) ([]pgContraint, error) {
+func (PostgreSQLHelper) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
 	sql := `
 SELECT table_name, constraint_name
 FROM information_schema.table_constraints
 WHERE constraint_type = 'FOREIGN KEY'
   AND is_deferrable = 'NO'`
-	rows, err := tx.Query(sql)
+	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -95,72 +93,109 @@ WHERE constraint_type = 'FOREIGN KEY'
 	return constraints, nil
 }
 
-func (h *PostgreSQLHelper) disableTriggers(tx *sql.Tx) error {
-	tables, err := h.getTables(tx)
+func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) error {
+	tables, err := h.getTables(db)
 	if err != nil {
 		return err
 	}
-	sql := ""
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	var sql string
 	for _, table := range tables {
 		sql += fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL;", table)
 	}
-
 	_, err = tx.Exec(sql)
-	return err
-}
-
-func (h *PostgreSQLHelper) enableTriggers(tx *sql.Tx) error {
-	tables, err := h.getTables(tx)
 	if err != nil {
 		return err
 	}
-	sql := ""
 
+	err = loadFn(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = ""
 	for _, table := range tables {
 		sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", table)
 	}
-
 	_, err = tx.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	err = h.resetSequences(db)
 	return err
 }
 
-func (h *PostgreSQLHelper) makeConstraintsDeferrable(tx *sql.Tx) error {
-	sql := ""
-	for _, constraint := range h.nonDeferrableConstraints {
+func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) error {
+	nonDeferrableConstraints, err := h.getNonDeferrableConstraints(db)
+	if err != nil {
+		return err
+	}
+
+	var sql string
+	for _, constraint := range nonDeferrableConstraints {
 		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE;", constraint.tableName, constraint.constraintName)
 	}
-	_, err := tx.Exec(sql)
-	return err
-}
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
 
-func (h *PostgreSQLHelper) undoMakeConstraintsDeferrable(tx *sql.Tx) error {
-	sql := ""
-	for _, constraint := range h.nonDeferrableConstraints {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED")
+	if err != nil {
+		return nil
+	}
+
+	err = loadFn(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	sql = ""
+	for _, constraint := range nonDeferrableConstraints {
 		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
 	}
-	_, err := tx.Exec(sql)
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	err = h.resetSequences(db)
 	return err
 }
 
-func (h *PostgreSQLHelper) disableReferentialIntegrity(tx *sql.Tx) error {
+func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	if h.UseAlterConstraint {
-		return h.makeConstraintsDeferrable(tx)
+		return h.makeConstraintsDeferrable(db, loadFn)
 	} else {
-		return h.disableTriggers(tx)
+		return h.disableTriggers(db, loadFn)
 	}
 }
 
-func (h *PostgreSQLHelper) enableReferentialIntegrity(tx *sql.Tx) error {
-	if h.UseAlterConstraint {
-		return h.undoMakeConstraintsDeferrable(tx)
-	} else {
-		return h.enableTriggers(tx)
-	}
-}
-
-func (h *PostgreSQLHelper) resetSequences(tx *sql.Tx) error {
-	sequences, err := h.getSequences(tx)
+func (h *PostgreSQLHelper) resetSequences(db *sql.DB) error {
+	sequences, err := h.getSequences(db)
 	if err != nil {
 		return err
 	}
@@ -168,7 +203,7 @@ func (h *PostgreSQLHelper) resetSequences(tx *sql.Tx) error {
 	for _, sequence := range sequences {
 		var max int
 		table := strings.Replace(sequence, "_id_seq", "", 1)
-		row := tx.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", table))
+		row := db.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", table))
 		err = row.Scan(&max)
 		if err != nil {
 			return err
@@ -177,25 +212,10 @@ func (h *PostgreSQLHelper) resetSequences(tx *sql.Tx) error {
 		if max == 0 {
 			max = 1
 		}
-		_, err = tx.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, max))
+		_, err = db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, max))
 		if err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func (h *PostgreSQLHelper) beforeLoad(tx *sql.Tx) error {
-	var err error
-	h.nonDeferrableConstraints, err = h.getNonDeferrableConstraints(tx)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED")
-	return err
-}
-
-func (h *PostgreSQLHelper) afterLoad(tx *sql.Tx) error {
-	return h.resetSequences(tx)
 }
