@@ -13,6 +13,9 @@ func (MySQLHelper) paramType() int {
 }
 
 func (h *MySQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+	// re-enable after load
+	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -26,11 +29,6 @@ func (h *MySQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunctio
 	err = loadFn(tx)
 	if err != nil {
 		tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
-	if err != nil {
 		return err
 	}
 

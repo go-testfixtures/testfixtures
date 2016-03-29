@@ -25,6 +25,8 @@ func (PostgreSQLHelper) paramType() int {
 }
 
 func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
+	var tables []string
+
 	sql := `
 SELECT table_name
 FROM information_schema.tables
@@ -36,7 +38,6 @@ WHERE table_schema='public'
 		return nil, err
 	}
 
-	var tables []string
 	defer rows.Close()
 	for rows.Next() {
 		var table string
@@ -47,15 +48,14 @@ WHERE table_schema='public'
 }
 
 func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
+	var sequences []string
+
 	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
 	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	var sequences []string
 	defer rows.Close()
 	for rows.Next() {
 		var sequence string
@@ -69,6 +69,8 @@ func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
 }
 
 func (PostgreSQLHelper) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
+	var constraints []pgContraint
+
 	sql := `
 SELECT table_name, constraint_name
 FROM information_schema.table_constraints
@@ -80,8 +82,6 @@ WHERE constraint_type = 'FOREIGN KEY'
 	}
 
 	defer rows.Close()
-
-	var constraints []pgContraint
 	for rows.Next() {
 		var constraint pgContraint
 		err = rows.Scan(&constraint.tableName, &constraint.constraintName)
@@ -98,6 +98,15 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		// re-enable triggers after load
+		var sql string
+		for _, table := range tables {
+			sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", table)
+		}
+		db.Exec(sql)
+	}()
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -119,21 +128,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 		return err
 	}
 
-	sql = ""
-	for _, table := range tables {
-		sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", table)
-	}
-	_, err = tx.Exec(sql)
-	if err != nil {
-		return err
-	}
-
 	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	err = h.resetSequences(db)
 	return err
 }
 
@@ -142,6 +137,15 @@ func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunc
 	if err != nil {
 		return err
 	}
+
+	defer func() {
+		// ensure constraint being not deferrable again after load
+		var sql string
+		for _, constraint := range nonDeferrableConstraints {
+			sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
+		}
+		db.Exec(sql)
+	}()
 
 	var sql string
 	for _, constraint := range nonDeferrableConstraints {
@@ -169,24 +173,13 @@ func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunc
 	}
 
 	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	sql = ""
-	for _, constraint := range nonDeferrableConstraints {
-		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
-	}
-	_, err = db.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	err = h.resetSequences(db)
 	return err
 }
 
 func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+	// ensure sequences being reset after load
+	defer h.resetSequences(db)
+
 	if h.UseAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)
 	} else {
