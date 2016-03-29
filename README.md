@@ -162,9 +162,9 @@ No secret, just use:
 
 ### SQLite
 
-SQLite support, for now, requires foreign key to be disabled. You can see how
-on the [documentation](https://www.sqlite.org/foreignkeys.html#fk_enable).
-Being aware of that, just use:
+SQLite is supported also. It is recommended to create foreign keys as
+`DEFERRABLE` (the default) to prevent problems. See more
+[on the SQLite documentation](https://www.sqlite.org/foreignkeys.html#fk_deferred)
 
 ```go
 &testfixtures.SQLiteHelper{}
