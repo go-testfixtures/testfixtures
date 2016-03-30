@@ -5,11 +5,15 @@ import (
 )
 
 // MySQLHelper is the MySQL helper for this package
-type MySQLHelper struct {
-}
+type MySQLHelper struct{}
 
 func (MySQLHelper) paramType() int {
 	return paramTypeQuestion
+}
+
+func (MySQLHelper) databaseName(db *sql.DB) (dbName string) {
+	db.QueryRow("SELECT DATABASE()").Scan(&dbName)
+	return
 }
 
 func (h *MySQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {

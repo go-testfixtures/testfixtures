@@ -88,6 +88,12 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 
 // LoadFixtures loads all fixtures in a given folder in the database
 func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
+	if !skipDatabaseNameCheck {
+		if !dbnameRegexp.MatchString(h.databaseName(db)) {
+			return errNotTestDatabase
+		}
+	}
+
 	files, err := getYmlFiles(foldername)
 	if err != nil {
 		return err

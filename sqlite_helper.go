@@ -2,10 +2,23 @@ package testfixtures
 
 import (
 	"database/sql"
+	"path/filepath"
 )
 
 // SQLiteHelper is the SQLite Helper for this package
 type SQLiteHelper struct{}
+
+func (SQLiteHelper) paramType() int {
+	return paramTypeQuestion
+}
+
+func (SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
+	var seq int
+	var main string
+	db.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
+	dbName = filepath.Base(dbName)
+	return
+}
 
 func (SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tx, err := db.Begin()
@@ -25,8 +38,4 @@ func (SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 
 	err = tx.Commit()
 	return err
-}
-
-func (SQLiteHelper) paramType() int {
-	return paramTypeQuestion
 }

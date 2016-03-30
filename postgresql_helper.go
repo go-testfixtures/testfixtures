@@ -24,6 +24,11 @@ func (PostgreSQLHelper) paramType() int {
 	return paramTypeDollar
 }
 
+func (PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
+	db.QueryRow("SELECT current_database()").Scan(&dbName)
+	return
+}
+
 func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
 	var tables []string
 
