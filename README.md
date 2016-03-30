@@ -117,6 +117,16 @@ func TestZ(t *testing.T) {
 }
 ```
 
+## Security check
+
+In order to prevent you from accidentally wiping the wrong database, the
+fixture load will refuse to load if the database name (or database filename for
+SQLite) doesn't contains "test". If you want to disable this check, use:
+
+```go
+testfixtures.SkipDatabaseNameCheck(true)
+```
+
 ## Compatible databases
 
 ### PostgreSQL
