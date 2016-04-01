@@ -2,6 +2,7 @@
 
 [![Join the chat at https://gitter.im/go-testfixtures/testfixtures](https://badges.gitter.im/go-testfixtures/testfixtures.svg)](https://gitter.im/go-testfixtures/testfixtures?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v1?status.svg)](https://godoc.org/gopkg.in/testfixtures.v1)
+[![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
@@ -25,7 +26,7 @@ the tests.
 First, get it:
 
 ```bash
-go get gopkg.in/testfixtures.v1
+go get gopkg.in/testfixtures.v1/...
 ```
 
 ## Usage
@@ -33,7 +34,7 @@ go get gopkg.in/testfixtures.v1
 Create a folder for the fixture files. Each file should contain data for a
 single table and have the name `<table-name>.yml`:
 
-```
+```yml
 myapp
   - myapp.go
   - myapp_test.go
@@ -164,7 +165,9 @@ errors with the previous approach. It is as simple as using:
 
 ### MySQL
 
-No secret, just use:
+Just make sure the connection string have
+[the multistatement parameter](https://github.com/go-sql-driver/mysql#multistatements)
+set to true, and use:
 
 ```go
 &testfixtures.MySQLHelper{}
