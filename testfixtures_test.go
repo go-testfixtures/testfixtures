@@ -102,5 +102,7 @@ func TestLoadFixtures(t *testing.T) {
 		}
 
 		testLoadFixtures(t, db, database.helper)
+
+		db.Close()
 	}
 }

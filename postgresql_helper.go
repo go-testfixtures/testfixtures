@@ -108,7 +108,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 		// re-enable triggers after load
 		var sql string
 		for _, table := range tables {
-			sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", table)
+			sql += fmt.Sprintf("ALTER TABLE \"%s\" ENABLE TRIGGER ALL;", table)
 		}
 		db.Exec(sql)
 	}()
@@ -120,7 +120,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 
 	var sql string
 	for _, table := range tables {
-		sql += fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL;", table)
+		sql += fmt.Sprintf("ALTER TABLE \"%s\" DISABLE TRIGGER ALL;", table)
 	}
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -147,14 +147,14 @@ func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunc
 		// ensure constraint being not deferrable again after load
 		var sql string
 		for _, constraint := range nonDeferrableConstraints {
-			sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
+			sql += fmt.Sprintf("ALTER TABLE \"%s\" ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
 		}
 		db.Exec(sql)
 	}()
 
 	var sql string
 	for _, constraint := range nonDeferrableConstraints {
-		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE;", constraint.tableName, constraint.constraintName)
+		sql += fmt.Sprintf("ALTER TABLE \"%s\" ALTER CONSTRAINT %s DEFERRABLE;", constraint.tableName, constraint.constraintName)
 	}
 	_, err = db.Exec(sql)
 	if err != nil {
