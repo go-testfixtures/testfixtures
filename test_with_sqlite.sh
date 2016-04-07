@@ -1,1 +1,1 @@
-go test -tags sqlite
+go test -v -tags sqlite
