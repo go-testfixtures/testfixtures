@@ -23,4 +23,5 @@ type DataBaseHelper interface {
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
 	databaseName(*sql.DB) string
+	quoteKeyword(string) string
 }

@@ -2,6 +2,7 @@ package testfixtures
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 // MySQLHelper is the MySQL helper for this package
@@ -9,6 +10,10 @@ type MySQLHelper struct{}
 
 func (MySQLHelper) paramType() int {
 	return paramTypeQuestion
+}
+
+func (MySQLHelper) quoteKeyword(str string) string {
+	return fmt.Sprintf("`%s`", str)
 }
 
 func (MySQLHelper) databaseName(db *sql.DB) (dbName string) {

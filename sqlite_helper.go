@@ -2,6 +2,7 @@ package testfixtures
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
 )
 
@@ -10,6 +11,10 @@ type SQLiteHelper struct{}
 
 func (SQLiteHelper) paramType() int {
 	return paramTypeQuestion
+}
+
+func (SQLiteHelper) quoteKeyword(str string) string {
+	return fmt.Sprintf("\"%s\"", str)
 }
 
 func (SQLiteHelper) databaseName(db *sql.DB) (dbName string) {

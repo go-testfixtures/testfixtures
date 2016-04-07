@@ -20,8 +20,8 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
 }
 
-func (f *fixtureFile) delete(tx *sql.Tx) error {
-	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", f.fileNameWithoutExtension()))
+func (f *fixtureFile) delete(tx *sql.Tx, h DataBaseHelper) error {
+	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension())))
 	return err
 }
 
@@ -41,10 +41,10 @@ func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 		i := 1
 		for key, value := range record {
 			if sqlColumns != "" {
-				sqlColumns += ","
-				sqlValues += ","
+				sqlColumns += ", "
+				sqlValues += ", "
 			}
-			sqlColumns = sqlColumns + key.(string)
+			sqlColumns = sqlColumns + h.quoteKeyword(key.(string))
 			if h.paramType() == paramTypeDollar {
 				sqlValues = fmt.Sprintf("%s$%d", sqlValues, i)
 			} else {
@@ -54,7 +54,7 @@ func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 			values = append(values, value)
 		}
 
-		sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", f.fileNameWithoutExtension(), sqlColumns, sqlValues)
+		sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", h.quoteKeyword(f.fileNameWithoutExtension()), sqlColumns, sqlValues)
 		_, err = tx.Exec(sql, values...)
 		if err != nil {
 			return err
@@ -101,7 +101,7 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 
 	err = h.disableReferentialIntegrity(db, func(tx *sql.Tx) error {
 		for _, file := range files {
-			err = file.delete(tx)
+			err = file.delete(tx, h)
 			if err != nil {
 				return err
 			}

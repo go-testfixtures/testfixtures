@@ -24,6 +24,10 @@ func (PostgreSQLHelper) paramType() int {
 	return paramTypeDollar
 }
 
+func (PostgreSQLHelper) quoteKeyword(str string) string {
+	return fmt.Sprintf("\"%s\"", str)
+}
+
 func (PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT current_database()").Scan(&dbName)
 	return
@@ -108,7 +112,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 		// re-enable triggers after load
 		var sql string
 		for _, table := range tables {
-			sql += fmt.Sprintf("ALTER TABLE \"%s\" ENABLE TRIGGER ALL;", table)
+			sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", h.quoteKeyword(table))
 		}
 		db.Exec(sql)
 	}()
@@ -120,7 +124,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 
 	var sql string
 	for _, table := range tables {
-		sql += fmt.Sprintf("ALTER TABLE \"%s\" DISABLE TRIGGER ALL;", table)
+		sql += fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL;", h.quoteKeyword(table))
 	}
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -147,14 +151,14 @@ func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunc
 		// ensure constraint being not deferrable again after load
 		var sql string
 		for _, constraint := range nonDeferrableConstraints {
-			sql += fmt.Sprintf("ALTER TABLE \"%s\" ALTER CONSTRAINT %s NOT DEFERRABLE;", constraint.tableName, constraint.constraintName)
+			sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", h.quoteKeyword(constraint.tableName), h.quoteKeyword(constraint.constraintName))
 		}
 		db.Exec(sql)
 	}()
 
 	var sql string
 	for _, constraint := range nonDeferrableConstraints {
-		sql += fmt.Sprintf("ALTER TABLE \"%s\" ALTER CONSTRAINT %s DEFERRABLE;", constraint.tableName, constraint.constraintName)
+		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE;", h.quoteKeyword(constraint.tableName), h.quoteKeyword(constraint.constraintName))
 	}
 	_, err = db.Exec(sql)
 	if err != nil {
@@ -201,7 +205,7 @@ func (h *PostgreSQLHelper) resetSequences(db *sql.DB) error {
 	for _, sequence := range sequences {
 		var max int
 		table := strings.Replace(sequence, "_id_seq", "", 1)
-		row := db.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", table))
+		row := db.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", h.quoteKeyword(table)))
 		err = row.Scan(&max)
 		if err != nil {
 			return err
