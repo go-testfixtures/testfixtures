@@ -186,3 +186,27 @@ SQLite is supported also. It is recommended to create foreign keys as
 ### Others
 
 Contributions are welcome to add support for more.
+
+## Contributing
+
+Tests were written to ensure everything work as expected. You can run the tests
+with:
+
+```bash
+# running tests for postgresql
+go test -tags postgresql
+
+# running test for mysql
+go test -tags mysql
+
+# running tests for sqlite
+go test -tags sqlite
+
+# running test for multiple databases at once
+go test -tags 'sqlite postgresql mysql'
+```
+
+Travis runs tests for PostgreSQL, MySQL and SQLite.
+
+To setting the connection string of tests for each database, edit the `.env`
+file, but do not include the changes a in pull request.

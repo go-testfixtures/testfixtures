@@ -9,9 +9,7 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/lib/pq"
 )
 
 func TestFixtureFile(t *testing.T) {
@@ -69,13 +67,13 @@ type databaseTest struct {
 	helper     DataBaseHelper
 }
 
-var databases = []databaseTest{
-	{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{}},
-	{"postgres", "PG_CONN_STRING", "test_schema/postgresql.sql", &PostgreSQLHelper{UseAlterConstraint: true}},
-	{"mysql", "MYSQL_CONN_STRING", "test_schema/mysql.sql", &MySQLHelper{}},
-}
+var databases = []databaseTest{}
 
 func TestLoadFixtures(t *testing.T) {
+	if len(databases) == 0 {
+		t.Error("No database choosen for tests!")
+	}
+
 	for _, database := range databases {
 		connString := os.Getenv(database.connEnv)
 		if connString == "" {

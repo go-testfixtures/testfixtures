@@ -10,5 +10,8 @@ before_script:
   - mysql -e 'CREATE DATABASE testfixtures_test;'
   - psql -c 'CREATE DATABASE testfixtures_test;' -U postgres
 install:
-  - go get -u -t -tags 'sqlite' ./...
-script: sh test_with_sqlite.sh
+  - go get -u -t -tags 'sqlite postgresql mysql' ./...
+script:
+  - go test -tags mysql
+  - go test -tags postgresql
+  - go test -tags sqlite
