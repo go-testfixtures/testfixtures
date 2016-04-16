@@ -25,6 +25,10 @@ func (SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (SQLiteHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+	return fn()
+}
+
 func (SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tx, err := db.Begin()
 	if err != nil {

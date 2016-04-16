@@ -24,4 +24,5 @@ type DataBaseHelper interface {
 	paramType() int
 	databaseName(*sql.DB) string
 	quoteKeyword(string) string
+	whileInsertOnTable(*sql.Tx, string, func() error) error
 }

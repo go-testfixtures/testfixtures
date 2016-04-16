@@ -21,6 +21,10 @@ func (MySQLHelper) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (MySQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+	return fn()
+}
+
 func (h *MySQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// re-enable after load
 	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")

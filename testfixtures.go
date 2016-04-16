@@ -40,7 +40,7 @@ func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 		sqlValues := ""
 		i := 1
 		for key, value := range record {
-			if sqlColumns != "" {
+			if len(sqlColumns) > 0 {
 				sqlColumns += ", "
 				sqlValues += ", "
 			}
@@ -106,7 +106,9 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 				return err
 			}
 
-			err = file.insert(tx, h)
+			err = h.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+				return file.insert(tx, h)
+			})
 			if err != nil {
 				return err
 			}

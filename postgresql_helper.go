@@ -33,6 +33,10 @@ func (PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (PostgreSQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+	return fn()
+}
+
 func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
 	var tables []string
 

@@ -95,7 +95,7 @@ func TestMain(m *testing.M) {
 }
 
 func prepareTestDatabase() {
-    // see about compatible databases in this page below
+    // see about all compatible databases in this page below
     err = testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
@@ -175,12 +175,22 @@ set to true, and use:
 
 ### SQLite
 
-SQLite is supported also. It is recommended to create foreign keys as
+SQLite is also supported. It is recommended to create foreign keys as
 `DEFERRABLE` (the default) to prevent problems. See more
 [on the SQLite documentation](https://www.sqlite.org/foreignkeys.html#fk_deferred)
 
 ```go
 &testfixtures.SQLiteHelper{}
+```
+
+### Microsoft SQL Server
+
+SQL Server support requires SQL Server >= 2008. Inserting on `IDENTITY` columns
+are handled as well. Just make sure you are logged in with a user with
+`ALTER TABLE` permission.
+
+```go
+&testfixtures.SQLServerHelper{}
 ```
 
 ### Others
@@ -193,14 +203,17 @@ Tests were written to ensure everything work as expected. You can run the tests
 with:
 
 ```bash
-# running tests for postgresql
+# running tests for PostgreSQL
 go test -tags postgresql
 
-# running test for mysql
+# running test for MySQL
 go test -tags mysql
 
-# running tests for sqlite
+# running tests for SQLite
 go test -tags sqlite
+
+# running tests for SQL Server
+go test -tags sqlserver
 
 # running test for multiple databases at once
 go test -tags 'sqlite postgresql mysql'

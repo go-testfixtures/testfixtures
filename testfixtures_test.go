@@ -76,9 +76,6 @@ func TestLoadFixtures(t *testing.T) {
 
 	for _, database := range databases {
 		connString := os.Getenv(database.connEnv)
-		if connString == "" {
-			continue
-		}
 
 		var bytes []byte
 
@@ -87,6 +84,10 @@ func TestLoadFixtures(t *testing.T) {
 		db, err := sql.Open(database.name, connString)
 		if err != nil {
 			log.Fatalf("Failed to connect to database: %v\n", err)
+		}
+
+		if err = db.Ping(); err != nil {
+			log.Fatalf("Failed to ping database: %v\n", err)
 		}
 
 		bytes, err = ioutil.ReadFile(database.schemaFile)
