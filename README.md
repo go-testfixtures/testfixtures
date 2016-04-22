@@ -3,6 +3,7 @@
 [![Join the chat at https://gitter.im/go-testfixtures/testfixtures](https://badges.gitter.im/go-testfixtures/testfixtures.svg)](https://gitter.im/go-testfixtures/testfixtures?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v1?status.svg)](https://godoc.org/gopkg.in/testfixtures.v1)
 [![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-testfixtures/testfixtures)](https://goreportcard.com/report/github.com/go-testfixtures/testfixtures)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
@@ -61,13 +62,15 @@ The file would look like this (it can have as many record you want):
     updated_at: 2016-01-01 12:30:12
 
 -
-    id: 1
+    id: 2
     post_id: 2
     content: Are you kidding me?
     author_name: John Doe
     author_email: john@doe.com
     created_at: 2016-01-01 12:30:12
     updated_at: 2016-01-01 12:30:12
+
+# ...
 ```
 
 Your tests would look like this:
@@ -96,7 +99,7 @@ func TestMain(m *testing.M) {
 
 func prepareTestDatabase() {
     // see about all compatible databases in this page below
-    err = testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
+    err := testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
     }
@@ -177,7 +180,9 @@ set to true, and use:
 
 SQLite is also supported. It is recommended to create foreign keys as
 `DEFERRABLE` (the default) to prevent problems. See more
-[on the SQLite documentation](https://www.sqlite.org/foreignkeys.html#fk_deferred)
+[on the SQLite documentation](https://www.sqlite.org/foreignkeys.html#fk_deferred).
+(Foreign key constraints are no-op by default on SQLite, but enabling it is
+recommended).
 
 ```go
 &testfixtures.SQLiteHelper{}
