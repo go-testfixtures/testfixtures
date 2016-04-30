@@ -3,7 +3,6 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 )
 
 // PostgreSQLHelper is the PG helper for this package
@@ -43,8 +42,8 @@ func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
 	sql := `
 SELECT table_name
 FROM information_schema.tables
-WHERE table_schema='public'
-  AND table_type='BASE TABLE';
+WHERE table_schema = 'public'
+  AND table_type = 'BASE TABLE';
 `
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -207,18 +206,7 @@ func (h *PostgreSQLHelper) resetSequences(db *sql.DB) error {
 	}
 
 	for _, sequence := range sequences {
-		var max int
-		table := strings.Replace(sequence, "_id_seq", "", 1)
-		row := db.QueryRow(fmt.Sprintf("SELECT COALESCE(MAX(id), 0) FROM %s", h.quoteKeyword(table)))
-		err = row.Scan(&max)
-		if err != nil {
-			return err
-		}
-
-		if max == 0 {
-			max = 1
-		}
-		_, err = db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, max))
+		_, err = db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, resetSequencesTo))
 		if err != nil {
 			return err
 		}

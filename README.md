@@ -128,11 +128,22 @@ SQLite) doesn't contains "test". If you want to disable this check, use:
 testfixtures.SkipDatabaseNameCheck(true)
 ```
 
+## Sequences
+
+For PostgreSQL or Oracle, this package also resets all sequences to a high
+number to prevent duplicated primary keys while running the tests.
+The default is 10000, but you can change that with:
+
+```go
+testfixtures.ResetSequencesTo(10000)
+```
+
 ## Compatible databases
 
 ### PostgreSQL
 
-This package has two approaches to import fixtures in PostgreSQL databases:
+This package has two approaches to disable foreign keys while importing fixtures
+in PostgreSQL databases:
 
 #### With `DISABLE TRIGGER`
 
@@ -140,8 +151,6 @@ This is the default approach. For that use:
 
 ```go
 &testfixtures.PostgreSQLHelper{}
-// or
-&testfixtures.PostgreSQLHelper{UseAlterConstraint: false}
 ```
 
 With the above snippet this package will use `DISABLE TRIGGER` to temporarily
@@ -195,8 +204,7 @@ are handled as well. Just make sure you are logged in with a user with
 
 ### Oracle
 
-Oracle is supported as well. All sequences are reset to 10000 to prevent errors
-on your inserts. Use:
+Oracle is supported as well. Use:
 
 ```go
 &testfixtures.OracleHelper{}
@@ -233,5 +241,5 @@ go test -tags 'sqlite postgresql mysql'
 
 Travis runs tests for PostgreSQL, MySQL and SQLite.
 
-To setting the connection string of tests for each database, edit the `.env`
+To set the connection string of tests for each database, edit the `.env`
 file, but do not include the changes a in pull request.

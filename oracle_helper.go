@@ -78,7 +78,7 @@ func (h *OracleHelper) resetSequences(db *sql.DB) error {
 		if err != nil {
 			return err
 		}
-		_, err = db.Exec(fmt.Sprintf("CREATE SEQUENCE %s START WITH 10000", h.quoteKeyword(sequence)))
+		_, err = db.Exec(fmt.Sprintf("CREATE SEQUENCE %s START WITH %d", h.quoteKeyword(sequence), resetSequencesTo))
 		if err != nil {
 			return err
 		}
