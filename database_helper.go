@@ -9,10 +9,11 @@ import (
 const (
 	paramTypeDollar = iota + 1
 	paramTypeQuestion
+	paramTypeColon
 )
 
 var (
-	dbnameRegexp       = regexp.MustCompile("test")
+	dbnameRegexp       = regexp.MustCompile("(?i)test")
 	errNotTestDatabase = errors.New("Loading aborted because the database name does not contains \"test\"")
 )
 

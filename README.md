@@ -17,7 +17,7 @@ applications, where sample data is kept in fixtures files. Before the execution
 of every test, the test database is cleaned and the fixture data is loaded in
 the database.
 
-The idea is running tests in a real database, instead of relying in mocks,
+The idea is running tests against a real database, instead of relying in mocks,
 which is boring to setup and may lead to production bugs not to being catch in
 the tests.
 
@@ -193,6 +193,15 @@ are handled as well. Just make sure you are logged in with a user with
 &testfixtures.SQLServerHelper{}
 ```
 
+### Oracle
+
+Oracle is supported as well. All sequences are reset to 10000 to prevent errors
+on your inserts. Use:
+
+```go
+&testfixtures.OracleHelper{}
+```
+
 ### Others
 
 Contributions are welcome to add support for more.
@@ -214,6 +223,9 @@ go test -tags sqlite
 
 # running tests for SQL Server
 go test -tags sqlserver
+
+# running tests for Oracle
+go test -tags oracle
 
 # running test for multiple databases at once
 go test -tags 'sqlite postgresql mysql'

@@ -44,11 +44,22 @@ func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
 				sqlColumns += ", "
 				sqlValues += ", "
 			}
-			sqlColumns = sqlColumns + h.quoteKeyword(key.(string))
-			if h.paramType() == paramTypeDollar {
-				sqlValues = fmt.Sprintf("%s$%d", sqlValues, i)
-			} else {
-				sqlValues = fmt.Sprintf("%s?", sqlValues)
+			sqlColumns += h.quoteKeyword(key.(string))
+			switch h.paramType() {
+			case paramTypeDollar:
+				sqlValues += fmt.Sprintf("$%d", i)
+			case paramTypeQuestion:
+				sqlValues += "?"
+			case paramTypeColon:
+				if isDateTime(value) {
+					sqlValues += fmt.Sprintf("to_date(:%d, 'YYYY-MM-DD HH24:MI:SS')", i)
+				} else if isDate(value) {
+					sqlValues += fmt.Sprintf("to_date(:%d, 'YYYY-MM-DD')", i)
+				} else if isTime(value) {
+					sqlValues += fmt.Sprintf("to_date(:%d, 'HH24:MI:SS')", i)
+				} else {
+					sqlValues += fmt.Sprintf(":%d", i)
+				}
 			}
 			i++
 			values = append(values, value)
