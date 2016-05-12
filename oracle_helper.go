@@ -31,12 +31,12 @@ func (OracleHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 	return fn()
 }
 
-func (OracleHelper) getDisabledContraints(db *sql.DB) ([]oracleConstraint, error) {
+func (OracleHelper) getEnabledContraints(db *sql.DB) ([]oracleConstraint, error) {
 	constraints := make([]oracleConstraint, 0)
 	rows, err := db.Query(`
         SELECT table_name, constraint_name
         FROM user_constraints
-        WHERE constraint_type ='R'
+        WHERE constraint_type = 'R'
           AND status = 'ENABLED'
     `)
 	if err != nil {
@@ -87,7 +87,7 @@ func (h *OracleHelper) resetSequences(db *sql.DB) error {
 }
 
 func (h *OracleHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
-	constraints, err := h.getDisabledContraints(db)
+	constraints, err := h.getEnabledContraints(db)
 	if err != nil {
 		return err
 	}
