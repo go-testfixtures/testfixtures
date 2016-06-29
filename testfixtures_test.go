@@ -63,6 +63,30 @@ func testLoadFixtures(t *testing.T, db *sql.DB, h DataBaseHelper) {
 	}
 }
 
+var fixturesFiles = []string{
+	"test_fixtures/posts.yml",
+	"test_fixtures/comments.yml",
+	"test_fixtures/tags.yml",
+	"test_fixtures/posts_tags.yml",
+}
+
+func testLoadFixtureFiles(t *testing.T, db *sql.DB, h DataBaseHelper) {
+	db.Exec("DELETE FROM %s", h.quoteKeyword("posts_tags"))
+	db.Exec("DELETE FROM %s", h.quoteKeyword("comments"))
+	db.Exec("DELETE FROM %s", h.quoteKeyword("posts"))
+	db.Exec("DELETE FROM %s", h.quoteKeyword("tags"))
+
+	err := LoadFixtureFiles(db, h, fixturesFiles...)
+	if err != nil {
+		t.Errorf("Error on loading fixtures: %v", err)
+	}
+
+	assertCount(t, db, h, "posts", 2)
+	assertCount(t, db, h, "comments", 4)
+	assertCount(t, db, h, "tags", 3)
+	assertCount(t, db, h, "posts_tags", 2)
+}
+
 type databaseTest struct {
 	name       string
 	connEnv    string
@@ -106,5 +130,6 @@ func TestLoadFixtures(t *testing.T) {
 		}
 
 		testLoadFixtures(t, db, database.helper)
+		testLoadFixtureFiles(t, db, database.helper)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -84,7 +85,7 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 	for _, fileinfo := range fileinfos {
 		if !fileinfo.IsDir() && filepath.Ext(fileinfo.Name()) == ".yml" {
 			fixture := &fixtureFile{
-				path:     foldername + "/" + fileinfo.Name(),
+				path:     path.Join(foldername, fileinfo.Name()),
 				fileName: fileinfo.Name(),
 			}
 			fixture.content, err = ioutil.ReadFile(fixture.path)
@@ -97,22 +98,45 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 	return files, nil
 }
 
+// LoadFixtureFiles load all specified fixtures files to database
+func LoadFixtureFiles(db *sql.DB, h DataBaseHelper, files ...string) error {
+	var fixtureFiles []*fixtureFile
+	var err error
+	for _, f := range files {
+		fixture := &fixtureFile{
+			path:     f,
+			fileName: filepath.Base(f),
+		}
+		fixture.content, err = ioutil.ReadFile(fixture.path)
+		if err != nil {
+			return err
+		}
+		fixtureFiles = append(fixtureFiles, fixture)
+	}
+
+	return loadFixtures(db, h, fixtureFiles...)
+}
+
 // LoadFixtures loads all fixtures in a given folder in the database
 func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
+	fixturesFiles, err := getYmlFiles(foldername)
+	if err != nil {
+		return err
+	}
+
+	return loadFixtures(db, h, fixturesFiles...)
+}
+
+func loadFixtures(db *sql.DB, h DataBaseHelper, fixturesFiles ...*fixtureFile) error {
 	if !skipDatabaseNameCheck {
 		if !dbnameRegexp.MatchString(h.databaseName(db)) {
 			return errNotTestDatabase
 		}
 	}
 
-	files, err := getYmlFiles(foldername)
-	if err != nil {
-		return err
-	}
-
-	err = h.disableReferentialIntegrity(db, func(tx *sql.Tx) error {
-		for _, file := range files {
-			err = file.delete(tx, h)
+	err := h.disableReferentialIntegrity(db, func(tx *sql.Tx) error {
+		for _, file := range fixturesFiles {
+			err := file.delete(tx, h)
 			if err != nil {
 				return err
 			}
