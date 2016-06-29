@@ -9,20 +9,20 @@ import (
 // SQL Server >= 2008 is required.
 type SQLServerHelper struct{}
 
-func (SQLServerHelper) paramType() int {
+func (*SQLServerHelper) paramType() int {
 	return paramTypeQuestion
 }
 
-func (SQLServerHelper) quoteKeyword(str string) string {
+func (*SQLServerHelper) quoteKeyword(str string) string {
 	return fmt.Sprintf("[%s]", str)
 }
 
-func (SQLServerHelper) databaseName(db *sql.DB) (dbname string) {
+func (*SQLServerHelper) databaseName(db *sql.DB) (dbname string) {
 	db.QueryRow("SELECT DB_NAME()").Scan(&dbname)
 	return
 }
 
-func (SQLServerHelper) getTables(db *sql.DB) ([]string, error) {
+func (*SQLServerHelper) getTables(db *sql.DB) ([]string, error) {
 	rows, err := db.Query("SELECT table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (SQLServerHelper) getTables(db *sql.DB) ([]string, error) {
 	return tables, nil
 }
 
-func (SQLServerHelper) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
+func (*SQLServerHelper) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
 	sql := `
 SELECT COUNT(*)
 FROM SYS.IDENTITY_COLUMNS

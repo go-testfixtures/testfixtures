@@ -8,20 +8,20 @@ import (
 // MySQLHelper is the MySQL helper for this package
 type MySQLHelper struct{}
 
-func (MySQLHelper) paramType() int {
+func (*MySQLHelper) paramType() int {
 	return paramTypeQuestion
 }
 
-func (MySQLHelper) quoteKeyword(str string) string {
+func (*MySQLHelper) quoteKeyword(str string) string {
 	return fmt.Sprintf("`%s`", str)
 }
 
-func (MySQLHelper) databaseName(db *sql.DB) (dbName string) {
+func (*MySQLHelper) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	return
 }
 
-func (MySQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*MySQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 

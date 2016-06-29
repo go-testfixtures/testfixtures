@@ -19,20 +19,20 @@ type pgContraint struct {
 	constraintName string
 }
 
-func (PostgreSQLHelper) paramType() int {
+func (*PostgreSQLHelper) paramType() int {
 	return paramTypeDollar
 }
 
-func (PostgreSQLHelper) quoteKeyword(str string) string {
+func (*PostgreSQLHelper) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", str)
 }
 
-func (PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
+func (*PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT current_database()").Scan(&dbName)
 	return
 }
 
-func (PostgreSQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*PostgreSQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
@@ -80,7 +80,7 @@ func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-func (PostgreSQLHelper) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
+func (*PostgreSQLHelper) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
 	var constraints []pgContraint
 
 	sql := `

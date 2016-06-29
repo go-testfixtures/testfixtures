@@ -9,15 +9,15 @@ import (
 // SQLiteHelper is the SQLite Helper for this package
 type SQLiteHelper struct{}
 
-func (SQLiteHelper) paramType() int {
+func (*SQLiteHelper) paramType() int {
 	return paramTypeQuestion
 }
 
-func (SQLiteHelper) quoteKeyword(str string) string {
+func (*SQLiteHelper) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", str)
 }
 
-func (SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
+func (*SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
 	var seq int
 	var main string
 	db.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
@@ -25,11 +25,11 @@ func (SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
-func (SQLiteHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*SQLiteHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
-func (SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (*SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
