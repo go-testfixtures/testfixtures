@@ -15,7 +15,7 @@ Go easier.
 
 Basically this package mimics the "Rails' way" of writing tests for database
 applications, where sample data is kept in fixtures files. Before the execution
-of every test, the test database is cleaned and the fixture data is loaded in
+of every test, the test database is cleaned and the fixture data is loaded into
 the database.
 
 The idea is running tests against a real database, instead of relying in mocks,
@@ -118,6 +118,17 @@ func TestY(t *testing.T) {
 func TestZ(t *testing.T) {
     prepareTestDatabase()
     // your test here ...
+}
+```
+
+Alternatively, you can use the `LoadFixtureFiles` function, to specify which
+files you want to load into the database:
+
+```go
+err = testfixtures.LoadFixtureFiles(db, &PostgreSQLHelper{},
+	"fixtures/orders.yml", "fixtures/customers.yml") // add as many files you want
+if err != nil {
+	log.Fatal(err)
 }
 ```
 

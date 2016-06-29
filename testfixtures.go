@@ -98,7 +98,10 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 	return files, nil
 }
 
-// LoadFixtureFiles load all specified fixtures files to database
+// LoadFixtureFiles load all specified fixtures files into database:
+// 		LoadFixtureFiles(db, &PostgreSQLHelper{},
+// 			"fixtures/customers.yml", "fixtures/orders.yml")
+//			// add as many files you want
 func LoadFixtureFiles(db *sql.DB, h DataBaseHelper, files ...string) error {
 	var fixtureFiles []*fixtureFile
 	var err error
@@ -117,7 +120,8 @@ func LoadFixtureFiles(db *sql.DB, h DataBaseHelper, files ...string) error {
 	return loadFixtures(db, h, fixtureFiles...)
 }
 
-// LoadFixtures loads all fixtures in a given folder in the database
+// LoadFixtures loads all fixtures in a given folder into the database:
+// 		LoadFixtures("myfixturesfolder", db, &PostgreSQLHelper{})
 func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 	fixturesFiles, err := getYmlFiles(foldername)
 	if err != nil {
