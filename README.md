@@ -86,20 +86,23 @@ import (
     "gopkg.in/testfixtures.v1"
 )
 
-const FIXTURES_PATH = "fixtures"
+const FixturesPath = "testdata/fixtures"
 
 func TestMain(m *testing.M) {
     // Open connection with the test database.
     // Do NOT import fixtures in a production database!
     // Existing data would be deleted
-    db, _ := sql.Open("postgres", "dbname=myapp_test")
+    db, err := sql.Open("postgres", "dbname=myapp_test")
+    if err != nil {
+        log.Fatal(err)
+    }
 
     os.Exit(m.Run())
 }
 
 func prepareTestDatabase() {
     // see about all compatible databases in this page below
-    err := testfixtures.LoadFixtures(FIXTURES_PATH, db, &testfixtures.PostgreSQLHelper{})
+    err := testfixtures.LoadFixtures(FixturesPath, db, &testfixtures.PostgreSQLHelper{})
     if err != nil {
         log.Fatal(err)
     }
@@ -225,10 +228,6 @@ Oracle is supported as well. Use:
 ```go
 &testfixtures.OracleHelper{}
 ```
-
-### Others
-
-Contributions are welcome to add support for more.
 
 ## Contributing
 
