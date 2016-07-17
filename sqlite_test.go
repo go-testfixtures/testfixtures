@@ -10,7 +10,7 @@ func init() {
 	databases = append(databases, databaseTest{
 		"sqlite3",
 		"SQLITE_CONN_STRING",
-		"test_schema/sqlite.sql",
+		"testdata/schema/sqlite.sql",
 		&SQLiteHelper{},
 	})
 }

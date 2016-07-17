@@ -11,7 +11,7 @@ func init() {
 		databaseTest{
 			"ora",
 			"ORACLE_CONN_STRING",
-			"test_schema/oracle.sql",
+			"testdata/schema/oracle.sql",
 			&OracleHelper{},
 		},
 	)

@@ -11,7 +11,7 @@ func init() {
 		databaseTest{
 			"mysql",
 			"MYSQL_CONN_STRING",
-			"test_schema/mysql.sql",
+			"testdata/schema/mysql.sql",
 			&MySQLHelper{},
 		},
 	)

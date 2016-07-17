@@ -31,7 +31,7 @@ func assertCount(t *testing.T, db *sql.DB, h DataBaseHelper, table string, expec
 }
 
 func testLoadFixtures(t *testing.T, db *sql.DB, h DataBaseHelper) {
-	err := LoadFixtures("test_fixtures", db, h)
+	err := LoadFixtures("testdata/fixtures", db, h)
 	if err != nil {
 		t.Errorf("Error on loading fixtures: %v", err)
 	}
@@ -64,10 +64,10 @@ func testLoadFixtures(t *testing.T, db *sql.DB, h DataBaseHelper) {
 }
 
 var fixturesFiles = []string{
-	"test_fixtures/posts.yml",
-	"test_fixtures/comments.yml",
-	"test_fixtures/tags.yml",
-	"test_fixtures/posts_tags.yml",
+	"testdata/fixtures/posts.yml",
+	"testdata/fixtures/comments.yml",
+	"testdata/fixtures/tags.yml",
+	"testdata/fixtures/posts_tags.yml",
 }
 
 func testLoadFixtureFiles(t *testing.T, db *sql.DB, h DataBaseHelper) {
