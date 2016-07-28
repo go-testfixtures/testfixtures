@@ -1,5 +1,6 @@
 # Go Test Fixtures
 
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/go-testfixtures/testfixtures/blob/master/LICENSE)
 [![Join the chat at https://gitter.im/go-testfixtures/testfixtures](https://badges.gitter.im/go-testfixtures/testfixtures.svg)](https://gitter.im/go-testfixtures/testfixtures?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v1?status.svg)](https://godoc.org/gopkg.in/testfixtures.v1)
 [![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
@@ -13,10 +14,10 @@ Writing tests is hard, even more when you have to deal with an SQL database.
 This package aims to make writing functional tests for web apps written in
 Go easier.
 
-Basically this package mimics the "Rails' way" of writing tests for database
-applications, where sample data is kept in fixtures files. Before the execution
-of every test, the test database is cleaned and the fixture data is loaded into
-the database.
+Basically this package mimics the ["Rails' way"][railstests] of writing tests
+for database applications, where sample data is kept in fixtures files. Before
+the execution of every test, the test database is cleaned and the fixture data
+is loaded into the database.
 
 The idea is running tests against a real database, instead of relying in mocks,
 which is boring to setup and may lead to production bugs not to being catch in
@@ -137,9 +138,10 @@ if err != nil {
 
 ## Security check
 
-In order to prevent you from accidentally wiping the wrong database, the
-fixture load will refuse to load if the database name (or database filename for
-SQLite) doesn't contains "test". If you want to disable this check, use:
+In order to prevent you from accidentally wiping the wrong database, this
+package will refuse to load fixtures if the database name (or database
+filename for SQLite) doesn't contains "test". If you want to disable this
+check, use:
 
 ```go
 testfixtures.SkipDatabaseNameCheck(true)
@@ -258,3 +260,30 @@ Travis runs tests for PostgreSQL, MySQL and SQLite.
 
 To set the connection string of tests for each database, edit the `.env`
 file, but do not include the changes a in pull request.
+
+## Alternatives
+
+If you don't think using fixtures is a good idea, you can try one of these
+packages instead:
+
+- [factory-go][factorygo]: Factory for Go. Inspired by Python's Factory Boy
+and Ruby's Factory Girl
+- [go-txdb (Single transaction SQL driver for Go)][gotxdb]: Use a single
+database transaction for each functional test, so you can rollback to
+previous state between tests to have the same database state in all tests
+- [go-sqlmock][gosqlmock]: A mock for the sql.DB interface. This allow you to unit
+test database code without having to connect to a real database
+
+There's also these other implementations of test fixtures for Go:
+
+- [go-fixtures][gofixtures]: Django style fixtures for Go
+- [mongofixtures][mongofixtures]: Fixtures for MongoDB
+- [fixturer][fixturer]: Another fixture loader supporting MySQL
+
+[railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
+[gotxdb]: https://github.com/DATA-DOG/go-txdb
+[gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
+[gofixtures]: https://github.com/AreaHQ/go-fixtures
+[mongofixtures]: https://github.com/OwlyCode/mongofixtures
+[fixturer]: https://github.com/44hapa/fixturer
+[factorygo]: https://github.com/bluele/factory-go
