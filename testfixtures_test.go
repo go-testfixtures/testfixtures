@@ -133,3 +133,19 @@ func TestLoadFixtures(t *testing.T) {
 		testLoadFixtureFiles(t, db, database.helper)
 	}
 }
+
+func TestInterfaces(t *testing.T) {
+	// helpers should implement interface
+	helpers := []interface{}{
+		&PostgreSQLHelper{},
+		&MySQLHelper{},
+		&SQLiteHelper{},
+		&SQLServerHelper{},
+		&OracleHelper{},
+	}
+	for _, h := range helpers {
+		if _, ok := h.(DataBaseHelper); !ok {
+			t.Errorf("Helper doesn't implement interface")
+		}
+	}
+}
