@@ -3,13 +3,13 @@
 package testfixtures
 
 import (
-	_ "gopkg.in/rana/ora.v3"
+	_ "github.com/mattn/go-oci8"
 )
 
 func init() {
 	databases = append(databases,
 		databaseTest{
-			"ora",
+			"oci8",
 			"ORACLE_CONN_STRING",
 			"testdata/schema/oracle.sql",
 			&OracleHelper{},
