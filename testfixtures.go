@@ -12,6 +12,64 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Context struct {
+	db            *sql.DB
+	helper        Helper
+	fixturesFiles []*fixtureFile
+}
+
+func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
+	fixtures, err := fixturesFromFolder(folderName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Context{
+		db:            db,
+		helper:        helper,
+		fixturesFiles: fixtures,
+	}, nil
+}
+
+func NewFiles(db *sql.DB, helper Helper, fileNames ...string) (*Context, error) {
+	fixtures, err := fixturesFromFiles(fileNames...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Context{
+		db:            db,
+		helper:        helper,
+		fixturesFiles: fixtures,
+	}, nil
+}
+
+func (c *Context) Load() error {
+	if !skipDatabaseNameCheck {
+		if !dbnameRegexp.MatchString(c.helper.databaseName(c.db)) {
+			return errNotTestDatabase
+		}
+	}
+
+	err := c.helper.disableReferentialIntegrity(c.db, func(tx *sql.Tx) error {
+		for _, file := range c.fixturesFiles {
+			err := file.delete(tx, c.helper)
+			if err != nil {
+				return err
+			}
+
+			err = c.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+				return file.insert(tx, c.helper)
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return err
+}
+
 type fixtureFile struct {
 	path     string
 	fileName string
@@ -127,9 +185,9 @@ func (f *fixtureFile) insert(tx *sql.Tx, h Helper) error {
 	return nil
 }
 
-func getYmlFiles(foldername string) ([]*fixtureFile, error) {
+func fixturesFromFolder(folderName string) ([]*fixtureFile, error) {
 	var files []*fixtureFile
-	fileinfos, err := ioutil.ReadDir(foldername)
+	fileinfos, err := ioutil.ReadDir(folderName)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +195,7 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 	for _, fileinfo := range fileinfos {
 		if !fileinfo.IsDir() && filepath.Ext(fileinfo.Name()) == ".yml" {
 			fixture := &fixtureFile{
-				path:     path.Join(foldername, fileinfo.Name()),
+				path:     path.Join(folderName, fileinfo.Name()),
 				fileName: fileinfo.Name(),
 			}
 			fixture.content, err = ioutil.ReadFile(fixture.path)
@@ -150,61 +208,23 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 	return files, nil
 }
 
-// LoadFixtureFiles load all specified fixtures files into database:
-// 		LoadFixtureFiles(db, &PostgreSQLHelper{},
-// 			"fixtures/customers.yml", "fixtures/orders.yml")
-//			// add as many files you want
-func LoadFixtureFiles(db *sql.DB, h Helper, files ...string) error {
-	var fixtureFiles []*fixtureFile
-	var err error
-	for _, f := range files {
+func fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
+	var (
+		fixtureFiles []*fixtureFile
+		err          error
+	)
+
+	for _, f := range fileNames {
 		fixture := &fixtureFile{
 			path:     f,
 			fileName: filepath.Base(f),
 		}
 		fixture.content, err = ioutil.ReadFile(fixture.path)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		fixtureFiles = append(fixtureFiles, fixture)
 	}
 
-	return loadFixtures(db, h, fixtureFiles...)
-}
-
-// LoadFixtures loads all fixtures in a given folder into the database:
-// 		LoadFixtures("myfixturesfolder", db, &PostgreSQLHelper{})
-func LoadFixtures(foldername string, db *sql.DB, h Helper) error {
-	fixturesFiles, err := getYmlFiles(foldername)
-	if err != nil {
-		return err
-	}
-
-	return loadFixtures(db, h, fixturesFiles...)
-}
-
-func loadFixtures(db *sql.DB, h Helper, fixturesFiles ...*fixtureFile) error {
-	if !skipDatabaseNameCheck {
-		if !dbnameRegexp.MatchString(h.databaseName(db)) {
-			return errNotTestDatabase
-		}
-	}
-
-	err := h.disableReferentialIntegrity(db, func(tx *sql.Tx) error {
-		for _, file := range fixturesFiles {
-			err := file.delete(tx, h)
-			if err != nil {
-				return err
-			}
-
-			err = h.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
-				return file.insert(tx, h)
-			})
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	return err
+	return fixtureFiles, nil
 }
