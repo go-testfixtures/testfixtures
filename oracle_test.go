@@ -12,7 +12,7 @@ func init() {
 			"oci8",
 			"ORACLE_CONN_STRING",
 			"testdata/schema/oracle.sql",
-			&OracleHelper{},
+			&Oracle{},
 		},
 	)
 }

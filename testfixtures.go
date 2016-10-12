@@ -33,12 +33,12 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
 }
 
-func (f *fixtureFile) delete(tx *sql.Tx, h DataBaseHelper) error {
+func (f *fixtureFile) delete(tx *sql.Tx, h Helper) error {
 	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension())))
 	return err
 }
 
-func (f *fixtureFile) buildInsertSQL(h DataBaseHelper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
+func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
 	var sqlColumns string
 	var sqlValues string
 	i := 1
@@ -77,7 +77,7 @@ func (f *fixtureFile) buildInsertSQL(h DataBaseHelper, record map[interface{}]in
 	return
 }
 
-func (f *fixtureFile) insert(tx *sql.Tx, h DataBaseHelper) error {
+func (f *fixtureFile) insert(tx *sql.Tx, h Helper) error {
 	var rows interface{}
 	err := yaml.Unmarshal(f.content, &rows)
 	if err != nil {
@@ -154,7 +154,7 @@ func getYmlFiles(foldername string) ([]*fixtureFile, error) {
 // 		LoadFixtureFiles(db, &PostgreSQLHelper{},
 // 			"fixtures/customers.yml", "fixtures/orders.yml")
 //			// add as many files you want
-func LoadFixtureFiles(db *sql.DB, h DataBaseHelper, files ...string) error {
+func LoadFixtureFiles(db *sql.DB, h Helper, files ...string) error {
 	var fixtureFiles []*fixtureFile
 	var err error
 	for _, f := range files {
@@ -174,7 +174,7 @@ func LoadFixtureFiles(db *sql.DB, h DataBaseHelper, files ...string) error {
 
 // LoadFixtures loads all fixtures in a given folder into the database:
 // 		LoadFixtures("myfixturesfolder", db, &PostgreSQLHelper{})
-func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
+func LoadFixtures(foldername string, db *sql.DB, h Helper) error {
 	fixturesFiles, err := getYmlFiles(foldername)
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func LoadFixtures(foldername string, db *sql.DB, h DataBaseHelper) error {
 	return loadFixtures(db, h, fixturesFiles...)
 }
 
-func loadFixtures(db *sql.DB, h DataBaseHelper, fixturesFiles ...*fixtureFile) error {
+func loadFixtures(db *sql.DB, h Helper, fixturesFiles ...*fixtureFile) error {
 	if !skipDatabaseNameCheck {
 		if !dbnameRegexp.MatchString(h.databaseName(db)) {
 			return errNotTestDatabase

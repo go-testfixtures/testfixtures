@@ -5,27 +5,27 @@ import (
 	"fmt"
 )
 
-// MySQLHelper is the MySQL helper for this package
-type MySQLHelper struct{}
+// MySQL is the MySQL helper for this package
+type MySQL struct{}
 
-func (*MySQLHelper) paramType() int {
+func (*MySQL) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*MySQLHelper) quoteKeyword(str string) string {
+func (*MySQL) quoteKeyword(str string) string {
 	return fmt.Sprintf("`%s`", str)
 }
 
-func (*MySQLHelper) databaseName(db *sql.DB) (dbName string) {
+func (*MySQL) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	return
 }
 
-func (*MySQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*MySQL) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
-func (h *MySQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// re-enable after load
 	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")
 

@@ -12,13 +12,13 @@ func init() {
 			"postgres",
 			"PG_CONN_STRING",
 			"testdata/schema/postgresql.sql",
-			&PostgreSQLHelper{},
+			&PostgreSQL{},
 		},
 		databaseTest{
 			"postgres",
 			"PG_CONN_STRING",
 			"testdata/schema/postgresql.sql",
-			&PostgreSQLHelper{UseAlterConstraint: true},
+			&PostgreSQL{UseAlterConstraint: true},
 		},
 	)
 }

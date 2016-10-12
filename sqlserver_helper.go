@@ -5,24 +5,24 @@ import (
 	"fmt"
 )
 
-// SQLServerHelper is the helper for SQL Server for this package.
+// SQLServer is the helper for SQL Server for this package.
 // SQL Server >= 2008 is required.
-type SQLServerHelper struct{}
+type SQLServer struct{}
 
-func (*SQLServerHelper) paramType() int {
+func (*SQLServer) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLServerHelper) quoteKeyword(str string) string {
+func (*SQLServer) quoteKeyword(str string) string {
 	return fmt.Sprintf("[%s]", str)
 }
 
-func (*SQLServerHelper) databaseName(db *sql.DB) (dbname string) {
+func (*SQLServer) databaseName(db *sql.DB) (dbname string) {
 	db.QueryRow("SELECT DB_NAME()").Scan(&dbname)
 	return
 }
 
-func (*SQLServerHelper) getTables(db *sql.DB) ([]string, error) {
+func (*SQLServer) getTables(db *sql.DB) ([]string, error) {
 	rows, err := db.Query("SELECT table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (*SQLServerHelper) getTables(db *sql.DB) ([]string, error) {
 	return tables, nil
 }
 
-func (*SQLServerHelper) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
+func (*SQLServer) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
 	sql := `
 SELECT COUNT(*)
 FROM SYS.IDENTITY_COLUMNS
@@ -50,7 +50,7 @@ WHERE OBJECT_NAME(OBJECT_ID) = ?
 
 }
 
-func (h *SQLServerHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	if h.tableHasIdentityColumn(tx, tableName) {
 		defer tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
 		_, err := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON", h.quoteKeyword(tableName)))
@@ -61,7 +61,7 @@ func (h *SQLServerHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn fu
 	return fn()
 }
 
-func (h *SQLServerHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tables, err := h.getTables(db)
 	if err != nil {
 		return err

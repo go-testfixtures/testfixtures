@@ -19,8 +19,8 @@ var (
 
 type loadFunction func(tx *sql.Tx) error
 
-// DataBaseHelper is the generic interface for the database helper
-type DataBaseHelper interface {
+// Helper is the generic interface for the database helper
+type Helper interface {
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
 	databaseName(*sql.DB) string

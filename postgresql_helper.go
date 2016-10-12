@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// PostgreSQLHelper is the PG helper for this package
-type PostgreSQLHelper struct {
+// PostgreSQL is the PG helper for this package
+type PostgreSQL struct {
 	// UseAlterConstraint If true, the contraint disabling will do
 	// using ALTER CONTRAINT sintax, only allowed in PG >= 9.4.
 	// If false, the constraint disabling will use DISABLE TRIGGER ALL,
@@ -19,24 +19,24 @@ type pgContraint struct {
 	constraintName string
 }
 
-func (*PostgreSQLHelper) paramType() int {
+func (*PostgreSQL) paramType() int {
 	return paramTypeDollar
 }
 
-func (*PostgreSQLHelper) quoteKeyword(str string) string {
+func (*PostgreSQL) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", str)
 }
 
-func (*PostgreSQLHelper) databaseName(db *sql.DB) (dbName string) {
+func (*PostgreSQL) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT current_database()").Scan(&dbName)
 	return
 }
 
-func (*PostgreSQLHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*PostgreSQL) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
-func (h *PostgreSQLHelper) getTables(db *sql.DB) ([]string, error) {
+func (h *PostgreSQL) getTables(db *sql.DB) ([]string, error) {
 	var tables []string
 
 	sql := `
@@ -59,7 +59,7 @@ WHERE table_schema = 'public'
 	return tables, nil
 }
 
-func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
+func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 	var sequences []string
 
 	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
@@ -80,7 +80,7 @@ func (h *PostgreSQLHelper) getSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-func (*PostgreSQLHelper) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
+func (*PostgreSQL) getNonDeferrableConstraints(db *sql.DB) ([]pgContraint, error) {
 	var constraints []pgContraint
 
 	sql := `
@@ -105,7 +105,7 @@ WHERE constraint_type = 'FOREIGN KEY'
 	return constraints, nil
 }
 
-func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) error {
 	tables, err := h.getTables(db)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (h *PostgreSQLHelper) disableTriggers(db *sql.DB, loadFn loadFunction) erro
 	return err
 }
 
-func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) error {
 	nonDeferrableConstraints, err := h.getNonDeferrableConstraints(db)
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ func (h *PostgreSQLHelper) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunc
 	return err
 }
 
-func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// ensure sequences being reset after load
 	defer h.resetSequences(db)
 
@@ -199,7 +199,7 @@ func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFu
 	}
 }
 
-func (h *PostgreSQLHelper) resetSequences(db *sql.DB) error {
+func (h *PostgreSQL) resetSequences(db *sql.DB) error {
 	sequences, err := h.getSequences(db)
 	if err != nil {
 		return err

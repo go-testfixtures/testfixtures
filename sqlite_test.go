@@ -11,6 +11,6 @@ func init() {
 		"sqlite3",
 		"SQLITE_CONN_STRING",
 		"testdata/schema/sqlite.sql",
-		&SQLiteHelper{},
+		&SQLite{},
 	})
 }

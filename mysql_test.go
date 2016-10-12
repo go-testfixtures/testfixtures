@@ -12,7 +12,7 @@ func init() {
 			"mysql",
 			"MYSQL_CONN_STRING",
 			"testdata/schema/mysql.sql",
-			&MySQLHelper{},
+			&MySQL{},
 		},
 	)
 }

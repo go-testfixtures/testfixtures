@@ -6,32 +6,32 @@ import (
 	"strings"
 )
 
-// OracleHelper is the Oracle database helper for this package
-type OracleHelper struct{}
+// Oracle is the Oracle database helper for this package
+type Oracle struct{}
 
 type oracleConstraint struct {
 	tableName      string
 	constraintName string
 }
 
-func (*OracleHelper) paramType() int {
+func (*Oracle) paramType() int {
 	return paramTypeColon
 }
 
-func (*OracleHelper) quoteKeyword(str string) string {
+func (*Oracle) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", strings.ToUpper(str))
 }
 
-func (*OracleHelper) databaseName(db *sql.DB) (dbName string) {
+func (*Oracle) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT user FROM DUAL").Scan(&dbName)
 	return
 }
 
-func (*OracleHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*Oracle) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
-func (*OracleHelper) getEnabledContraints(db *sql.DB) ([]oracleConstraint, error) {
+func (*Oracle) getEnabledContraints(db *sql.DB) ([]oracleConstraint, error) {
 	constraints := make([]oracleConstraint, 0)
 	rows, err := db.Query(`
         SELECT table_name, constraint_name
@@ -51,7 +51,7 @@ func (*OracleHelper) getEnabledContraints(db *sql.DB) ([]oracleConstraint, error
 	return constraints, nil
 }
 
-func (*OracleHelper) getSequences(db *sql.DB) ([]string, error) {
+func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
 	sequences := make([]string, 0)
 	rows, err := db.Query("SELECT sequence_name FROM user_sequences")
 	if err != nil {
@@ -67,7 +67,7 @@ func (*OracleHelper) getSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-func (h *OracleHelper) resetSequences(db *sql.DB) error {
+func (h *Oracle) resetSequences(db *sql.DB) error {
 	sequences, err := h.getSequences(db)
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (h *OracleHelper) resetSequences(db *sql.DB) error {
 	return nil
 }
 
-func (h *OracleHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	constraints, err := h.getEnabledContraints(db)
 	if err != nil {
 		return err

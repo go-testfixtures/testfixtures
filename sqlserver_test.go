@@ -12,7 +12,7 @@ func init() {
 			"mssql",
 			"SQLSERVER_CONN_STRING",
 			"testdata/schema/sqlserver.sql",
-			&SQLServerHelper{},
+			&SQLServer{},
 		},
 	)
 }

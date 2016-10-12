@@ -20,7 +20,7 @@ func TestFixtureFile(t *testing.T) {
 	}
 }
 
-func assertCount(t *testing.T, db *sql.DB, h DataBaseHelper, table string, expectedCount int) {
+func assertCount(t *testing.T, db *sql.DB, h Helper, table string, expectedCount int) {
 	var count int
 
 	row := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", h.quoteKeyword(table)))
@@ -30,7 +30,7 @@ func assertCount(t *testing.T, db *sql.DB, h DataBaseHelper, table string, expec
 	}
 }
 
-func testLoadFixtures(t *testing.T, db *sql.DB, h DataBaseHelper) {
+func testLoadFixtures(t *testing.T, db *sql.DB, h Helper) {
 	err := LoadFixtures("testdata/fixtures", db, h)
 	if err != nil {
 		t.Errorf("Error on loading fixtures: %v", err)
@@ -70,7 +70,7 @@ var fixturesFiles = []string{
 	"testdata/fixtures/posts_tags.yml",
 }
 
-func testLoadFixtureFiles(t *testing.T, db *sql.DB, h DataBaseHelper) {
+func testLoadFixtureFiles(t *testing.T, db *sql.DB, h Helper) {
 	db.Exec("DELETE FROM %s", h.quoteKeyword("posts_tags"))
 	db.Exec("DELETE FROM %s", h.quoteKeyword("comments"))
 	db.Exec("DELETE FROM %s", h.quoteKeyword("posts"))
@@ -91,7 +91,7 @@ type databaseTest struct {
 	name       string
 	connEnv    string
 	schemaFile string
-	helper     DataBaseHelper
+	helper     Helper
 }
 
 var databases = []databaseTest{}
@@ -137,6 +137,12 @@ func TestLoadFixtures(t *testing.T) {
 func TestInterfaces(t *testing.T) {
 	// helpers should implement interface
 	helpers := []interface{}{
+		&PostgreSQL{},
+		&MySQL{},
+		&SQLite{},
+		&SQLServer{},
+		&Oracle{},
+
 		&PostgreSQLHelper{},
 		&MySQLHelper{},
 		&SQLiteHelper{},
@@ -144,7 +150,7 @@ func TestInterfaces(t *testing.T) {
 		&OracleHelper{},
 	}
 	for _, h := range helpers {
-		if _, ok := h.(DataBaseHelper); !ok {
+		if _, ok := h.(Helper); !ok {
 			t.Errorf("Helper doesn't implement interface")
 		}
 	}

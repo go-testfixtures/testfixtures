@@ -6,18 +6,18 @@ import (
 	"path/filepath"
 )
 
-// SQLiteHelper is the SQLite Helper for this package
-type SQLiteHelper struct{}
+// SQLite is the SQLite Helper for this package
+type SQLite struct{}
 
-func (*SQLiteHelper) paramType() int {
+func (*SQLite) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLiteHelper) quoteKeyword(str string) string {
+func (*SQLite) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", str)
 }
 
-func (*SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
+func (*SQLite) databaseName(db *sql.DB) (dbName string) {
 	var seq int
 	var main string
 	db.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
@@ -25,11 +25,11 @@ func (*SQLiteHelper) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
-func (*SQLiteHelper) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (*SQLite) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
 	return fn()
 }
 
-func (*SQLiteHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (*SQLite) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
