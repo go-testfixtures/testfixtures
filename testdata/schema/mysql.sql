@@ -7,21 +7,21 @@ CREATE TABLE posts (
 	id INT PRIMARY KEY AUTO_INCREMENT
 	,title VARCHAR(255) NOT NULL
 	,content TEXT NOT NULL
-	,created_at TIMESTAMP NOT NULL
-	,updated_at TIMESTAMP NOT NULL
+	,created_at TIMESTAMP NOT NULL DEFAULT NOW()
+	,updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE tags (
 	id INT PRIMARY KEY AUTO_INCREMENT
 	,name VARCHAR(255) NOT NULL
-	,created_at TIMESTAMP NOT NULL
-	,updated_at TIMESTAMP NOT NULL
+	,created_at TIMESTAMP NOT NULL DEFAULT NOW()
+	,updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE posts_tags (
 	post_id INT NOT NULL
 	,tag_id INT NOT NULL
-  ,PRIMARY KEY (post_id, tag_id)
+	,PRIMARY KEY (post_id, tag_id)
 	,FOREIGN KEY (post_id) REFERENCES posts (id)
 	,FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
@@ -32,7 +32,7 @@ CREATE TABLE comments (
 	,author_name VARCHAR(255) NOT NULL
 	,author_email VARCHAR(255) NOT NULL
 	,content TEXT NOT NULL
-	,created_at TIMESTAMP NOT NULL
-	,updated_at TIMESTAMP NOT NULL
+	,created_at TIMESTAMP NOT NULL DEFAULT NOW()
+	,updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 	,FOREIGN KEY (post_id) REFERENCES posts (id)
 );
