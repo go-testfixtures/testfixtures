@@ -28,7 +28,7 @@ the tests.
 First, get it:
 
 ```bash
-go get gopkg.in/testfixtures.v1/...
+go get -u gopkg.in/testfixtures.v2
 ```
 
 ## Usage
@@ -84,27 +84,37 @@ import (
     "log"
 
     _ "github.com/lib/pq"
-    "gopkg.in/testfixtures.v1"
+    "gopkg.in/testfixtures.v2"
 )
 
-const FixturesPath = "testdata/fixtures"
+var (
+    db *sql.DB
+	fixtures *testfixtures.Context
+)
 
 func TestMain(m *testing.M) {
+    var err error
+
     // Open connection with the test database.
     // Do NOT import fixtures in a production database!
     // Existing data would be deleted
-    db, err := sql.Open("postgres", "dbname=myapp_test")
+    db, err = sql.Open("postgres", "dbname=myapp_test")
     if err != nil {
         log.Fatal(err)
     }
+
+    // creating the context that hold the fixtures
+    // see about all compatible databases in this page below
+    c, err = testfixtures.NewFolder(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
+    if err != nil {
+        log.Fatal(err)
+	}
 
     os.Exit(m.Run())
 }
 
 func prepareTestDatabase() {
-    // see about all compatible databases in this page below
-    err := testfixtures.LoadFixtures(FixturesPath, db, &testfixtures.PostgreSQLHelper{})
-    if err != nil {
+    if err := fixtures.Load(); err != nil {
         log.Fatal(err)
     }
 }
@@ -125,12 +135,15 @@ func TestZ(t *testing.T) {
 }
 ```
 
-Alternatively, you can use the `LoadFixtureFiles` function, to specify which
+Alternatively, you can use the `NewFiles` function, to specify which
 files you want to load into the database:
 
 ```go
-err = testfixtures.LoadFixtureFiles(db, &PostgreSQLHelper{},
-	"fixtures/orders.yml", "fixtures/customers.yml") // add as many files you want
+fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
+    "fixtures/orders.yml",
+    "fixtures/customers.yml",
+    // add as many files you want
+)
 if err != nil {
 	log.Fatal(err)
 }
@@ -169,7 +182,7 @@ in PostgreSQL databases:
 This is the default approach. For that use:
 
 ```go
-&testfixtures.PostgreSQLHelper{}
+&testfixtures.PostgreSQL{}
 ```
 
 With the above snippet this package will use `DISABLE TRIGGER` to temporarily
@@ -188,7 +201,7 @@ PostgreSQL versions >= 9.4. Try this if you are getting foreign key violation
 errors with the previous approach. It is as simple as using:
 
 ```go
-&testfixtures.PostgreSQLHelper{UseAlterConstraint: true}
+&testfixtures.PostgreSQL{UseAlterConstraint: true}
 ```
 
 ### MySQL
@@ -198,7 +211,7 @@ Just make sure the connection string have
 set to true, and use:
 
 ```go
-&testfixtures.MySQLHelper{}
+&testfixtures.MySQL{}
 ```
 
 ### SQLite
@@ -210,7 +223,7 @@ SQLite is also supported. It is recommended to create foreign keys as
 recommended).
 
 ```go
-&testfixtures.SQLiteHelper{}
+&testfixtures.SQLite{}
 ```
 
 ### Microsoft SQL Server
@@ -220,7 +233,7 @@ are handled as well. Just make sure you are logged in with a user with
 `ALTER TABLE` permission.
 
 ```go
-&testfixtures.SQLServerHelper{}
+&testfixtures.SQLServer{}
 ```
 
 ### Oracle
@@ -228,7 +241,7 @@ are handled as well. Just make sure you are logged in with a user with
 Oracle is supported as well. Use:
 
 ```go
-&testfixtures.OracleHelper{}
+&testfixtures.Oracle{}
 ```
 
 ## Contributing
@@ -254,12 +267,33 @@ go test -tags oracle
 
 # running test for multiple databases at once
 go test -tags 'sqlite postgresql mysql'
+
+# running tests + benchmark
+go test -v -bench=. -tags postgresql
 ```
 
 Travis runs tests for PostgreSQL, MySQL and SQLite.
 
 To set the connection string of tests for each database, edit the `.env`
 file, but do not include the changes a in pull request.
+
+## Changes in v2
+
+A context was created to allow cache of some SQL statements. See in the
+documentation above how to use it.
+
+The helpers were renamed to have a smaller name:
+
+```go
+PostgreSQLHelper{} -> PostgreSQL{}
+MySQLHelper{}      -> MySQL{}
+SQLiteHelper{}     -> SQLite{}
+SQLServerHelper{}  -> SQLServer{}
+OracleHelper{}     -> Oracle{}
+```
+
+The old functions and helpers are still available for backward compatibility.
+See the file [deprecated.go](https://github.com/go-testfixtures/testfixtures/blob/master/LICENSE)
 
 ## Alternatives
 
