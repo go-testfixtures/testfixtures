@@ -9,11 +9,30 @@ import (
 // Oracle is the Oracle database helper for this package
 type Oracle struct {
 	baseHelper
+
+	enabledConstraints []oracleConstraint
+	sequences          []string
 }
 
 type oracleConstraint struct {
 	tableName      string
 	constraintName string
+}
+
+func (h *Oracle) init(db *sql.DB) error {
+	var err error
+
+	h.enabledConstraints, err = h.getEnabledConstraints(db)
+	if err != nil {
+		return err
+	}
+
+	h.sequences, err = h.getSequences(db)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (*Oracle) paramType() int {
@@ -33,7 +52,7 @@ func (*Oracle) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error)
 	return fn()
 }
 
-func (*Oracle) getEnabledContraints(db *sql.DB) ([]oracleConstraint, error) {
+func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 	constraints := make([]oracleConstraint, 0)
 	rows, err := db.Query(`
         SELECT table_name, constraint_name
@@ -70,12 +89,7 @@ func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
 }
 
 func (h *Oracle) resetSequences(db *sql.DB) error {
-	sequences, err := h.getSequences(db)
-	if err != nil {
-		return err
-	}
-
-	for _, sequence := range sequences {
+	for _, sequence := range h.sequences {
 		_, err := db.Exec(fmt.Sprintf("DROP SEQUENCE %s", h.quoteKeyword(sequence)))
 		if err != nil {
 			return err
@@ -89,21 +103,16 @@ func (h *Oracle) resetSequences(db *sql.DB) error {
 }
 
 func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
-	constraints, err := h.getEnabledContraints(db)
-	if err != nil {
-		return err
-	}
-
 	// re-enable after load
 	defer func() {
-		for _, c := range constraints {
+		for _, c := range h.enabledConstraints {
 			db.Exec(fmt.Sprintf("ALTER TABLE %s ENABLE CONSTRAINT %s", h.quoteKeyword(c.tableName), h.quoteKeyword(c.constraintName)))
 		}
 	}()
 
 	// disable foreign keys
-	for _, c := range constraints {
-		_, err = db.Exec(fmt.Sprintf("ALTER TABLE %s DISABLE CONSTRAINT %s", h.quoteKeyword(c.tableName), h.quoteKeyword(c.constraintName)))
+	for _, c := range h.enabledConstraints {
+		_, err := db.Exec(fmt.Sprintf("ALTER TABLE %s DISABLE CONSTRAINT %s", h.quoteKeyword(c.tableName), h.quoteKeyword(c.constraintName)))
 		if err != nil {
 			return err
 		}
