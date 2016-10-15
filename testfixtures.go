@@ -2,10 +2,12 @@ package testfixtures
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -32,13 +34,18 @@ type insertSQL struct {
 
 var (
 	// ErrWrongCastNotAMap is returned when a map is not a map[interface{}]interface{}
-	ErrWrongCastNotAMap = fmt.Errorf("Could not cast record: not a map[interface{}]interface{}")
+	ErrWrongCastNotAMap = errors.New("Could not cast record: not a map[interface{}]interface{}")
 
 	// ErrFileIsNotSliceOrMap is returned the the fixture file is not a slice or map.
-	ErrFileIsNotSliceOrMap = fmt.Errorf("The fixture file is not a slice or map")
+	ErrFileIsNotSliceOrMap = errors.New("The fixture file is not a slice or map")
 
 	// ErrKeyIsNotString is returned when a record is not of type string
-	ErrKeyIsNotString = fmt.Errorf("Record map key is not string")
+	ErrKeyIsNotString = errors.New("Record map key is not string")
+
+	// ErrNotTestDatabase is returned when the database name doesn't contains "test"
+	ErrNotTestDatabase = errors.New(`Loading aborted because the database name does not contains "test"`)
+
+	dbnameRegexp = regexp.MustCompile("(?i)test")
 )
 
 // NewFolder craetes a context for all fixtures in a given folder into the database:
@@ -102,7 +109,7 @@ func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, e
 func (c *Context) Load() error {
 	if !skipDatabaseNameCheck {
 		if !dbnameRegexp.MatchString(c.helper.databaseName(c.db)) {
-			return errNotTestDatabase
+			return ErrNotTestDatabase
 		}
 	}
 
