@@ -5,22 +5,22 @@ import (
 )
 
 type (
-	DataBaseHelper Helper
+	DataBaseHelper Helper // Deprecated: Use Helper instead
 
-	PostgreSQLHelper struct {
+	PostgreSQLHelper struct { // Deprecated: Use PostgreSQL{} instead
 		PostgreSQL
 		UseAlterConstraint bool
 	}
-	MySQLHelper struct {
+	MySQLHelper struct { // Deprecated: Use MySQL{} instead
 		MySQL
 	}
-	SQLiteHelper struct {
+	SQLiteHelper struct { // Deprecated: Use SQLite{} instead
 		SQLite
 	}
-	SQLServerHelper struct {
+	SQLServerHelper struct { // Deprecated: Use SQLServer{} instead
 		SQLServer
 	}
-	OracleHelper struct {
+	OracleHelper struct { // Deprecated: Use Oracle{} instead
 		Oracle
 	}
 )
@@ -31,11 +31,13 @@ func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFu
 }
 
 // LoadFixtureFiles load all specified fixtures files into database:
-// 		LoadFixtureFiles(db, &PostgreSQLHelper{},
+// 		LoadFixtureFiles(db, &PostgreSQL{},
 // 			"fixtures/customers.yml", "fixtures/orders.yml")
 //			// add as many files you want
-func LoadFixtureFiles(db *sql.DB, h Helper, files ...string) error {
-	c, err := NewFiles(db, h, files...)
+//
+// Deprecated: Use NewFiles() and Load() instead.
+func LoadFixtureFiles(db *sql.DB, helper Helper, files ...string) error {
+	c, err := NewFiles(db, helper, files...)
 	if err != nil {
 		return err
 	}
@@ -44,9 +46,11 @@ func LoadFixtureFiles(db *sql.DB, h Helper, files ...string) error {
 }
 
 // LoadFixtures loads all fixtures in a given folder into the database:
-// 		LoadFixtures("myfixturesfolder", db, &PostgreSQLHelper{})
-func LoadFixtures(folderName string, db *sql.DB, h Helper) error {
-	c, err := NewFolder(db, h, folderName)
+// 		LoadFixtures("myfixturesfolder", db, &PostgreSQL{})
+//
+// Deprecated: Use NewFolder() and Load() instead.
+func LoadFixtures(folderName string, db *sql.DB, helper Helper) error {
+	c, err := NewFolder(db, helper, folderName)
 	if err != nil {
 		return err
 	}

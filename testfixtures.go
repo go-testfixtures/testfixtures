@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Context holds the fixtures to be loaded in the database.
 type Context struct {
 	db            *sql.DB
 	helper        Helper
@@ -40,6 +41,8 @@ var (
 	ErrKeyIsNotString = fmt.Errorf("Record map key is not string")
 )
 
+// NewFolder craetes a context for all fixtures in a given folder into the database:
+//     NewFolder(db, &PostgreSQL{}, "my/fixtures/folder")
 func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
 	fixtures, err := fixturesFromFolder(folderName)
 	if err != nil {
@@ -54,6 +57,12 @@ func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
 	return c, nil
 }
 
+// NewFiles craetes a context for all specified fixtures files into database:
+//     NewFiles(db, &PostgreSQL{},
+//         "fixtures/customers.yml",
+//         "fixtures/orders.yml"
+//         // add as many files you want
+//     )
 func NewFiles(db *sql.DB, helper Helper, fileNames ...string) (*Context, error) {
 	fixtures, err := fixturesFromFiles(fileNames...)
 	if err != nil {
@@ -86,6 +95,10 @@ func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, e
 	return c, nil
 }
 
+// Load wipes and after load all fixtures in the database.
+//     if err := fixtures.Load(); err != nil {
+//         log.Fatal(err)
+//     }
 func (c *Context) Load() error {
 	if !skipDatabaseNameCheck {
 		if !dbnameRegexp.MatchString(c.helper.databaseName(c.db)) {
