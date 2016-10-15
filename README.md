@@ -293,7 +293,7 @@ OracleHelper{}     -> Oracle{}
 ```
 
 The old functions and helpers are still available for backward compatibility.
-See the file [deprecated.go](https://github.com/go-testfixtures/testfixtures/blob/master/LICENSE)
+See the file [deprecated.go](https://github.com/go-testfixtures/testfixtures/blob/master/deprecated.go)
 
 ## Alternatives
 
