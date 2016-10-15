@@ -52,6 +52,10 @@ func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
 		fixturesFiles: fixtures,
 	}
 
+	if err = c.helper.init(c.db); err != nil {
+		return nil, err
+	}
+
 	if err := c.buildInsertSQLs(); err != nil {
 		return nil, err
 	}
@@ -69,6 +73,10 @@ func NewFiles(db *sql.DB, helper Helper, fileNames ...string) (*Context, error) 
 		db:            db,
 		helper:        helper,
 		fixturesFiles: fixtures,
+	}
+
+	if err = c.helper.init(c.db); err != nil {
+		return nil, err
 	}
 
 	if err := c.buildInsertSQLs(); err != nil {

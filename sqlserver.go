@@ -7,7 +7,9 @@ import (
 
 // SQLServer is the helper for SQL Server for this package.
 // SQL Server >= 2008 is required.
-type SQLServer struct{}
+type SQLServer struct {
+	baseHelper
+}
 
 func (*SQLServer) paramType() int {
 	return paramTypeQuestion

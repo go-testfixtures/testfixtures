@@ -7,7 +7,9 @@ import (
 )
 
 // SQLite is the SQLite Helper for this package
-type SQLite struct{}
+type SQLite struct {
+	baseHelper
+}
 
 func (*SQLite) paramType() int {
 	return paramTypeQuestion

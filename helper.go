@@ -21,9 +21,16 @@ type loadFunction func(tx *sql.Tx) error
 
 // Helper is the generic interface for the database helper
 type Helper interface {
+	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
 	databaseName(*sql.DB) string
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
+}
+
+type baseHelper struct{}
+
+func (*baseHelper) init(_ *sql.DB) error {
+	return nil
 }

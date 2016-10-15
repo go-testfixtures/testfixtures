@@ -7,7 +7,9 @@ import (
 )
 
 // Oracle is the Oracle database helper for this package
-type Oracle struct{}
+type Oracle struct {
+	baseHelper
+}
 
 type oracleConstraint struct {
 	tableName      string

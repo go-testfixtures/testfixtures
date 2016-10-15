@@ -6,7 +6,9 @@ import (
 )
 
 // MySQL is the MySQL helper for this package
-type MySQL struct{}
+type MySQL struct {
+	baseHelper
+}
 
 func (*MySQL) paramType() int {
 	return paramTypeQuestion
