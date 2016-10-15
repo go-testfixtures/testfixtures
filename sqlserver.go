@@ -9,6 +9,19 @@ import (
 // SQL Server >= 2008 is required.
 type SQLServer struct {
 	baseHelper
+
+	tables []string
+}
+
+func (h *SQLServer) init(db *sql.DB) error {
+	var err error
+
+	h.tables, err = h.getTables(db)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (*SQLServer) paramType() int {
@@ -64,15 +77,10 @@ func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 }
 
 func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
-	tables, err := h.getTables(db)
-	if err != nil {
-		return err
-	}
-
 	// ensure the triggers are re-enable after all
 	defer func() {
 		sql := ""
-		for _, table := range tables {
+		for _, table := range h.tables {
 			sql += fmt.Sprintf("ALTER TABLE %s WITH CHECK CHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 		}
 		_, err := db.Exec(sql)
@@ -82,10 +90,10 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	}()
 
 	sql := ""
-	for _, table := range tables {
+	for _, table := range h.tables {
 		sql += fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 	}
-	_, err = db.Exec(sql)
+	_, err := db.Exec(sql)
 	if err != nil {
 		return err
 	}
