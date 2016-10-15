@@ -7,6 +7,8 @@ import (
 
 // PostgreSQL is the PG helper for this package
 type PostgreSQL struct {
+	baseHelper
+
 	// UseAlterConstraint If true, the contraint disabling will do
 	// using ALTER CONTRAINT sintax, only allowed in PG >= 9.4.
 	// If false, the constraint disabling will use DISABLE TRIGGER ALL,
@@ -48,17 +50,9 @@ func (*PostgreSQL) paramType() int {
 	return paramTypeDollar
 }
 
-func (*PostgreSQL) quoteKeyword(str string) string {
-	return fmt.Sprintf("\"%s\"", str)
-}
-
 func (*PostgreSQL) databaseName(db *sql.DB) (dbName string) {
 	db.QueryRow("SELECT current_database()").Scan(&dbName)
 	return
-}
-
-func (*PostgreSQL) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
-	return fn()
 }
 
 func (h *PostgreSQL) getTables(db *sql.DB) ([]string, error) {

@@ -48,10 +48,6 @@ func (*Oracle) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
-func (*Oracle) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
-	return fn()
-}
-
 func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 	constraints := make([]oracleConstraint, 0)
 	rows, err := db.Query(`

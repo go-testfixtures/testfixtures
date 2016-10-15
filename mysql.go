@@ -23,10 +23,6 @@ func (*MySQL) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
-func (*MySQL) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
-	return fn()
-}
-
 func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// re-enable after load
 	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")

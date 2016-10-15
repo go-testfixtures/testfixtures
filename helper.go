@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"regexp"
 )
 
@@ -33,4 +34,12 @@ type baseHelper struct{}
 
 func (*baseHelper) init(_ *sql.DB) error {
 	return nil
+}
+
+func (*baseHelper) quoteKeyword(str string) string {
+	return fmt.Sprintf(`"%s"`, str)
+}
+
+func (*baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) error {
+	return fn()
 }
