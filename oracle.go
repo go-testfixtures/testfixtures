@@ -123,14 +123,12 @@ func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) er
 		return err
 	}
 
-	err = loadFn(tx)
-	if err != nil {
+	if err = loadFn(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = tx.Commit()
-	if err != nil {
+	if err = tx.Commit(); err != nil {
 		return err
 	}
 

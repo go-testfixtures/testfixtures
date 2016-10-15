@@ -83,8 +83,7 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 		for _, table := range h.tables {
 			sql += fmt.Sprintf("ALTER TABLE %s WITH CHECK CHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 		}
-		_, err := db.Exec(sql)
-		if err != nil {
+		if _, err := db.Exec(sql); err != nil {
 			fmt.Printf("Error on re-enabling constraints: %v\n", err)
 		}
 	}()
@@ -93,8 +92,7 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	for _, table := range h.tables {
 		sql += fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 	}
-	_, err := db.Exec(sql)
-	if err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -103,8 +101,7 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 		return err
 	}
 
-	err = loadFn(tx)
-	if err != nil {
+	if err = loadFn(tx); err != nil {
 		tx.Rollback()
 		return err
 	}

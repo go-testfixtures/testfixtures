@@ -96,8 +96,7 @@ func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var sequence string
-		err = rows.Scan(&sequence)
-		if err != nil {
+		if err = rows.Scan(&sequence); err != nil {
 			return nil, err
 		}
 		sequences = append(sequences, sequence)
@@ -149,19 +148,16 @@ func (h *PostgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) error {
 	for _, table := range h.tables {
 		sql += fmt.Sprintf("ALTER TABLE %s DISABLE TRIGGER ALL;", h.quoteKeyword(table))
 	}
-	_, err = tx.Exec(sql)
-	if err != nil {
+	if _, err = tx.Exec(sql); err != nil {
 		return err
 	}
 
-	err = loadFn(tx)
-	if err != nil {
+	if err = loadFn(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = tx.Commit()
-	return err
+	return tx.Commit()
 }
 
 func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) error {
@@ -178,8 +174,7 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 	for _, constraint := range h.nonDeferrableConstraints {
 		sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s DEFERRABLE;", h.quoteKeyword(constraint.tableName), h.quoteKeyword(constraint.constraintName))
 	}
-	_, err := db.Exec(sql)
-	if err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -188,19 +183,16 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 		return err
 	}
 
-	_, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED")
-	if err != nil {
+	if _, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED"); err != nil {
 		return nil
 	}
 
-	err = loadFn(tx)
-	if err != nil {
+	if err = loadFn(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = tx.Commit()
-	return err
+	return tx.Commit()
 }
 
 func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {

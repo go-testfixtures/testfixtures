@@ -36,17 +36,14 @@ func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) err
 		return err
 	}
 
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0")
-	if err != nil {
+	if _, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0"); err != nil {
 		return err
 	}
 
-	err = loadFn(tx)
-	if err != nil {
+	if err = loadFn(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = tx.Commit()
-	return err
+	return tx.Commit()
 }
