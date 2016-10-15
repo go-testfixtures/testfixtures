@@ -99,20 +99,24 @@ func assertCount(t *testing.T, db *sql.DB, h Helper, table string, expectedCount
 	}
 }
 
-func testLoadFixtures(t *testing.T, db *sql.DB, h Helper) {
-	err := LoadFixtures("testdata/fixtures", db, h)
+func testLoadFixtures(t *testing.T, db *sql.DB, helper Helper) {
+	c, err := NewFolder(db, helper, "testdata/fixtures")
 	if err != nil {
+		t.Errorf("Error creating context: %v", err)
+	}
+
+	if err := c.Load(); err != nil {
 		t.Errorf("Error on loading fixtures: %v", err)
 	}
 
-	assertCount(t, db, h, "posts", 2)
-	assertCount(t, db, h, "comments", 4)
-	assertCount(t, db, h, "tags", 3)
-	assertCount(t, db, h, "posts_tags", 2)
+	assertCount(t, db, helper, "posts", 2)
+	assertCount(t, db, helper, "comments", 4)
+	assertCount(t, db, helper, "tags", 3)
+	assertCount(t, db, helper, "posts_tags", 2)
 
 	// this insert is to test if the PostgreSQL sequences were reset
 	var sql string
-	switch h.paramType() {
+	switch helper.paramType() {
 	case paramTypeDollar:
 		sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)"
 	case paramTypeQuestion:
@@ -132,26 +136,30 @@ func testLoadFixtures(t *testing.T, db *sql.DB, h Helper) {
 	}
 }
 
-var fixturesFiles = []string{
-	"testdata/fixtures/posts.yml",
-	"testdata/fixtures/comments.yml",
-	"testdata/fixtures/tags.yml",
-	"testdata/fixtures/posts_tags.yml",
-}
+func testLoadFixtureFiles(t *testing.T, db *sql.DB, helper Helper) {
+	tables := []string{"posts_tags", "comments", "posts", "tags"}
+	for _, table := range tables {
+		db.Exec("DELETE FROM %s", helper.quoteKeyword(table))
+	}
 
-func testLoadFixtureFiles(t *testing.T, db *sql.DB, h Helper) {
-	db.Exec("DELETE FROM %s", h.quoteKeyword("posts_tags"))
-	db.Exec("DELETE FROM %s", h.quoteKeyword("comments"))
-	db.Exec("DELETE FROM %s", h.quoteKeyword("posts"))
-	db.Exec("DELETE FROM %s", h.quoteKeyword("tags"))
+	fixturesFiles := []string{
+		"testdata/fixtures/posts.yml",
+		"testdata/fixtures/comments.yml",
+		"testdata/fixtures/tags.yml",
+		"testdata/fixtures/posts_tags.yml",
+	}
 
-	err := LoadFixtureFiles(db, h, fixturesFiles...)
+	c, err := NewFiles(db, helper, fixturesFiles...)
 	if err != nil {
+		t.Errorf("Error on creating context: %v", err)
+	}
+
+	if err := c.Load(); err != nil {
 		t.Errorf("Error on loading fixtures: %v", err)
 	}
 
-	assertCount(t, db, h, "posts", 2)
-	assertCount(t, db, h, "comments", 4)
-	assertCount(t, db, h, "tags", 3)
-	assertCount(t, db, h, "posts_tags", 2)
+	assertCount(t, db, helper, "posts", 2)
+	assertCount(t, db, helper, "comments", 4)
+	assertCount(t, db, helper, "tags", 3)
+	assertCount(t, db, helper, "posts_tags", 2)
 }
