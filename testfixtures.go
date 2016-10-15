@@ -48,7 +48,7 @@ var (
 	dbnameRegexp = regexp.MustCompile("(?i)test")
 )
 
-// NewFolder craetes a context for all fixtures in a given folder into the database:
+// NewFolder creates a context for all fixtures in a given folder into the database:
 //     NewFolder(db, &PostgreSQL{}, "my/fixtures/folder")
 func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
 	fixtures, err := fixturesFromFolder(folderName)
@@ -64,7 +64,7 @@ func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
 	return c, nil
 }
 
-// NewFiles craetes a context for all specified fixtures files into database:
+// NewFiles creates a context for all specified fixtures files into database:
 //     NewFiles(db, &PostgreSQL{},
 //         "fixtures/customers.yml",
 //         "fixtures/orders.yml"
