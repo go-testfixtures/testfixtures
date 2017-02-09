@@ -105,7 +105,7 @@ func TestMain(m *testing.M) {
 
     // creating the context that hold the fixtures
     // see about all compatible databases in this page below
-    c, err = testfixtures.NewFolder(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
+    fixtures, err = testfixtures.NewFolder(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
     if err != nil {
         log.Fatal(err)
 	}
