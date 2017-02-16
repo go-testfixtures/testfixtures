@@ -42,12 +42,14 @@ func (*SQLServer) getTables(db *sql.DB) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	tables := make([]string, 0)
 	defer rows.Close()
+
+	var tables []string
 	for rows.Next() {
 		var table string
-		rows.Scan(&table)
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
 		tables = append(tables, table)
 	}
 	return tables, nil
@@ -55,10 +57,10 @@ func (*SQLServer) getTables(db *sql.DB) ([]string, error) {
 
 func (*SQLServer) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
 	sql := `
-SELECT COUNT(*)
-FROM SYS.IDENTITY_COLUMNS
-WHERE OBJECT_NAME(OBJECT_ID) = ?
-`
+		SELECT COUNT(*)
+		FROM SYS.IDENTITY_COLUMNS
+		WHERE OBJECT_NAME(OBJECT_ID) = ?
+	`
 	var count int
 	tx.QueryRow(sql, tableName).Scan(&count)
 	return count > 0
@@ -79,7 +81,7 @@ func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// ensure the triggers are re-enable after all
 	defer func() {
-		sql := ""
+		var sql string
 		for _, table := range h.tables {
 			sql += fmt.Sprintf("ALTER TABLE %s WITH CHECK CHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 		}
@@ -88,7 +90,7 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 		}
 	}()
 
-	sql := ""
+	var sql string
 	for _, table := range h.tables {
 		sql += fmt.Sprintf("ALTER TABLE %s NOCHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 	}

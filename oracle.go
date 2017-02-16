@@ -49,17 +49,18 @@ func (*Oracle) databaseName(db *sql.DB) (dbName string) {
 }
 
 func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
-	constraints := make([]oracleConstraint, 0)
+	var constraints []oracleConstraint
 	rows, err := db.Query(`
-        SELECT table_name, constraint_name
-        FROM user_constraints
-        WHERE constraint_type = 'R'
-          AND status = 'ENABLED'
-    `)
+		SELECT table_name, constraint_name
+		FROM user_constraints
+		WHERE constraint_type = 'R'
+		  AND status = 'ENABLED'
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var constraint oracleConstraint
 		rows.Scan(&constraint.tableName, &constraint.constraintName)
@@ -69,16 +70,18 @@ func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 }
 
 func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
-	sequences := make([]string, 0)
+	var sequences []string
 	rows, err := db.Query("SELECT sequence_name FROM user_sequences")
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
+
 	for rows.Next() {
 		var sequence string
-		rows.Scan(&sequence)
+		if err = rows.Scan(&sequence); err != nil {
+			return nil, err
+		}
 		sequences = append(sequences, sequence)
 	}
 	return sequences, nil

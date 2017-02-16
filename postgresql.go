@@ -59,20 +59,22 @@ func (h *PostgreSQL) getTables(db *sql.DB) ([]string, error) {
 	var tables []string
 
 	sql := `
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_type = 'BASE TABLE';
-`
+		SELECT table_name
+		FROM information_schema.tables
+		WHERE table_schema = 'public'
+		  AND table_type = 'BASE TABLE';
+	`
 	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
+
 	for rows.Next() {
 		var table string
-		rows.Scan(&table)
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
 		tables = append(tables, table)
 	}
 	return tables, nil
@@ -86,8 +88,8 @@ func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
+
 	for rows.Next() {
 		var sequence string
 		if err = rows.Scan(&sequence); err != nil {
@@ -102,10 +104,11 @@ func (*PostgreSQL) getNonDeferrableConstraints(db *sql.DB) ([]pgConstraint, erro
 	var constraints []pgConstraint
 
 	sql := `
-SELECT table_name, constraint_name
-FROM information_schema.table_constraints
-WHERE constraint_type = 'FOREIGN KEY'
-  AND is_deferrable = 'NO'`
+		SELECT table_name, constraint_name
+		FROM information_schema.table_constraints
+		WHERE constraint_type = 'FOREIGN KEY'
+		  AND is_deferrable = 'NO'
+  	`
 	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
@@ -114,8 +117,7 @@ WHERE constraint_type = 'FOREIGN KEY'
 	defer rows.Close()
 	for rows.Next() {
 		var constraint pgConstraint
-		err = rows.Scan(&constraint.tableName, &constraint.constraintName)
-		if err != nil {
+		if err = rows.Scan(&constraint.tableName, &constraint.constraintName); err != nil {
 			return nil, err
 		}
 		constraints = append(constraints, constraint)
@@ -178,7 +180,7 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 	}
 
 	if _, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED"); err != nil {
-		return nil
+		return err
 	}
 
 	if err = loadFn(tx); err != nil {
