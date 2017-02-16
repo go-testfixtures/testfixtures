@@ -221,8 +221,15 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 				sqlValues = append(sqlValues, fmt.Sprintf(":%d", i))
 			}
 		}
-		i++
+
+		// if map or array, convert to json
+		switch v := value.(type) {
+		case []interface{}, map[interface{}]interface{}:
+			value = recursiveToJSON(v)
+		}
+
 		values = append(values, value)
+		i++
 	}
 
 	sqlStr = fmt.Sprintf(

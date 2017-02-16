@@ -86,6 +86,10 @@ func TestLoadFixtures(t *testing.T) {
 
 		testLoadFixtures(t, db, database.helper)
 		testLoadFixtureFiles(t, db, database.helper)
+		if _, isPG := database.helper.(*PostgreSQL); isPG {
+			testLocalJSONColumnFixtures(t, db, database.helper)
+		}
+
 	}
 }
 
@@ -162,4 +166,19 @@ func testLoadFixtureFiles(t *testing.T, db *sql.DB, helper Helper) {
 	assertCount(t, db, helper, "comments", 4)
 	assertCount(t, db, helper, "tags", 3)
 	assertCount(t, db, helper, "posts_tags", 2)
+}
+
+func testLocalJSONColumnFixtures(t *testing.T, db *sql.DB, h Helper) {
+	c, err := NewFolder(db, h, "testdata/fixtures_json")
+	if err != nil {
+		t.Errorf("Error creating context: %v", err)
+		return
+	}
+
+	if err = c.Load(); err != nil {
+		t.Errorf("Error loading fixtures: %v", err)
+		return
+	}
+
+	assertCount(t, db, h, "users", 2)
 }
