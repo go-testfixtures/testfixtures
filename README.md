@@ -56,7 +56,7 @@ The file would look like this (it can have as many record you want):
 -
     id: 1
     post_id: 1
-    content: This post is awesome!
+    content: A comment...
     author_name: John Doe
     author_email: john@doe.com
     created_at: 2016-01-01 12:30:12
@@ -65,13 +65,30 @@ The file would look like this (it can have as many record you want):
 -
     id: 2
     post_id: 2
-    content: Are you kidding me?
+    content: Another comment...
     author_name: John Doe
     author_email: john@doe.com
     created_at: 2016-01-01 12:30:12
     updated_at: 2016-01-01 12:30:12
 
 # ...
+```
+
+For a JSONB column on PostgreSQL, you can pass an object or array and it will
+will be converted automatically to JSON:
+
+```yml
+-
+    id: 1
+    post_attributes:
+        author: John Due
+        author_email: john@due.com
+        title: "..."
+        tags:
+            - programming
+            - go
+            - testing
+        post: "..."
 ```
 
 Your tests would look like this:
