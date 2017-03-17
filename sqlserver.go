@@ -16,7 +16,7 @@ type SQLServer struct {
 func (h *SQLServer) init(db *sql.DB) error {
 	var err error
 
-	h.tables, err = h.getTables(db)
+	h.tables, err = h.tableNames(db)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (*SQLServer) databaseName(db *sql.DB) (dbname string) {
 	return
 }
 
-func (*SQLServer) getTables(db *sql.DB) ([]string, error) {
+func (*SQLServer) tableNames(db *sql.DB) ([]string, error) {
 	rows, err := db.Query("SELECT table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err

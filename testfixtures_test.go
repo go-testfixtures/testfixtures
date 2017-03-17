@@ -90,6 +90,22 @@ func TestLoadFixtures(t *testing.T) {
 			testLocalJSONColumnFixtures(t, db, database.helper)
 		}
 
+		// generate fixtures from database
+		dir, err := ioutil.TempDir(os.TempDir(), "testfixtures_test")
+		if err != nil {
+			t.Error(err)
+		}
+		if err := GenerateFixtures(db, database.helper, dir); err != nil {
+			t.Error(err)
+		}
+
+		// should be able to load generated fixtures
+		context, err := NewFolder(db, database.helper, dir)
+		if err != nil {
+			t.Error(err)
+		} else if err := context.Load(); err != nil {
+			t.Error(err)
+		}
 	}
 }
 

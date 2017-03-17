@@ -19,6 +19,7 @@ type Helper interface {
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
 	databaseName(*sql.DB) string
+	tableNames(*sql.DB) ([]string, error)
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 }
