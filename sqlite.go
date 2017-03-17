@@ -22,6 +22,29 @@ func (*SQLite) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (*SQLite) tableNames(db *sql.DB) ([]string, error) {
+	query := `
+		SELECT name
+		FROM sqlite_master
+		WHERE type='table';
+	`
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		tables = append(tables, table)
+	}
+	return tables, nil
+}
+
 func (*SQLite) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	tx, err := db.Begin()
 	if err != nil {

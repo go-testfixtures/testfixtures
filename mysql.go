@@ -23,6 +23,30 @@ func (*MySQL) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (h *MySQL) tableNames(db *sql.DB) ([]string, error) {
+	query := `
+		SELECT table_name
+		FROM information_schema.tables
+		WHERE table_schema=?;
+	`
+	rows, err := db.Query(query, h.databaseName(db))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		tables = append(tables, table)
+	}
+	return tables, nil
+
+}
+
 func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
 	// re-enable after load
 	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")

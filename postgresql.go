@@ -28,7 +28,7 @@ type pgConstraint struct {
 func (h *PostgreSQL) init(db *sql.DB) error {
 	var err error
 
-	h.tables, err = h.getTables(db)
+	h.tables, err = h.tableNames(db)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (*PostgreSQL) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
-func (h *PostgreSQL) getTables(db *sql.DB) ([]string, error) {
+func (h *PostgreSQL) tableNames(db *sql.DB) ([]string, error) {
 	var tables []string
 
 	sql := `
