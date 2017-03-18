@@ -234,7 +234,7 @@ errors with the previous approach. It is as simple as using:
 &testfixtures.PostgreSQL{UseAlterConstraint: true}
 ```
 
-### MySQL
+### MySQL / MariaDB
 
 Just make sure the connection string have
 [the multistatement parameter](https://github.com/go-sql-driver/mysql#multistatements)
