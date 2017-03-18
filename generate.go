@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Save generates fixtures for the current contents of a database, and saves
+// GenerateFixtures generates fixtures for the current contents of a database, and saves
 // them to the specified directory
 func GenerateFixtures(db *sql.DB, helper Helper, dir string) error {
 	tables, err := helper.tableNames(db)
