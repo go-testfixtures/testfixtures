@@ -18,15 +18,15 @@ func GenerateFixtures(db *sql.DB, helper Helper, dir string) error {
 	}
 	for _, table := range tables {
 		filename := path.Join(dir, table+".yml")
-		if err := generateFixturesForTable(db, table, filename); err != nil {
+		if err := generateFixturesForTable(db, helper, table, filename); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func generateFixturesForTable(db *sql.DB, table string, filename string) error {
-	query := fmt.Sprintf("SELECT * FROM %s;", table)
+func generateFixturesForTable(db *sql.DB, h Helper, table string, filename string) error {
+	query := fmt.Sprintf("SELECT * FROM %s", h.quoteKeyword(table))
 	rows, err := db.Query(query)
 	if err != nil {
 		return err

@@ -50,8 +50,8 @@ func (*Oracle) databaseName(db *sql.DB) (dbName string) {
 
 func (*Oracle) tableNames(db *sql.DB) ([]string, error) {
 	query := `
-		SELECT table_name
-		FROM all_tables
+		SELECT TABLE_NAME
+		FROM USER_TABLES
 	`
 	rows, err := db.Query(query)
 	if err != nil {

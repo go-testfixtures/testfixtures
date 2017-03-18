@@ -210,20 +210,16 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 		case paramTypeQuestion:
 			sqlValues = append(sqlValues, "?")
 		case paramTypeColon:
-			switch {
-			case isDateTime(value):
-				sqlValues = append(sqlValues, fmt.Sprintf("to_date(:%d, 'YYYY-MM-DD HH24:MI:SS')", i))
-			case isDate(value):
-				sqlValues = append(sqlValues, fmt.Sprintf("to_date(:%d, 'YYYY-MM-DD')", i))
-			case isTime(value):
-				sqlValues = append(sqlValues, fmt.Sprintf("to_date(:%d, 'HH24:MI:SS')", i))
-			default:
-				sqlValues = append(sqlValues, fmt.Sprintf(":%d", i))
-			}
+			sqlValues = append(sqlValues, fmt.Sprintf(":%d", i))
 		}
 
+		// if string, try convert to time
 		// if map or array, convert to json
 		switch v := value.(type) {
+		case string:
+			if t, err := tryStrToDate(v); err == nil {
+				value = t
+			}
 		case []interface{}, map[interface{}]interface{}:
 			value = recursiveToJSON(v)
 		}
