@@ -261,6 +261,22 @@ Oracle is supported as well. Use:
 &testfixtures.Oracle{}
 ```
 
+## Generation fixtures for a existent database (experimental)
+
+The following code will generate a YAML file for each table of the database in
+the given folder. It may be useful to boostrap a test scenario from a sample
+database of your app.
+
+```go
+err := testfixtures.GenerateFixtures(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
+if err != nil {
+	log.Fatalf("Error generating fixtures: %v", err)
+}
+```
+
+> This was thought to run in small sample databases. It will likely break
+if run in a production/big database.
+
 ## Contributing
 
 Tests were written to ensure everything work as expected. You can run the tests

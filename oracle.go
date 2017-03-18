@@ -48,6 +48,29 @@ func (*Oracle) databaseName(db *sql.DB) (dbName string) {
 	return
 }
 
+func (*Oracle) tableNames(db *sql.DB) ([]string, error) {
+	query := `
+		SELECT TABLE_NAME
+		FROM USER_TABLES
+	`
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		tables = append(tables, table)
+	}
+	return tables, nil
+
+}
+
 func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 	var constraints []oracleConstraint
 	rows, err := db.Query(`
