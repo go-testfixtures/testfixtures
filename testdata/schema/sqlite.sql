@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS posts_tags;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE posts (
 	id INT PRIMARY KEY
@@ -37,4 +38,9 @@ CREATE TABLE comments (
 	,created_at TIMESTAMP NOT NULL
 	,updated_at TIMESTAMP NOT NULL
 	,FOREIGN KEY (post_id) REFERENCES posts (id)
+);
+
+CREATE TABLE users (
+	id INT PRIMARY KEY
+	,attributes TEXT NOT NULL
 );
