@@ -74,8 +74,9 @@ The file would look like this (it can have as many record you want):
 # ...
 ```
 
-For a JSONB column on PostgreSQL, you can pass an object or array and it will
-will be converted automatically to JSON:
+An YAML object or array will be converted to JSON. It can be stored on a native
+JSON type like JSONB on PostgreSQL or as a TEXT or VARCHAR column on other
+databases.
 
 ```yml
 -
