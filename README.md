@@ -92,6 +92,18 @@ databases.
         post: "..."
 ```
 
+If you need to write raw SQL, probably to call a function, prefix the value
+of the column with `RAW=`:
+
+```yml
+-
+	id: 1
+	uuid_column: RAW=uuid_generate_v4()
+	postgis_type_column: RAW=ST_GeomFromText('params...')
+	created_at: RAW=NOW()
+	updated_at: RAW=NOW()
+```
+
 Your tests would look like this:
 
 ```go

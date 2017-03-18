@@ -204,6 +204,22 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 
 		sqlColumns = append(sqlColumns, h.quoteKeyword(keyStr))
 
+		// if string, try convert to SQL or time
+		// if map or array, convert to json
+		switch v := value.(type) {
+		case string:
+			if strings.HasPrefix(v, "RAW=") {
+				sqlValues = append(sqlValues, strings.TrimPrefix(v, "RAW="))
+				continue
+			}
+
+			if t, err := tryStrToDate(v); err == nil {
+				value = t
+			}
+		case []interface{}, map[interface{}]interface{}:
+			value = recursiveToJSON(v)
+		}
+
 		switch h.paramType() {
 		case paramTypeDollar:
 			sqlValues = append(sqlValues, fmt.Sprintf("$%d", i))
@@ -211,17 +227,6 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 			sqlValues = append(sqlValues, "?")
 		case paramTypeColon:
 			sqlValues = append(sqlValues, fmt.Sprintf(":%d", i))
-		}
-
-		// if string, try convert to time
-		// if map or array, convert to json
-		switch v := value.(type) {
-		case string:
-			if t, err := tryStrToDate(v); err == nil {
-				value = t
-			}
-		case []interface{}, map[interface{}]interface{}:
-			value = recursiveToJSON(v)
 		}
 
 		values = append(values, value)
