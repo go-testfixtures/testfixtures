@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"unicode/utf8"
 
 	"gopkg.in/yaml.v2"
 )
@@ -71,10 +72,11 @@ func generateFixturesForTable(db *sql.DB, h Helper, table string, filename strin
 }
 
 func convertValue(value interface{}) interface{} {
-	switch value.(type) {
+	switch v := value.(type) {
 	case []byte:
-		return string(value.([]byte))
-	default:
-		return value
+		if utf8.Valid(v) {
+			return string(v)
+		}
 	}
+	return value
 }
