@@ -5,30 +5,36 @@ import (
 )
 
 type (
+	// DataBaseHelper is the helper interface
 	// Deprecated: Use Helper instead
 	DataBaseHelper Helper
 
+	// PostgreSQLHelper is the PostgreSQL helper
 	// Deprecated: Use PostgreSQL{} instead
 	PostgreSQLHelper struct {
 		PostgreSQL
 		UseAlterConstraint bool
 	}
 
+	// MySQLHelper is the MySQL helper
 	// Deprecated: Use MySQL{} instead
 	MySQLHelper struct {
 		MySQL
 	}
 
+	// SQLiteHelper is the SQLite helper
 	// Deprecated: Use SQLite{} instead
 	SQLiteHelper struct {
 		SQLite
 	}
 
+	// SQLServerHelper is the SQLServer helper
 	// Deprecated: Use SQLServer{} instead
 	SQLServerHelper struct {
 		SQLServer
 	}
 
+	// OracleHelper is the Oracle helper
 	// Deprecated: Use Oracle{} instead
 	OracleHelper struct {
 		Oracle

@@ -197,9 +197,8 @@ func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 
 	if h.UseAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)
-	} else {
-		return h.disableTriggers(db, loadFn)
 	}
+	return h.disableTriggers(db, loadFn)
 }
 
 func (h *PostgreSQL) resetSequences(db *sql.DB) error {
