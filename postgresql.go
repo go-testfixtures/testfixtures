@@ -178,13 +178,13 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	if _, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED"); err != nil {
 		return err
 	}
 
 	if err = loadFn(tx); err != nil {
-		tx.Rollback()
 		return err
 	}
 

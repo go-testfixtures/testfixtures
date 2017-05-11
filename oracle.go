@@ -144,9 +144,9 @@ func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) er
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	if err = loadFn(tx); err != nil {
-		tx.Rollback()
 		return err
 	}
 

@@ -50,6 +50,7 @@ func (*SQLite) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) erro
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	if _, err = tx.Exec("PRAGMA defer_foreign_keys = ON"); err != nil {
 		return err

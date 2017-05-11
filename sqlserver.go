@@ -102,9 +102,9 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	if err = loadFn(tx); err != nil {
-		tx.Rollback()
 		return err
 	}
 
