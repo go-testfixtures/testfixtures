@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.6
+  - 1.8
 services:
   - postgresql
   - mysql
@@ -11,7 +11,6 @@ before_script:
   - psql -c 'CREATE DATABASE testfixtures_test;' -U postgres
 install:
   - go get -u -t -tags 'sqlite postgresql mysql' ./...
+  - go get -u -v github.com/go-task/task/cmd/task
 script:
-  - go test -tags mysql
-  - go test -tags postgresql
-  - go test -tags sqlite
+  - task lint test-free
