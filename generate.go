@@ -56,6 +56,9 @@ func generateFixturesForTable(db *sql.DB, h Helper, table string, filename strin
 		}
 		fixtures = append(fixtures, entryMap)
 	}
+	if err = rows.Err(); err != nil {
+		return err
+	}
 
 	f, err := os.Create(filename)
 	if err != nil {

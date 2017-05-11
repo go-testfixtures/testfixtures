@@ -67,6 +67,9 @@ func (*Oracle) tableNames(db *sql.DB) ([]string, error) {
 		}
 		tables = append(tables, table)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return tables, nil
 
 }
@@ -89,6 +92,9 @@ func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 		rows.Scan(&constraint.tableName, &constraint.constraintName)
 		constraints = append(constraints, constraint)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return constraints, nil
 }
 
@@ -106,6 +112,9 @@ func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
 			return nil, err
 		}
 		sequences = append(sequences, sequence)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 	return sequences, nil
 }

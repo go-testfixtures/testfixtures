@@ -43,6 +43,9 @@ func (h *MySQL) tableNames(db *sql.DB) ([]string, error) {
 		}
 		tables = append(tables, table)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return tables, nil
 
 }
