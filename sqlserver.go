@@ -70,9 +70,15 @@ func (*SQLServer) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
 
 }
 
-func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) error {
+func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) (err error) {
 	if h.tableHasIdentityColumn(tx, tableName) {
-		defer tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
+		defer func() {
+			_, err2 := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
+			if err2 != nil && err == nil {
+				err = err2
+			}
+		}()
+
 		_, err := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON", h.quoteKeyword(tableName)))
 		if err != nil {
 			return err
@@ -81,15 +87,15 @@ func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 	return fn()
 }
 
-func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure the triggers are re-enable after all
 	defer func() {
 		var sql string
 		for _, table := range h.tables {
 			sql += fmt.Sprintf("ALTER TABLE %s WITH CHECK CHECK CONSTRAINT ALL;", h.quoteKeyword(table))
 		}
-		if _, err := db.Exec(sql); err != nil {
-			fmt.Printf("Error on re-enabling constraints: %v\n", err)
+		if _, err2 := db.Exec(sql); err2 != nil && err == nil {
+			err = err2
 		}
 	}()
 

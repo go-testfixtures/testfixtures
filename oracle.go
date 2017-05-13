@@ -133,11 +133,14 @@ func (h *Oracle) resetSequences(db *sql.DB) error {
 	return nil
 }
 
-func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *Oracle) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// re-enable after load
 	defer func() {
 		for _, c := range h.enabledConstraints {
-			db.Exec(fmt.Sprintf("ALTER TABLE %s ENABLE CONSTRAINT %s", h.quoteKeyword(c.tableName), h.quoteKeyword(c.constraintName)))
+			_, err2 := db.Exec(fmt.Sprintf("ALTER TABLE %s ENABLE CONSTRAINT %s", h.quoteKeyword(c.tableName), h.quoteKeyword(c.constraintName)))
+			if err2 != nil && err == nil {
+				err = err2
+			}
 		}
 	}()
 

@@ -134,14 +134,16 @@ func (*PostgreSQL) getNonDeferrableConstraints(db *sql.DB) ([]pgConstraint, erro
 	return constraints, nil
 }
 
-func (h *PostgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) (err error) {
 	defer func() {
 		// re-enable triggers after load
 		var sql string
 		for _, table := range h.tables {
 			sql += fmt.Sprintf("ALTER TABLE %s ENABLE TRIGGER ALL;", h.quoteKeyword(table))
 		}
-		db.Exec(sql)
+		if _, err2 := db.Exec(sql); err2 != nil && err == nil {
+			err = err2
+		}
 	}()
 
 	tx, err := db.Begin()
@@ -165,14 +167,16 @@ func (h *PostgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) error {
 	return tx.Commit()
 }
 
-func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) (err error) {
 	defer func() {
 		// ensure constraint being not deferrable again after load
 		var sql string
 		for _, constraint := range h.nonDeferrableConstraints {
 			sql += fmt.Sprintf("ALTER TABLE %s ALTER CONSTRAINT %s NOT DEFERRABLE;", h.quoteKeyword(constraint.tableName), h.quoteKeyword(constraint.constraintName))
 		}
-		db.Exec(sql)
+		if _, err2 := db.Exec(sql); err2 != nil && err == nil {
+			err = err2
+		}
 	}()
 
 	var sql string
@@ -200,9 +204,13 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 	return tx.Commit()
 }
 
-func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure sequences being reset after load
-	defer h.resetSequences(db)
+	defer func() {
+		if err2 := h.resetSequences(db); err2 != nil && err == nil {
+			err = err2
+		}
+	}()
 
 	if h.UseAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)

@@ -50,9 +50,13 @@ func (h *MySQL) tableNames(db *sql.DB) ([]string, error) {
 
 }
 
-func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// re-enable after load
-	defer db.Exec("SET FOREIGN_KEY_CHECKS = 1")
+	defer func() {
+		if _, err2 := db.Exec("SET FOREIGN_KEY_CHECKS = 1"); err2 != nil && err == nil {
+			err = err2
+		}
+	}()
 
 	tx, err := db.Begin()
 	if err != nil {

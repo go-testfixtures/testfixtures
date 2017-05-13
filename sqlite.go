@@ -48,16 +48,22 @@ func (*SQLite) tableNames(db *sql.DB) ([]string, error) {
 	return tables, nil
 }
 
-func (*SQLite) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {
+func (*SQLite) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
+	defer func() {
+		if _, err2 := db.Exec("PRAGMA defer_foreign_keys = OFF"); err2 != nil && err == nil {
+			err = err2
+		}
+	}()
+
+	if _, err = db.Exec("PRAGMA defer_foreign_keys = ON"); err != nil {
+		return err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-
-	if _, err = tx.Exec("PRAGMA defer_foreign_keys = ON"); err != nil {
-		return err
-	}
 
 	if err = loadFn(tx); err != nil {
 		return err
