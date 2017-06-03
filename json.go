@@ -40,5 +40,5 @@ func recursiveToJSON(v interface{}) (r interface{}) {
 	default:
 		r = v
 	}
-	return r
+	return
 }
