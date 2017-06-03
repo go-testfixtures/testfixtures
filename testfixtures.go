@@ -122,7 +122,7 @@ func (c *Context) Load() error {
 			err := c.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for _, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
-						return err
+						return fmt.Errorf("%s, file:%s, query:%s", err.Error(), file.fileName, i.sql)
 					}
 				}
 				return nil
