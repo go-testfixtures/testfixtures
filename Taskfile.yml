@@ -17,6 +17,15 @@ test-free:
     - ^test-mysql
     - ^test-sqlite
 
+test-all:
+  desc: Test all databases (PG, MySQL, SQLite, SQLServer and Oracle)
+  cmds:
+    - ^test-pg
+    - ^test-mysql
+    - ^test-sqlite
+    - ^test-sqlserver
+    - ^test-oracle
+
 test-pg:
   desc: Test PostgreSQL
   cmds:
