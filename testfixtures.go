@@ -102,11 +102,17 @@ func (c *Context) Load() error {
 
 	err := c.helper.disableReferentialIntegrity(c.db, func(tx *sql.Tx) error {
 		for _, file := range c.fixturesFiles {
+			modified, err := c.helper.tableModified(c.db, file.fileNameWithoutExtension())
+			if err != nil {
+				return err
+			} else if !modified {
+				continue
+			}
 			if err := file.delete(tx, c.helper); err != nil {
 				return err
 			}
 
-			err := c.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+			err = c.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for j, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
 						return &InsertError{
@@ -126,7 +132,10 @@ func (c *Context) Load() error {
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	return c.helper.tablesLoaded(c.db)
 }
 
 func (c *Context) buildInsertSQLs() error {
