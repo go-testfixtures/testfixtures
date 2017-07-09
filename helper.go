@@ -20,7 +20,7 @@ type Helper interface {
 	paramType() int
 	databaseName(*sql.DB) string
 	tableNames(*sql.DB) ([]string, error)
-	tableModified(*sql.DB, string) (bool, error)
+	isTableModified(*sql.DB, string) (bool, error)
 	tablesLoaded(*sql.DB) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
@@ -40,7 +40,7 @@ func (*baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) erro
 	return fn()
 }
 
-func (*baseHelper) tableModified(_ *sql.DB, _ string) (bool, error) {
+func (*baseHelper) isTableModified(_ *sql.DB, _ string) (bool, error) {
 	return true, nil
 }
 

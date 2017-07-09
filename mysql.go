@@ -76,7 +76,7 @@ func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (er
 	return tx.Commit()
 }
 
-func (h *MySQL) tableModified(db *sql.DB, tableName string) (bool, error) {
+func (h *MySQL) isTableModified(db *sql.DB, tableName string) (bool, error) {
 	checksum, err := h.getChecksum(db, tableName)
 	if err != nil {
 		return true, err
@@ -104,16 +104,9 @@ func (h *MySQL) tablesLoaded(db *sql.DB) error {
 }
 
 func (h *MySQL) getChecksum(db *sql.DB, tableName string) (int64, error) {
-	rows, err := db.Query("CHECKSUM TABLE " + h.quoteKeyword(tableName))
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return 0, rows.Err()
-	}
+	row := db.QueryRow("CHECKSUM TABLE " + h.quoteKeyword(tableName))
 	var table string
 	var checksum int64
-	err = rows.Scan(&table, &checksum)
+	err := row.Scan(&table, &checksum)
 	return checksum, err
 }
