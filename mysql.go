@@ -8,6 +8,7 @@ import (
 // MySQL is the MySQL helper for this package
 type MySQL struct {
 	baseHelper
+	tableChecksums map[string]int64
 }
 
 func (*MySQL) paramType() int {
@@ -73,4 +74,39 @@ func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (er
 	}
 
 	return tx.Commit()
+}
+
+func (h *MySQL) isTableModified(db *sql.DB, tableName string) (bool, error) {
+	checksum, err := h.getChecksum(db, tableName)
+	if err != nil {
+		return true, err
+	}
+	previousChecksum, ok := h.tableChecksums[tableName]
+	return !ok || checksum != previousChecksum, nil
+}
+
+func (h *MySQL) tablesLoaded(db *sql.DB) error {
+	if h.tableChecksums != nil {
+		return nil
+	}
+	tableNames, err := h.tableNames(db)
+	if err != nil {
+		return err
+	}
+	h.tableChecksums = make(map[string]int64, len(tableNames))
+	for _, tableName := range tableNames {
+		h.tableChecksums[tableName], err = h.getChecksum(db, tableName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h *MySQL) getChecksum(db *sql.DB, tableName string) (int64, error) {
+	row := db.QueryRow("CHECKSUM TABLE " + h.quoteKeyword(tableName))
+	var table string
+	var checksum int64
+	err := row.Scan(&table, &checksum)
+	return checksum, err
 }
