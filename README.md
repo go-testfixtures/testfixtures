@@ -20,7 +20,7 @@ the execution of every test, the test database is cleaned and the fixture data
 is loaded into the database.
 
 The idea is running tests against a real database, instead of relying in mocks,
-which is boring to setup and may lead to production bugs not to being catch in
+which is boring to setup and may lead to production bugs not being caught in
 the tests.
 
 ## Installation
