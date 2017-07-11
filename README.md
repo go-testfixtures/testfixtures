@@ -53,23 +53,21 @@ The file would look like this (it can have as many record you want):
 
 ```yml
 # comments.yml
--
-    id: 1
-    post_id: 1
-    content: A comment...
-    author_name: John Doe
-    author_email: john@doe.com
-    created_at: 2016-01-01 12:30:12
-    updated_at: 2016-01-01 12:30:12
+- id: 1
+  post_id: 1
+  content: A comment...
+  author_name: John Doe
+  author_email: john@doe.com
+  created_at: 2016-01-01 12:30:12
+  updated_at: 2016-01-01 12:30:12
 
--
-    id: 2
-    post_id: 2
-    content: Another comment...
-    author_name: John Doe
-    author_email: john@doe.com
-    created_at: 2016-01-01 12:30:12
-    updated_at: 2016-01-01 12:30:12
+- id: 2
+  post_id: 2
+  content: Another comment...
+  author_name: John Doe
+  author_email: john@doe.com
+  created_at: 2016-01-01 12:30:12
+  updated_at: 2016-01-01 12:30:12
 
 # ...
 ```
@@ -79,29 +77,27 @@ JSON type like JSONB on PostgreSQL or as a TEXT or VARCHAR column on other
 databases.
 
 ```yml
--
-    id: 1
-    post_attributes:
-        author: John Due
-        author_email: john@due.com
-        title: "..."
-        tags:
-            - programming
-            - go
-            - testing
-        post: "..."
+- id: 1
+  post_attributes:
+    author: John Due
+    author_email: john@due.com
+    title: "..."
+    tags:
+      - programming
+      - go
+      - testing
+    post: "..."
 ```
 
 If you need to write raw SQL, probably to call a function, prefix the value
 of the column with `RAW=`:
 
 ```yml
--
-    id: 1
-    uuid_column: RAW=uuid_generate_v4()
-    postgis_type_column: RAW=ST_GeomFromText('params...')
-    created_at: RAW=NOW()
-    updated_at: RAW=NOW()
+- id: 1
+  uuid_column: RAW=uuid_generate_v4()
+  postgis_type_column: RAW=ST_GeomFromText('params...')
+  created_at: RAW=NOW()
+  updated_at: RAW=NOW()
 ```
 
 Your tests would look like this:
@@ -119,7 +115,7 @@ import (
 
 var (
     db *sql.DB
-	fixtures *testfixtures.Context
+    fixtures *testfixtures.Context
 )
 
 func TestMain(m *testing.M) {
@@ -138,7 +134,7 @@ func TestMain(m *testing.M) {
     fixtures, err = testfixtures.NewFolder(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
     if err != nil {
         log.Fatal(err)
-	}
+    }
 
     os.Exit(m.Run())
 }
@@ -175,7 +171,7 @@ fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
     // add as many files you want
 )
 if err != nil {
-	log.Fatal(err)
+    log.Fatal(err)
 }
 ```
 
@@ -283,7 +279,7 @@ database of your app.
 ```go
 err := testfixtures.GenerateFixtures(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
 if err != nil {
-	log.Fatalf("Error generating fixtures: %v", err)
+    log.Fatalf("Error generating fixtures: %v", err)
 }
 ```
 
@@ -351,8 +347,10 @@ and Ruby's Factory Girl
 - [go-txdb (Single transaction SQL driver for Go)][gotxdb]: Use a single
 database transaction for each functional test, so you can rollback to
 previous state between tests to have the same database state in all tests
-- [go-sqlmock][gosqlmock]: A mock for the sql.DB interface. This allow you to unit
-test database code without having to connect to a real database
+- [go-sqlmock][gosqlmock]: A mock for the sql.DB interface. This allow you to
+unit test database code without having to connect to a real database
+- [dbcleaner][dbcleaner] - Clean database for testing, inspired by
+database_cleaner for Ruby
 
 There's also these other implementations of test fixtures for Go:
 
@@ -367,3 +365,4 @@ There's also these other implementations of test fixtures for Go:
 [mongofixtures]: https://github.com/OwlyCode/mongofixtures
 [fixturer]: https://github.com/44hapa/fixturer
 [factorygo]: https://github.com/bluele/factory-go
+[dbcleaner]: https://github.com/khaiql/dbcleaner
