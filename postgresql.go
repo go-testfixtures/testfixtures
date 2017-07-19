@@ -86,7 +86,13 @@ func (h *PostgreSQL) tableNames(db *sql.DB) ([]string, error) {
 func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 	var sequences []string
 
-	sql := "SELECT relname FROM pg_class WHERE relkind = 'S'"
+	sql := `SELECT pg_namespace.nspname || '.' || pg_class.relname AS sequence_name
+	FROM
+	pg_class
+	INNER JOIN
+	pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+	WHERE pg_class.relkind = 'S'`
+
 	rows, err := db.Query(sql)
 	if err != nil {
 		return nil, err
