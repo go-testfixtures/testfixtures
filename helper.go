@@ -18,13 +18,27 @@ type Helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
-	databaseName(*sql.DB) string
-	tableNames(*sql.DB) ([]string, error)
-	isTableModified(*sql.DB, string) (bool, error)
-	tablesLoaded(*sql.DB) error
+	databaseName(queryable) string
+	tableNames(queryable) ([]string, error)
+	isTableModified(queryable, string) (bool, error)
+	tablesLoaded(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 }
+
+type queryable interface {
+	Exec(string, ...interface{}) (sql.Result, error)
+	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryRow(string, ...interface{}) *sql.Row
+}
+
+var (
+	_ Helper = &MySQL{}
+	_ Helper = &PostgreSQL{}
+	_ Helper = &SQLite{}
+	_ Helper = &Oracle{}
+	_ Helper = &SQLServer{}
+)
 
 type baseHelper struct{}
 
@@ -40,10 +54,10 @@ func (*baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) erro
 	return fn()
 }
 
-func (*baseHelper) isTableModified(_ *sql.DB, _ string) (bool, error) {
+func (*baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 	return true, nil
 }
 
-func (*baseHelper) tablesLoaded(_ *sql.DB) error {
+func (*baseHelper) tablesLoaded(_ queryable) error {
 	return nil
 }

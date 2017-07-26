@@ -14,21 +14,21 @@ func (*SQLite) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLite) databaseName(db *sql.DB) (dbName string) {
+func (*SQLite) databaseName(q queryable) (dbName string) {
 	var seq int
 	var main string
-	db.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
+	q.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
 	dbName = filepath.Base(dbName)
 	return
 }
 
-func (*SQLite) tableNames(db *sql.DB) ([]string, error) {
+func (*SQLite) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT name
 		FROM sqlite_master
 		WHERE type='table';
 	`
-	rows, err := db.Query(query)
+	rows, err := q.Query(query)
 	if err != nil {
 		return nil, err
 	}

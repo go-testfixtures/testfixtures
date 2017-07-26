@@ -32,13 +32,13 @@ func (*SQLServer) quoteKeyword(str string) string {
 	return fmt.Sprintf("[%s]", str)
 }
 
-func (*SQLServer) databaseName(db *sql.DB) (dbname string) {
-	db.QueryRow("SELECT DB_NAME()").Scan(&dbname)
+func (*SQLServer) databaseName(q queryable) (dbname string) {
+	q.QueryRow("SELECT DB_NAME()").Scan(&dbname)
 	return
 }
 
-func (*SQLServer) tableNames(db *sql.DB) ([]string, error) {
-	rows, err := db.Query("SELECT table_name FROM information_schema.tables")
+func (*SQLServer) tableNames(q queryable) ([]string, error) {
+	rows, err := q.Query("SELECT table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +58,14 @@ func (*SQLServer) tableNames(db *sql.DB) ([]string, error) {
 	return tables, nil
 }
 
-func (*SQLServer) tableHasIdentityColumn(tx *sql.Tx, tableName string) bool {
+func (*SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
 	sql := `
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
 		WHERE OBJECT_NAME(OBJECT_ID) = ?
 	`
 	var count int
-	tx.QueryRow(sql, tableName).Scan(&count)
+	q.QueryRow(sql, tableName).Scan(&count)
 	return count > 0
 
 }

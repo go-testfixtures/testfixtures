@@ -19,18 +19,18 @@ func (*MySQL) quoteKeyword(str string) string {
 	return fmt.Sprintf("`%s`", str)
 }
 
-func (*MySQL) databaseName(db *sql.DB) (dbName string) {
-	db.QueryRow("SELECT DATABASE()").Scan(&dbName)
+func (*MySQL) databaseName(q queryable) (dbName string) {
+	q.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	return
 }
 
-func (h *MySQL) tableNames(db *sql.DB) ([]string, error) {
+func (h *MySQL) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT table_name
 		FROM information_schema.tables
 		WHERE table_schema=?;
 	`
-	rows, err := db.Query(query, h.databaseName(db))
+	rows, err := q.Query(query, h.databaseName(q))
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func (h *MySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (er
 	return tx.Commit()
 }
 
-func (h *MySQL) isTableModified(db *sql.DB, tableName string) (bool, error) {
-	checksum, err := h.getChecksum(db, tableName)
+func (h *MySQL) isTableModified(q queryable, tableName string) (bool, error) {
+	checksum, err := h.getChecksum(q, tableName)
 	if err != nil {
 		return true, err
 	}
@@ -85,17 +85,17 @@ func (h *MySQL) isTableModified(db *sql.DB, tableName string) (bool, error) {
 	return !ok || checksum != previousChecksum, nil
 }
 
-func (h *MySQL) tablesLoaded(db *sql.DB) error {
+func (h *MySQL) tablesLoaded(q queryable) error {
 	if h.tableChecksums != nil {
 		return nil
 	}
-	tableNames, err := h.tableNames(db)
+	tableNames, err := h.tableNames(q)
 	if err != nil {
 		return err
 	}
 	h.tableChecksums = make(map[string]int64, len(tableNames))
 	for _, tableName := range tableNames {
-		h.tableChecksums[tableName], err = h.getChecksum(db, tableName)
+		h.tableChecksums[tableName], err = h.getChecksum(q, tableName)
 		if err != nil {
 			return err
 		}
@@ -103,8 +103,8 @@ func (h *MySQL) tablesLoaded(db *sql.DB) error {
 	return nil
 }
 
-func (h *MySQL) getChecksum(db *sql.DB, tableName string) (int64, error) {
-	row := db.QueryRow("CHECKSUM TABLE " + h.quoteKeyword(tableName))
+func (h *MySQL) getChecksum(q queryable, tableName string) (int64, error) {
+	row := q.QueryRow("CHECKSUM TABLE " + h.quoteKeyword(tableName))
 	var table string
 	var checksum int64
 	err := row.Scan(&table, &checksum)
