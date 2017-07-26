@@ -43,17 +43,17 @@ func (*Oracle) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", strings.ToUpper(str))
 }
 
-func (*Oracle) databaseName(db *sql.DB) (dbName string) {
-	db.QueryRow("SELECT user FROM DUAL").Scan(&dbName)
+func (*Oracle) databaseName(q queryable) (dbName string) {
+	q.QueryRow("SELECT user FROM DUAL").Scan(&dbName)
 	return
 }
 
-func (*Oracle) tableNames(db *sql.DB) ([]string, error) {
+func (*Oracle) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT TABLE_NAME
 		FROM USER_TABLES
 	`
-	rows, err := db.Query(query)
+	rows, err := q.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +74,9 @@ func (*Oracle) tableNames(db *sql.DB) ([]string, error) {
 
 }
 
-func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
+func (*Oracle) getEnabledConstraints(q queryable) ([]oracleConstraint, error) {
 	var constraints []oracleConstraint
-	rows, err := db.Query(`
+	rows, err := q.Query(`
 		SELECT table_name, constraint_name
 		FROM user_constraints
 		WHERE constraint_type = 'R'
@@ -98,9 +98,9 @@ func (*Oracle) getEnabledConstraints(db *sql.DB) ([]oracleConstraint, error) {
 	return constraints, nil
 }
 
-func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
+func (*Oracle) getSequences(q queryable) ([]string, error) {
 	var sequences []string
-	rows, err := db.Query("SELECT sequence_name FROM user_sequences")
+	rows, err := q.Query("SELECT sequence_name FROM user_sequences")
 	if err != nil {
 		return nil, err
 	}
@@ -119,13 +119,13 @@ func (*Oracle) getSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-func (h *Oracle) resetSequences(db *sql.DB) error {
+func (h *Oracle) resetSequences(q queryable) error {
 	for _, sequence := range h.sequences {
-		_, err := db.Exec(fmt.Sprintf("DROP SEQUENCE %s", h.quoteKeyword(sequence)))
+		_, err := q.Exec(fmt.Sprintf("DROP SEQUENCE %s", h.quoteKeyword(sequence)))
 		if err != nil {
 			return err
 		}
-		_, err = db.Exec(fmt.Sprintf("CREATE SEQUENCE %s START WITH %d", h.quoteKeyword(sequence), resetSequencesTo))
+		_, err = q.Exec(fmt.Sprintf("CREATE SEQUENCE %s START WITH %d", h.quoteKeyword(sequence), resetSequencesTo))
 		if err != nil {
 			return err
 		}

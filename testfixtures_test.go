@@ -12,28 +12,6 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-func TestInterfaces(t *testing.T) {
-	// helpers should implement interface
-	helpers := []interface{}{
-		&PostgreSQL{},
-		&MySQL{},
-		&SQLite{},
-		&SQLServer{},
-		&Oracle{},
-
-		&PostgreSQLHelper{},
-		&MySQLHelper{},
-		&SQLiteHelper{},
-		&SQLServerHelper{},
-		&OracleHelper{},
-	}
-	for _, h := range helpers {
-		if _, ok := h.(Helper); !ok {
-			t.Errorf("Helper doesn't implement interface")
-		}
-	}
-}
-
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
 	file := f.fileNameWithoutExtension()

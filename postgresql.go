@@ -18,6 +18,7 @@ type PostgreSQL struct {
 	tables                   []string
 	sequences                []string
 	nonDeferrableConstraints []pgConstraint
+	tablesChecksum           map[string]string
 }
 
 type pgConstraint struct {
@@ -43,6 +44,8 @@ func (h *PostgreSQL) init(db *sql.DB) error {
 		return err
 	}
 
+	h.tablesChecksum = make(map[string]string, len(h.tables))
+
 	return nil
 }
 
@@ -50,12 +53,12 @@ func (*PostgreSQL) paramType() int {
 	return paramTypeDollar
 }
 
-func (*PostgreSQL) databaseName(db *sql.DB) (dbName string) {
-	db.QueryRow("SELECT current_database()").Scan(&dbName)
+func (*PostgreSQL) databaseName(q queryable) (dbName string) {
+	q.QueryRow("SELECT current_database()").Scan(&dbName)
 	return
 }
 
-func (h *PostgreSQL) tableNames(db *sql.DB) ([]string, error) {
+func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
@@ -64,7 +67,7 @@ func (h *PostgreSQL) tableNames(db *sql.DB) ([]string, error) {
 		WHERE table_schema = 'public'
 		  AND table_type = 'BASE TABLE';
 	`
-	rows, err := db.Query(sql)
+	rows, err := q.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +86,7 @@ func (h *PostgreSQL) tableNames(db *sql.DB) ([]string, error) {
 	return tables, nil
 }
 
-func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
-	var sequences []string
-
+func (h *PostgreSQL) getSequences(q queryable) ([]string, error) {
 	const sql = `
 		SELECT pg_namespace.nspname || '.' || pg_class.relname AS sequence_name
 		FROM pg_class
@@ -93,12 +94,13 @@ func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 		WHERE pg_class.relkind = 'S'
 	`
 
-	rows, err := db.Query(sql)
+	rows, err := q.Query(sql)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	var sequences []string
 	for rows.Next() {
 		var sequence string
 		if err = rows.Scan(&sequence); err != nil {
@@ -112,7 +114,7 @@ func (h *PostgreSQL) getSequences(db *sql.DB) ([]string, error) {
 	return sequences, nil
 }
 
-func (*PostgreSQL) getNonDeferrableConstraints(db *sql.DB) ([]pgConstraint, error) {
+func (*PostgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, error) {
 	var constraints []pgConstraint
 
 	sql := `
@@ -121,7 +123,7 @@ func (*PostgreSQL) getNonDeferrableConstraints(db *sql.DB) ([]pgConstraint, erro
 		WHERE constraint_type = 'FOREIGN KEY'
 		  AND is_deferrable = 'NO'
   	`
-	rows, err := db.Query(sql)
+	rows, err := q.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -232,4 +234,31 @@ func (h *PostgreSQL) resetSequences(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+func (h *PostgreSQL) isTableModified(q queryable, tableName string) (bool, error) {
+	checksum, err := h.getChecksum(q, tableName)
+	if err != nil {
+		return false, err
+	}
+
+	oldChecksum := h.tablesChecksum[tableName]
+	h.tablesChecksum[tableName] = checksum
+
+	return oldChecksum == "" || checksum != oldChecksum, nil
+}
+
+func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) {
+	sqlStr := fmt.Sprintf(`
+		SELECT md5(CAST((array_agg(t.*)) AS TEXT))
+		FROM %s AS t
+		`,
+		h.quoteKeyword(tableName),
+	)
+
+	var checksum sql.NullString
+	if err := q.QueryRow(sqlStr).Scan(&checksum); err != nil {
+		return "", err
+	}
+	return checksum.String, nil
 }
