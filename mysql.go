@@ -9,7 +9,7 @@ import (
 type MySQL struct {
 	baseHelper
 	tables         []string
-	tableChecksums map[string]int64
+	tablesChecksum map[string]int64
 }
 
 func (h *MySQL) init(db *sql.DB) error {
@@ -18,8 +18,6 @@ func (h *MySQL) init(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-
-	h.tableChecksums = make(map[string]int64, len(h.tables))
 
 	return nil
 }
@@ -95,10 +93,25 @@ func (h *MySQL) isTableModified(q queryable, tableName string) (bool, error) {
 		return true, err
 	}
 
-	oldChecksum := h.tableChecksums[tableName]
-	h.tableChecksums[tableName] = checksum
+	oldChecksum := h.tablesChecksum[tableName]
 
 	return oldChecksum == 0 || checksum != oldChecksum, nil
+}
+
+func (h *MySQL) afterLoad(q queryable) error {
+	if h.tablesChecksum != nil {
+		return nil
+	}
+
+	h.tablesChecksum = make(map[string]int64, len(h.tables))
+	for _, t := range h.tables {
+		checksum, err := h.getChecksum(q, t)
+		if err != nil {
+			return err
+		}
+		h.tablesChecksum[t] = checksum
+	}
+	return nil
 }
 
 func (h *MySQL) getChecksum(q queryable, tableName string) (int64, error) {

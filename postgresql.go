@@ -44,8 +44,6 @@ func (h *PostgreSQL) init(db *sql.DB) error {
 		return err
 	}
 
-	h.tablesChecksum = make(map[string]string, len(h.tables))
-
 	return nil
 }
 
@@ -243,9 +241,24 @@ func (h *PostgreSQL) isTableModified(q queryable, tableName string) (bool, error
 	}
 
 	oldChecksum := h.tablesChecksum[tableName]
-	h.tablesChecksum[tableName] = checksum
 
 	return oldChecksum == "" || checksum != oldChecksum, nil
+}
+
+func (h *PostgreSQL) afterLoad(q queryable) error {
+	if h.tablesChecksum != nil {
+		return nil
+	}
+
+	h.tablesChecksum = make(map[string]string, len(h.tables))
+	for _, t := range h.tables {
+		checksum, err := h.getChecksum(q, t)
+		if err != nil {
+			return err
+		}
+		h.tablesChecksum[t] = checksum
+	}
+	return nil
 }
 
 func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) {

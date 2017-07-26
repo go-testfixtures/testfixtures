@@ -21,6 +21,7 @@ type Helper interface {
 	databaseName(queryable) string
 	tableNames(queryable) ([]string, error)
 	isTableModified(queryable, string) (bool, error)
+	afterLoad(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 }
@@ -41,18 +42,22 @@ var (
 
 type baseHelper struct{}
 
-func (*baseHelper) init(_ *sql.DB) error {
+func (baseHelper) init(_ *sql.DB) error {
 	return nil
 }
 
-func (*baseHelper) quoteKeyword(str string) string {
+func (baseHelper) quoteKeyword(str string) string {
 	return fmt.Sprintf(`"%s"`, str)
 }
 
-func (*baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) error {
+func (baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) error {
 	return fn()
 }
 
-func (*baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
+func (baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 	return true, nil
+}
+
+func (baseHelper) afterLoad(_ queryable) error {
+	return nil
 }
