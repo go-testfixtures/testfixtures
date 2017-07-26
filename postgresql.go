@@ -18,6 +18,7 @@ type PostgreSQL struct {
 	tables                   []string
 	sequences                []string
 	nonDeferrableConstraints []pgConstraint
+	tablesChecksum           map[string]string
 }
 
 type pgConstraint struct {
@@ -42,6 +43,8 @@ func (h *PostgreSQL) init(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+
+	h.tablesChecksum = make(map[string]string, len(h.tables))
 
 	return nil
 }
@@ -231,4 +234,31 @@ func (h *PostgreSQL) resetSequences(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+func (h *PostgreSQL) isTableModified(q queryable, tableName string) (bool, error) {
+	checksum, err := h.getChecksum(q, tableName)
+	if err != nil {
+		return false, err
+	}
+
+	oldChecksum := h.tablesChecksum[tableName]
+	h.tablesChecksum[tableName] = checksum
+
+	return oldChecksum == "" || checksum != oldChecksum, nil
+}
+
+func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) {
+	sqlStr := fmt.Sprintf(`
+		SELECT md5(CAST((array_agg(t.*)) AS TEXT))
+		FROM %s AS t
+		`,
+		h.quoteKeyword(tableName),
+	)
+
+	var checksum sql.NullString
+	if err := q.QueryRow(sqlStr).Scan(&checksum); err != nil {
+		return "", err
+	}
+	return checksum.String, nil
 }

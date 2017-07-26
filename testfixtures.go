@@ -102,7 +102,7 @@ func (c *Context) Load() error {
 
 	err := c.helper.disableReferentialIntegrity(c.db, func(tx *sql.Tx) error {
 		for _, file := range c.fixturesFiles {
-			modified, err := c.helper.isTableModified(c.db, file.fileNameWithoutExtension())
+			modified, err := c.helper.isTableModified(tx, file.fileNameWithoutExtension())
 			if err != nil {
 				return err
 			}
