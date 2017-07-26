@@ -21,7 +21,6 @@ type Helper interface {
 	databaseName(queryable) string
 	tableNames(queryable) ([]string, error)
 	isTableModified(queryable, string) (bool, error)
-	tablesLoaded(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 }
@@ -56,8 +55,4 @@ func (*baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) erro
 
 func (*baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 	return true, nil
-}
-
-func (*baseHelper) tablesLoaded(_ queryable) error {
-	return nil
 }

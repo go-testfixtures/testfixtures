@@ -133,10 +133,7 @@ func (c *Context) Load() error {
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return c.helper.tablesLoaded(c.db)
+	return err
 }
 
 func (c *Context) buildInsertSQLs() error {

@@ -8,7 +8,20 @@ import (
 // MySQL is the MySQL helper for this package
 type MySQL struct {
 	baseHelper
+	tables         []string
 	tableChecksums map[string]int64
+}
+
+func (h *MySQL) init(db *sql.DB) error {
+	var err error
+	h.tables, err = h.tableNames(db)
+	if err != nil {
+		return err
+	}
+
+	h.tableChecksums = make(map[string]int64, len(h.tables))
+
+	return nil
 }
 
 func (*MySQL) paramType() int {
@@ -81,32 +94,21 @@ func (h *MySQL) isTableModified(q queryable, tableName string) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	previousChecksum, ok := h.tableChecksums[tableName]
-	return !ok || checksum != previousChecksum, nil
-}
 
-func (h *MySQL) tablesLoaded(q queryable) error {
-	if h.tableChecksums != nil {
-		return nil
-	}
-	tableNames, err := h.tableNames(q)
-	if err != nil {
-		return err
-	}
-	h.tableChecksums = make(map[string]int64, len(tableNames))
-	for _, tableName := range tableNames {
-		h.tableChecksums[tableName], err = h.getChecksum(q, tableName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	oldChecksum := h.tableChecksums[tableName]
+	h.tableChecksums[tableName] = checksum
+
+	return oldChecksum == 0 || checksum != oldChecksum, nil
 }
 
 func (h *MySQL) getChecksum(q queryable, tableName string) (int64, error) {
-	row := q.QueryRow("CHECKSUM TABLE " + h.quoteKeyword(tableName))
-	var table string
-	var checksum int64
-	err := row.Scan(&table, &checksum)
-	return checksum, err
+	sql := fmt.Sprintf("CHECKSUM TABLE %s", h.quoteKeyword(tableName))
+	var (
+		table    string
+		checksum int64
+	)
+	if err := q.QueryRow(sql).Scan(&table, &checksum); err != nil {
+		return 0, err
+	}
+	return checksum, nil
 }
