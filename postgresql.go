@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // PostgreSQL is the PG helper for this package
@@ -274,4 +275,18 @@ func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) 
 		return "", err
 	}
 	return checksum.String, nil
+}
+
+func (*PostgreSQL) quoteKeyword(tableName string) string {
+	var escapedTableName string
+
+	for i, part := range strings.Split(tableName, ".") {
+		if i > 0 && len(part) > 0 {
+			escapedTableName = escapedTableName + "."
+		}
+
+		escapedTableName = escapedTableName + fmt.Sprintf(`"%s"`, part)
+	}
+
+	return escapedTableName
 }
