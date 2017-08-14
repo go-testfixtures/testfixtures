@@ -30,7 +30,7 @@ type PostgreSQLTableNameTestCase struct {
 	Escaped  string
 }
 
-func testEscapeTableName(t *testing.T) {
+func TestEscapeTableName(t *testing.T) {
 	pql := &PostgreSQL{}
 
 	tables := []PostgreSQLTableNameTestCase{
