@@ -84,6 +84,25 @@ func TestLoadFixtures(t *testing.T) {
 	}
 }
 
+func TestQuoteKeyword(t *testing.T) {
+	tests := []struct {
+		Helper   Helper
+		Keyword  string
+		Expected string
+	}{
+		{&PostgreSQL{}, `posts_tags`, `"posts_tags"`},
+		{&PostgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
+	}
+
+	for _, test := range tests {
+		actual := test.Helper.quoteKeyword(test.Keyword)
+
+		if test.Expected != actual {
+			t.Errorf("TestQuoteKeyword keyword %s should have escaped to %s. Received %s instead", test.Keyword, test.Expected, actual)
+		}
+	}
+}
+
 func assertCount(t *testing.T, db *sql.DB, h Helper, table string, expectedCount int) {
 	var count int
 

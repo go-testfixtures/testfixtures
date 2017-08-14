@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // PostgreSQL is the PG helper for this package
@@ -60,10 +61,13 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
-		SELECT table_name
-		FROM information_schema.tables
-		WHERE table_schema = 'public'
-		  AND table_type = 'BASE TABLE';
+	         SELECT pg_namespace.nspname || '.' || pg_class.relname
+		 FROM pg_class
+		 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+		 WHERE pg_class.relkind = 'r'
+		 AND
+		 pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
+		 AND pg_namespace.nspname NOT LIKE 'pg_toast%';
 	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -116,10 +120,11 @@ func (*PostgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 	var constraints []pgConstraint
 
 	sql := `
-		SELECT table_name, constraint_name
+		SELECT table_schema || '.' || table_name,
+		constraint_name
 		FROM information_schema.table_constraints
 		WHERE constraint_type = 'FOREIGN KEY'
-		  AND is_deferrable = 'NO'
+		AND is_deferrable = 'NO'
   	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -274,4 +279,12 @@ func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) 
 		return "", err
 	}
 	return checksum.String, nil
+}
+
+func (*PostgreSQL) quoteKeyword(s string) string {
+	parts := strings.Split(s, ".")
+	for i, p := range parts {
+		parts[i] = fmt.Sprintf(`"%s"`, p)
+	}
+	return strings.Join(parts, ".")
 }
