@@ -281,16 +281,10 @@ func (h *PostgreSQL) getChecksum(q queryable, tableName string) (string, error) 
 	return checksum.String, nil
 }
 
-func (*PostgreSQL) quoteKeyword(tableName string) string {
-	var escapedTableName string
-
-	for i, part := range strings.Split(tableName, ".") {
-		if i > 0 && len(part) > 0 {
-			escapedTableName = escapedTableName + "."
-		}
-
-		escapedTableName = escapedTableName + fmt.Sprintf(`"%s"`, part)
+func (*PostgreSQL) quoteKeyword(s string) string {
+	parts := strings.Split(s, ".")
+	for i, p := range parts {
+		parts[i] = fmt.Sprintf(`"%s"`, p)
 	}
-
-	return escapedTableName
+	return strings.Join(parts, ".")
 }
