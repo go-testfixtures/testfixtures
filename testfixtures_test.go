@@ -84,6 +84,41 @@ func TestLoadFixtures(t *testing.T) {
 	}
 }
 
+func TestQuoteKeyword(t *testing.T) {
+	tests := []struct {
+		Helper   Helper
+		Keyword  string
+		Expected string
+	}{
+		{&PostgreSQL{}, `posts_tags`, `"posts_tags"`},
+		{&PostgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
+	}
+
+	for _, test := range tests {
+		actual := test.Helper.quoteKeyword(test.Keyword)
+
+		if err := assertEqualStrings(test.Expected, actual); err != nil {
+			t.Errorf("TestQuoteKeyword keyword %s should have escaped to %s. Received %s instead", test.Keyword, test.Expected, actual)
+		}
+	}
+}
+
+// This implementation is clearly a stub for TestQuoteKeyword.
+// For a general implementation, I'd recommend using a test package you're
+// comfortable with. E.g. github.com/stretchr/testify implements these methods,
+// along with run-time type validations, with interface{}.
+// Re-implement as you desire, whether that's with a dependency or
+// a case-specific assert like assertCount - I'm not a huge fan of the latter, though.
+func assertEqualStrings(expected, actual string) error {
+	var err error
+
+	if expected != actual {
+		return fmt.Errorf("Unequal arguments")
+	}
+
+	return err
+}
+
 func assertCount(t *testing.T, db *sql.DB, h Helper, table string, expectedCount int) {
 	var count int
 
