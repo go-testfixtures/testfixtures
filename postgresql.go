@@ -61,7 +61,7 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
-	         SELECT pg_namespace.nspname || '.' || pg_class.relname AS sequence_name
+	         SELECT pg_namespace.nspname || '.' || pg_class.relname
 		 FROM pg_class
 		 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		 WHERE pg_class.relkind = 'r'
