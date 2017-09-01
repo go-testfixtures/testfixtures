@@ -31,7 +31,7 @@ var databases = []databaseTest{}
 
 func TestLoadFixtures(t *testing.T) {
 	if len(databases) == 0 {
-		t.Error("No database choosen for tests!")
+		t.Error("No database chosen for tests!")
 	}
 
 	for _, database := range databases {
