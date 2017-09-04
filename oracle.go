@@ -43,9 +43,10 @@ func (*Oracle) quoteKeyword(str string) string {
 	return fmt.Sprintf("\"%s\"", strings.ToUpper(str))
 }
 
-func (*Oracle) databaseName(q queryable) (dbName string) {
-	q.QueryRow("SELECT user FROM DUAL").Scan(&dbName)
-	return
+func (*Oracle) databaseName(q queryable) (string, error) {
+	var dbName string
+	err := q.QueryRow("SELECT user FROM DUAL").Scan(&dbName)
+	return dbName, err
 }
 
 func (*Oracle) tableNames(q queryable) ([]string, error) {

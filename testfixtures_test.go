@@ -103,6 +103,31 @@ func TestQuoteKeyword(t *testing.T) {
 	}
 }
 
+func TestDatabaseNameHelperSurfacesErrors(t *testing.T) {
+	if len(databases) == 0 {
+		t.Error("No database chosen for tests!")
+	}
+
+	for _, database := range databases {
+		connString := os.Getenv(database.connEnv)
+
+		fmt.Printf("Test for %s\n", database.name)
+
+		db, err := sql.Open(database.name, connString)
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v\n", err)
+		}
+
+		// Ensure a connection error occurs
+		db.Close()
+
+		_, err = database.helper.databaseName(db)
+		if err == nil {
+			t.Error("Expected databaseName to surface error")
+		}
+	}
+}
+
 func assertCount(t *testing.T, db *sql.DB, h Helper, table string, expectedCount int) {
 	var count int
 

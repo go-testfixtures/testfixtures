@@ -18,7 +18,7 @@ type Helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
-	databaseName(queryable) string
+	databaseName(queryable) (string, error)
 	tableNames(queryable) ([]string, error)
 	isTableModified(queryable, string) (bool, error)
 	afterLoad(queryable) error

@@ -30,9 +30,10 @@ func (*MySQL) quoteKeyword(str string) string {
 	return fmt.Sprintf("`%s`", str)
 }
 
-func (*MySQL) databaseName(q queryable) (dbName string) {
-	q.QueryRow("SELECT DATABASE()").Scan(&dbName)
-	return
+func (*MySQL) databaseName(q queryable) (string, error) {
+	var dbName string
+	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)
+	return dbName, err
 }
 
 func (h *MySQL) tableNames(q queryable) ([]string, error) {
@@ -41,7 +42,12 @@ func (h *MySQL) tableNames(q queryable) ([]string, error) {
 		FROM information_schema.tables
 		WHERE table_schema=?;
 	`
-	rows, err := q.Query(query, h.databaseName(q))
+	dbName, err := h.databaseName(q)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := q.Query(query, dbName)
 	if err != nil {
 		return nil, err
 	}
