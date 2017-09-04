@@ -32,9 +32,10 @@ func (*SQLServer) quoteKeyword(str string) string {
 	return fmt.Sprintf("[%s]", str)
 }
 
-func (*SQLServer) databaseName(q queryable) (dbname string) {
-	q.QueryRow("SELECT DB_NAME()").Scan(&dbname)
-	return
+func (*SQLServer) databaseName(q queryable) (string, error) {
+	var dbName string
+	err := q.QueryRow("SELECT DB_NAME()").Scan(&dbName)
+	return dbName, err
 }
 
 func (*SQLServer) tableNames(q queryable) ([]string, error) {

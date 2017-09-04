@@ -95,7 +95,11 @@ func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, e
 //     }
 func (c *Context) Load() error {
 	if !skipDatabaseNameCheck {
-		if !dbnameRegexp.MatchString(c.helper.databaseName(c.db)) {
+		dbName, err := c.helper.databaseName(c.db)
+		if err != nil {
+			return err
+		}
+		if !dbnameRegexp.MatchString(dbName) {
 			return ErrNotTestDatabase
 		}
 	}

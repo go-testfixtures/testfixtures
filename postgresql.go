@@ -52,9 +52,10 @@ func (*PostgreSQL) paramType() int {
 	return paramTypeDollar
 }
 
-func (*PostgreSQL) databaseName(q queryable) (dbName string) {
-	q.QueryRow("SELECT current_database()").Scan(&dbName)
-	return
+func (*PostgreSQL) databaseName(q queryable) (string, error) {
+	var dbName string
+	err := q.QueryRow("SELECT current_database()").Scan(&dbName)
+	return dbName, err
 }
 
 func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {

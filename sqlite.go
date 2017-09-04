@@ -14,12 +14,15 @@ func (*SQLite) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLite) databaseName(q queryable) (dbName string) {
+func (*SQLite) databaseName(q queryable) (string, error) {
 	var seq int
-	var main string
-	q.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
+	var main, dbName string
+	err := q.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
+	if err != nil {
+		return "", err
+	}
 	dbName = filepath.Base(dbName)
-	return
+	return dbName, nil
 }
 
 func (*SQLite) tableNames(q queryable) ([]string, error) {
