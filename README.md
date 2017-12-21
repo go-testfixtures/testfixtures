@@ -1,7 +1,6 @@
 # Go Test Fixtures
 
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/go-testfixtures/testfixtures/blob/master/LICENSE)
-[![Join the chat at https://gitter.im/go-testfixtures/testfixtures](https://badges.gitter.im/go-testfixtures/testfixtures.svg)](https://gitter.im/go-testfixtures/testfixtures?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v2?status.svg)](https://godoc.org/gopkg.in/testfixtures.v2)
 [![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-testfixtures/testfixtures)](https://goreportcard.com/report/github.com/go-testfixtures/testfixtures)
@@ -28,25 +27,25 @@ the tests.
 First, get it:
 
 ```bash
-go get -u gopkg.in/testfixtures.v2
+go get -u -v gopkg.in/testfixtures.v2
 ```
 
 ## Usage
 
 Create a folder for the fixture files. Each file should contain data for a
-single table and have the name `<table-name>.yml`:
+single table and have the name `<table_name>.yml`:
 
-```yml
-myapp
-  - myapp.go
-  - myapp_test.go
-  - ...
-  - fixtures:
-    - posts.yml
-    - comments.yml
-    - tags.yml
-    - posts_tags.yml
-    - ...
+```
+myapp/
+  myapp.go
+  myapp_test.go
+  ...
+  fixtures/
+    posts.yml
+    comments.yml
+    tags.yml
+    posts_tags.yml
+    ...
 ```
 
 The file would look like this (it can have as many record you want):
@@ -270,7 +269,7 @@ Oracle is supported as well. Use:
 &testfixtures.Oracle{}
 ```
 
-## Generation fixtures for a existent database (experimental)
+## Generating fixtures for a existing database (experimental)
 
 The following code will generate a YAML file for each table of the database in
 the given folder. It may be useful to boostrap a test scenario from a sample
@@ -278,6 +277,23 @@ database of your app.
 
 ```go
 err := testfixtures.GenerateFixtures(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
+if err != nil {
+    log.Fatalf("Error generating fixtures: %v", err)
+}
+```
+
+Or
+
+```go
+err := testfixtures.GenerateFixturesForTables(
+    db,
+    []*TableInfo{
+        &TableInfo{Name: "table_name", Where: "foo = 'bar'"},
+        // ...
+    },
+    &testfixtures.PostgreSQL{},
+    "testdata/fixtures",
+)
 if err != nil {
     log.Fatalf("Error generating fixtures: %v", err)
 }
@@ -319,24 +335,6 @@ Travis runs tests for PostgreSQL, MySQL and SQLite.
 To set the connection string of tests for each database, edit the `.env`
 file, but do not include the changes a in pull request.
 
-## Changes in v2
-
-A context was created to allow cache of some SQL statements. See in the
-documentation above how to use it.
-
-The helpers were renamed to have a smaller name:
-
-```go
-PostgreSQLHelper{} -> PostgreSQL{}
-MySQLHelper{}      -> MySQL{}
-SQLiteHelper{}     -> SQLite{}
-SQLServerHelper{}  -> SQLServer{}
-OracleHelper{}     -> Oracle{}
-```
-
-The old functions and helpers are still available for backward compatibility.
-See the file [deprecated.go](https://github.com/go-testfixtures/testfixtures/blob/master/deprecated.go)
-
 ## Alternatives
 
 If you don't think using fixtures is a good idea, you can try one of these
@@ -352,17 +350,8 @@ unit test database code without having to connect to a real database
 - [dbcleaner][dbcleaner] - Clean database for testing, inspired by
 database_cleaner for Ruby
 
-There's also these other implementations of test fixtures for Go:
-
-- [go-fixtures][gofixtures]: Django style fixtures for Go
-- [mongofixtures][mongofixtures]: Fixtures for MongoDB
-- [fixturer][fixturer]: Another fixture loader supporting MySQL
-
 [railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
 [gotxdb]: https://github.com/DATA-DOG/go-txdb
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
-[gofixtures]: https://github.com/AreaHQ/go-fixtures
-[mongofixtures]: https://github.com/OwlyCode/mongofixtures
-[fixturer]: https://github.com/44hapa/fixturer
 [factorygo]: https://github.com/bluele/factory-go
 [dbcleaner]: https://github.com/khaiql/dbcleaner
