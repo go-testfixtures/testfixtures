@@ -64,7 +64,6 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	sql := `
 	         SELECT DISTINCT g.table_schema || '.' || pg_class.relname
 		 FROM pg_class, information_schema.role_table_grants g
-		 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		 WHERE pg_class.relkind = 'r'
 		 AND
 		 pg_class.relname = g.table_name;
