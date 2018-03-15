@@ -62,11 +62,11 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
-	         SELECT DISTINCT g.table_schema || '.' || pg_class.relname
+	   SELECT DISTINCT g.table_schema || '.' || pg_class.relname
 		 FROM pg_class, information_schema.role_table_grants g
 		 WHERE pg_class.relkind = 'r'
-		 AND
-		 pg_class.relname = g.table_name;
+		 AND pg_class.relname = g.table_name
+     AND g.table_schema NOT IN ('pg_catalog', 'information_schema');
 	`
 	rows, err := q.Query(sql)
 	if err != nil {
