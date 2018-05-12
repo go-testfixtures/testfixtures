@@ -1,9 +1,8 @@
 # Go Test Fixtures
 
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/go-testfixtures/testfixtures/blob/master/LICENSE)
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v2?status.svg)](https://godoc.org/gopkg.in/testfixtures.v2)
-[![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-testfixtures/testfixtures)](https://goreportcard.com/report/github.com/go-testfixtures/testfixtures)
+[![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
