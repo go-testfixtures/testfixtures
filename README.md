@@ -173,6 +173,28 @@ if err != nil {
 }
 ```
 
+Or in a directory you can define several different fixtures for different tests:  
+**test 1**
+```go
+fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
+    "fixtures/favorites.1.yml",
+    "fixtures/customers.yml",
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+**test 2**
+```go
+fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
+    "fixtures/favorites.2.yml",
+    "fixtures/customers.yml",
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
 ## Security check
 
 In order to prevent you from accidentally wiping the wrong database, this
