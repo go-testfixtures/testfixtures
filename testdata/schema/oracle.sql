@@ -93,4 +93,9 @@ BEGIN
         id INTEGER PRIMARY KEY NOT NULL
         ,attributes VARCHAR(255) NOT NULL
     )';
+
+    EXECUTE IMMEDIATE 'CREATE TABLE favorites (
+        id INTEGER PRIMARY KEY NOT NULL
+        ,post_id INTEGER NOT NULL
+    )';
 END;

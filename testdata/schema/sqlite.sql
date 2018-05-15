@@ -44,3 +44,8 @@ CREATE TABLE users (
 	id INT PRIMARY KEY
 	,attributes TEXT NOT NULL
 );
+
+CREATE TABLE favorites (
+	id INT PRIMARY KEY
+	,post_id INT NOT NULL
+);
