@@ -173,11 +173,11 @@ if err != nil {
 }
 ```
 
-Or in a directory you can define several different fixtures for different tests:  
+Or in a directory you can define several different fixtures for different tests using `#` after table name in file name:  
 **test 1**
 ```go
 fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
-    "fixtures/favorites.1.yml",
+    "fixtures/favorites#1.yml",
     "fixtures/customers.yml",
 )
 if err != nil {
@@ -187,7 +187,7 @@ if err != nil {
 **test 2**
 ```go
 fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
-    "fixtures/favorites.2.yml",
+    "fixtures/favorites#2.yml",
     "fixtures/customers.yml",
 )
 if err != nil {
@@ -195,6 +195,17 @@ if err != nil {
 }
 ```
 
+Also, there is possibility to define schema name:  
+```go
+fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
+    "fixtures/dbschema.favorites.yml",
+    "fixtures/customers.yml",
+    "fixtures/dbschema.users#1.yml",
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
 ## Security check
 
 In order to prevent you from accidentally wiping the wrong database, this

@@ -188,11 +188,11 @@ func (c *Context) buildInsertSQLs() error {
 }
 
 func (f *fixtureFile) fileNameWithoutExtension() string {
-	if filepath.Ext(f.fileName) != "" {
-		return f.fileName[:strings.Index(f.fileName, ".")]
+	if strings.Contains(f.fileName, "#") {
+		return f.fileName[:strings.Index(f.fileName, "#")]
 	}
 
-	return f.fileName
+	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
 }
 
 func (f *fixtureFile) delete(tx *sql.Tx, h Helper) error {
