@@ -203,3 +203,29 @@ func testLoadFixtureFiles(t *testing.T, db *sql.DB, helper Helper) {
 	assertCount(t, db, helper, "tags", 3)
 	assertCount(t, db, helper, "posts_tags", 2)
 }
+
+// TestFixtureFilesWithoutExtension
+func TestFixtureFilesWithoutWithSchemaExtension(t *testing.T) {
+	f := &fixtureFile{fileName: "schema.posts.yml"}
+	file := f.fileNameWithoutExtension()
+	if file != "schema.posts" {
+		t.Errorf("Should be 'posts', but returned %s", file)
+	}
+}
+
+// TestFixtureFilesWithoutExtensionExtraFiles
+func TestFixtureFilesWithoutExtensionWithSchemaExtraFiles(t *testing.T) {
+	f := &fixtureFile{fileName: "schema.posts#Test1.yml"}
+	file := f.fileNameWithoutExtension()
+	if file != "schema.posts" {
+		t.Errorf("Should be 'schema.posts', but returned %s", file)
+	}
+}
+
+func TestFixtureFilesWithoutExtensionWithoutSchemaExtraFiles(t *testing.T) {
+	f := &fixtureFile{fileName: "posts#Test1.yml"}
+	file := f.fileNameWithoutExtension()
+	if file != "posts" {
+		t.Errorf("Should be 'posts', but returned %s", file)
+	}
+}

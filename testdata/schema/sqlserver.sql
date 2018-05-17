@@ -3,6 +3,7 @@ IF OBJECT_ID('posts_tags', 'U') IS NOT NULL DROP TABLE posts_tags;
 IF OBJECT_ID('posts', 'U') IS NOT NULL DROP TABLE posts;
 IF OBJECT_ID('tags', 'U') IS NOT NULL DROP TABLE tags;
 IF OBJECT_ID('users', 'U') IS NOT NULL DROP TABLE users;
+IF OBJECT_ID('favorites', 'U') IS NOT NULL DROP TABLE favorites;
 
 CREATE TABLE posts (
 	id INT IDENTITY PRIMARY KEY
@@ -41,4 +42,9 @@ CREATE TABLE comments (
 CREATE TABLE users (
 	id INT IDENTITY PRIMARY KEY NOT NULL
 	,attributes NVARCHAR(MAX) NOT NULL
+);
+
+CREATE TABLE favorites (
+	id INT IDENTITY PRIMARY KEY NOT NULL
+	,post_id INTEGER NOT NULL
 );

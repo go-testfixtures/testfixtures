@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS posts_tags;
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS favorites;
 
 CREATE TABLE posts (
 	id INT PRIMARY KEY
@@ -43,4 +44,9 @@ CREATE TABLE comments (
 CREATE TABLE users (
 	id INT PRIMARY KEY
 	,attributes TEXT NOT NULL
+);
+
+CREATE TABLE favorites (
+	id INT PRIMARY KEY
+	,post_id INT NOT NULL
 );
