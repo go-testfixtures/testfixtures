@@ -92,6 +92,8 @@ func TestQuoteKeyword(t *testing.T) {
 	}{
 		{&PostgreSQL{}, `posts_tags`, `"posts_tags"`},
 		{&PostgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
+		{&SQLServer{}, `posts_tags`, `[posts_tags]`},
+		{&SQLServer{}, `test_schema.posts_tags`, `[test_schema].[posts_tags]`},
 	}
 
 	for _, test := range tests {
