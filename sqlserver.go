@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // SQLServer is the helper for SQL Server for this package.
@@ -28,8 +29,12 @@ func (*SQLServer) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLServer) quoteKeyword(str string) string {
-	return fmt.Sprintf("[%s]", str)
+func (*SQLServer) quoteKeyword(s string) string {
+	parts := strings.Split(s, ".")
+	for i, p := range parts {
+		parts[i] = fmt.Sprintf(`[%s]`, p)
+	}
+	return strings.Join(parts, ".")
 }
 
 func (*SQLServer) databaseName(q queryable) (string, error) {
@@ -59,14 +64,14 @@ func (*SQLServer) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (*SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
+func (h *SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
 	sql := `
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
-		WHERE OBJECT_NAME(OBJECT_ID) = ?
+		WHERE OBJECT_ID = OBJECT_ID(?)
 	`
 	var count int
-	q.QueryRow(sql, tableName).Scan(&count)
+	q.QueryRow(sql, h.quoteKeyword(tableName)).Scan(&count)
 	return count > 0
 
 }
