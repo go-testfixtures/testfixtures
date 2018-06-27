@@ -1,3 +1,6 @@
+IF OBJECT_ID('x.empty_table_without_fixtures', 'U') IS NOT NULL DROP TABLE x.empty_table_without_fixtures;
+IF EXISTS(SELECT 1 FROM sys.schemas WHERE name = 'x') DROP SCHEMA x;
+
 IF OBJECT_ID('comments', 'U') IS NOT NULL DROP TABLE comments;
 IF OBJECT_ID('posts_tags', 'U') IS NOT NULL DROP TABLE posts_tags;
 IF OBJECT_ID('posts', 'U') IS NOT NULL DROP TABLE posts;
@@ -17,6 +20,15 @@ CREATE TABLE tags (
 	,name VARCHAR(255) NOT NULL
 	,created_at DATETIME NOT NULL
 	,updated_at DATETIME NOT NULL
+);
+GO
+
+CREATE SCHEMA x AUTHORIZATION dbo;
+GO
+
+CREATE TABLE x.empty_table_without_fixtures (
+  id INT IDENTITY PRIMARY KEY
+  ,name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_tags (

@@ -1,6 +1,7 @@
 package testfixtures
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -37,8 +38,6 @@ func TestLoadFixtures(t *testing.T) {
 	for _, database := range databases {
 		connString := os.Getenv(database.connEnv)
 
-		var bytes []byte
-
 		fmt.Printf("Test for %s\n", database.name)
 
 		db, err := sql.Open(database.name, connString)
@@ -52,14 +51,25 @@ func TestLoadFixtures(t *testing.T) {
 			log.Fatalf("Failed to ping database: %v\n", err)
 		}
 
-		bytes, err = ioutil.ReadFile(database.schemaFile)
+		batches := [][]byte{}
+
+		data, err := ioutil.ReadFile(database.schemaFile)
 		if err != nil {
 			log.Fatalf("Could not read file %s: %v\n", database.schemaFile, err)
 		}
 
-		_, err = db.Exec(string(bytes))
-		if err != nil {
-			log.Fatalf("Failed to create schema: %v\n", err)
+		h, ok := database.helper.(BatchSplitter)
+		if ok {
+			batches = append(batches, bytes.Split(data, h.Splitter())...)
+		} else {
+			batches = append(batches, data)
+		}
+
+		for _, b := range batches {
+			_, err = db.Exec(string(b))
+			if err != nil {
+				t.Fatalf("Failed to create schema: %v\n", err)
+			}
 		}
 
 		testLoadFixtures(t, db, database.helper)

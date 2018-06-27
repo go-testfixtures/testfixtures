@@ -44,7 +44,7 @@ func (*SQLServer) databaseName(q queryable) (string, error) {
 }
 
 func (*SQLServer) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_name FROM information_schema.tables")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables")
 	if err != nil {
 		return nil, err
 	}
@@ -124,4 +124,12 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	}
 
 	return tx.Commit()
+}
+
+// Splitter is a BatchSplitter interface implementation. We need it for
+// SQL Server because commands like a `CREATE SCHEMA...` and a `CREATE TABLE...`
+// could not be executed in the same batch.
+// See https://docs.microsoft.com/en-us/previous-versions/sql/sql-server-2008-r2/ms175502(v=sql.105)#rules-for-using-batches
+func (*SQLServer) Splitter() []byte {
+	return []byte("GO\n")
 }
