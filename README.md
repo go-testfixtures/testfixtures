@@ -3,6 +3,7 @@
 [![GoDoc](https://godoc.org/gopkg.in/testfixtures.v2?status.svg)](https://godoc.org/gopkg.in/testfixtures.v2)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-testfixtures/testfixtures)](https://goreportcard.com/report/github.com/go-testfixtures/testfixtures)
 [![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
+[![Build status](https://ci.appveyor.com/api/projects/status/d2h6gq37wxbus1x7?svg=true)](https://ci.appveyor.com/project/andreynering/testfixtures)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
@@ -329,7 +330,8 @@ go test -tags 'sqlite postgresql mysql'
 go test -v -bench=. -tags postgresql
 ```
 
-Travis runs tests for PostgreSQL, MySQL and SQLite.
+Travis runs tests for PostgreSQL, MySQL and SQLite. AppVeyor run for all
+these and also Microsoft SQL Server.
 
 To set the connection string of tests for each database, edit the `.env`
 file, but do not include the changes a in pull request.
