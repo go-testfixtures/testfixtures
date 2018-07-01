@@ -27,14 +27,14 @@ environment:
   MINGW_PATH: C:\MinGW
 
   GOPATH: C:\GOPATH
-  GOVERSION: 1.10.2
+  GOVERSION: 1.10.3
 
 install:
   - SET PATH=%POSTGRES_PATH%\bin;%MYSQL_PATH%\bin;%MINGW_PATH%\bin;%PATH%
 
   - rmdir C:\go /s /q
-  - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
-  - msiexec /i go%GOVERSION%.windows-amd64.msi /q
+  - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-386.msi
+  - msiexec /i go%GOVERSION%.windows-386.msi /q
   - go version
 
 build_script:
