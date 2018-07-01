@@ -24,11 +24,13 @@ environment:
 
   SQLSERVER_CONN_STRING: 'server=localhost;database=testfixtures_test;user id=sa;password=Password12!;encrypt=disable'
 
+  MINGW_PATH: C:\MinGW
+
   GOPATH: C:\GOPATH
   GOVERSION: 1.10.2
 
 install:
-  - SET PATH=%POSTGRES_PATH%\bin;%MYSQL_PATH%\bin;%PATH%
+  - SET PATH=%POSTGRES_PATH%\bin;%MYSQL_PATH%\bin;%MINGW_PATH%\bin;%PATH%
 
   - rmdir C:\go /s /q
   - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
