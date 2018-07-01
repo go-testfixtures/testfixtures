@@ -25,3 +25,5 @@ _testmain.go
 
 # SQLite databases
 *.sqlite3
+
+.env

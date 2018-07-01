@@ -333,8 +333,8 @@ go test -v -bench=. -tags postgresql
 Travis runs tests for PostgreSQL, MySQL and SQLite. AppVeyor run for all
 these and also Microsoft SQL Server.
 
-To set the connection string of tests for each database, edit the `.env`
-file, but do not include the changes a in pull request.
+To set the connection string of tests for each database, copy the `.sample.env`
+file as `.env` and edit it according to your environment.
 
 ## Alternatives
 
