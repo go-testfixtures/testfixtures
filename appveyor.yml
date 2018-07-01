@@ -1,6 +1,6 @@
 version: '{build}'
 
-clone_folder: C:\GOPATH\src\gopkg.in\testfixtures.v2
+clone_folder: C:\GOPATH\src\github.com\go-testfixtures\testfixtures
 
 build: false
 deploy: false
