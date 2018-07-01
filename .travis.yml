@@ -16,7 +16,7 @@ before_script:
   - psql -c 'CREATE DATABASE testfixtures_test;' -U postgres
 
 install:
-  - go get -u -t -tags 'sqlite postgresql mysql' ./...
+  - go get -t -tags 'sqlite postgresql mysql' ./...
   - curl -s https://raw.githubusercontent.com/go-task/task/master/install-task.sh | sh
   - bin/task dl-deps
 
