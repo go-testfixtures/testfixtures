@@ -27,16 +27,15 @@ environment:
 install:
   - SET PATH=%POSTGRES_PATH%\bin;%PATH%
 
-  - createdb testfixtures_test
-
-  - mysql -e "CREATE DATABASE testfixtures_test;" --user=root
-
-  - sqlcmd -S localhost,1433 -U sa -P Password12! -Q "CREATE DATABASE testfixtures_test" -d "master"
-
   - rmdir C:\go /s /q
   - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
   - msiexec /i go%GOVERSION%.windows-amd64.msi /q
   - go version
+
+build_script:
+  - createdb testfixtures_test
+  - mysql -e "CREATE DATABASE testfixtures_test;" --user=root
+  - sqlcmd -S localhost,1433 -U sa -P Password12! -Q "CREATE DATABASE testfixtures_test" -d "master"
 
 test_script:
   - go get -u -t -tags 'sqlite postgresql mysql sqlserver' ./...
