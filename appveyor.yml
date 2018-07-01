@@ -16,6 +16,7 @@ environment:
   PGPASSWORD: Password12!
   PG_CONN_STRING: 'user=postgres password=Password12! dbname=testfixtures_test sslmode=disable'
 
+  MYSQL_PATH: C:\Program Files\MySql\MySQL Server 5.7
   MYSQL_PWD: Password12!
   MYSQL_CONN_STRING: 'root:Password12!@/testfixtures_test?multiStatements=true'
 
@@ -27,7 +28,7 @@ environment:
   GOVERSION: 1.10.2
 
 install:
-  - SET PATH=%POSTGRES_PATH%\bin;%PATH%
+  - SET PATH=%POSTGRES_PATH%\bin;%MYSQL_PATH%\bin;%PATH%
 
   - rmdir C:\go /s /q
   - appveyor DownloadFile https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
