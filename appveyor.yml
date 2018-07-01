@@ -6,11 +6,12 @@ build: false
 deploy: false
 
 services:
-  - postgresql
+  - postgresql96
   - mysql
   - mssql2017
 
 environment:
+  POSTGRES_PATH: C:\Program Files\PostgreSQL\9.6
   PG_CONN_STRING: 'user=postgres password=Password12! dbname=testfixtures_test sslmode=disable'
 
   MYSQL_PWD: Password12!
