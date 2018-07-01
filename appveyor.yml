@@ -42,9 +42,8 @@ build_script:
 
 test_script:
   - go get -t -tags "sqlite postgresql mysql sqlserver" ./...
-  - go get github.com/go-task/task/cmd/task
   - go install -v ./...
-  - task test-pg
-  - task test-mysql
-  - task test-sqlite
-  - task test-sqlserver
+  - go test -v -tags postgresql
+  - go test -v -tags mysql
+  - go test -v -tags sqlite
+  - go test -v -tags sqlserver
