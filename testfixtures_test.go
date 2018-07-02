@@ -51,23 +51,21 @@ func TestLoadFixtures(t *testing.T) {
 			log.Fatalf("Failed to ping database: %v\n", err)
 		}
 
-		batches := [][]byte{}
+		var batches [][]byte
 
 		data, err := ioutil.ReadFile(database.schemaFile)
 		if err != nil {
 			log.Fatalf("Could not read file %s: %v\n", database.schemaFile, err)
 		}
 
-		h, ok := database.helper.(BatchSplitter)
-		if ok {
-			batches = append(batches, bytes.Split(data, h.Splitter())...)
+		if h, ok := database.helper.(batchSplitter); ok {
+			batches = append(batches, bytes.Split(data, h.splitter())...)
 		} else {
 			batches = append(batches, data)
 		}
 
 		for _, b := range batches {
-			_, err = db.Exec(string(b))
-			if err != nil {
+			if _, err = db.Exec(string(b)); err != nil {
 				t.Fatalf("Failed to create schema: %v\n", err)
 			}
 		}
