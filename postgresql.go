@@ -62,13 +62,11 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 	var tables []string
 
 	sql := `
-	         SELECT pg_namespace.nspname || '.' || pg_class.relname
-		 FROM pg_class
-		 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+	   SELECT DISTINCT g.table_schema || '.' || pg_class.relname
+		 FROM pg_class, information_schema.role_table_grants g
 		 WHERE pg_class.relkind = 'r'
-		 AND
-		 pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
-		 AND pg_namespace.nspname NOT LIKE 'pg_toast%';
+		 AND pg_class.relname = g.table_name
+     AND g.table_schema NOT IN ('pg_catalog', 'information_schema');
 	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -91,10 +89,10 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 
 func (h *PostgreSQL) getSequences(q queryable) ([]string, error) {
 	const sql = `
-		SELECT pg_namespace.nspname || '.' || pg_class.relname AS sequence_name
-		FROM pg_class
-		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+		SELECT g.sequence_schema || '.' || pg_class.relname AS sequence_name
+		FROM pg_class, information_schema.sequences g
 		WHERE pg_class.relkind = 'S'
+		AND pg_class.relname = g.sequence_name;
 	`
 
 	rows, err := q.Query(sql)
