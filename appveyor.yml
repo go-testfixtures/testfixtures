@@ -1,6 +1,6 @@
 version: '{build}'
 
-clone_folder: C:\GOPATH\src\github.com\go-testfixtures\testfixtures
+clone_folder: C:\GOPATH\src\gopkg.in\testfixtures.v2
 
 build: false
 deploy: false
@@ -47,5 +47,5 @@ test_script:
   - go install -v ./...
   - go test -v -tags postgresql
   - go test -v -tags mysql
-  - go test -v -tags sqlite
   - go test -v -tags sqlserver
+  - go test -v -tags sqlite
