@@ -113,11 +113,10 @@ func TestQuoteKeyword(t *testing.T) {
 	}
 }
 
-func TestCheckDatabaseName(t *testing.T) {
-	// testdata
+func TestDetectTestDatabase(t *testing.T) {
 	tests := []struct {
-		name       string
-		isGoodName bool
+		name           string
+		isTestDatabase bool
 	}{
 		{"db_test", true},
 		{"dbTEST", true},
@@ -137,12 +136,12 @@ func TestCheckDatabaseName(t *testing.T) {
 	for _, it := range tests {
 		mockedHelper = NewMockHelper(it.name)
 		c = &Context{db: nil, helper: mockedHelper, fixturesFiles: nil}
-		err = c.CheckDatabaseName()
-		if err != nil && it.isGoodName {
-			t.Errorf("CheckDatabaseName(\"%s\") should return nil", it.name)
+		err = c.DetectTestDatabase()
+		if err != nil && it.isTestDatabase {
+			t.Errorf("DetectTestDatabase() should return nil for name = %s", it.name)
 		}
-		if err == nil && !it.isGoodName {
-			t.Errorf("CheckDatabaseName(\"%s\") should return error", it.name)
+		if err == nil && !it.isTestDatabase {
+			t.Errorf("DetectTestDatabase() should return error for name = %s", it.name)
 		}
 	}
 }

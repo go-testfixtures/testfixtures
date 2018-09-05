@@ -1,6 +1,8 @@
 package testfixtures
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type MockHelper struct {
 	dbName string

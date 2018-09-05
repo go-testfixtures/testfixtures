@@ -31,6 +31,10 @@ type insertSQL struct {
 	params []interface{}
 }
 
+var (
+	dbnameRegexp = regexp.MustCompile("(?i)test")
+)
+
 // NewFolder creates a context for all fixtures in a given folder into the database:
 //     NewFolder(db, &PostgreSQL{}, "my/fixtures/folder")
 func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
@@ -85,19 +89,15 @@ func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, e
 	return c, nil
 }
 
-// CheckDatabaseName returns nil if databaseName matches regexp
-//     if err := fixtures.CheckDatabaseName(); err != nil {
+// DetectTestDatabase returns nil if databaseName matches regexp
+//     if err := fixtures.DetectTestDatabase(); err != nil {
 //         log.Fatal(err)
 //     }
-func (c *Context) CheckDatabaseName() error {
-	if skipDatabaseNameCheck {
-		return nil
-	}
+func (c *Context) DetectTestDatabase() error {
 	dbName, err := c.helper.databaseName(c.db)
 	if err != nil {
 		return err
 	}
-	dbnameRegexp := regexp.MustCompile("(?i)test")
 	if !dbnameRegexp.MatchString(dbName) {
 		return ErrNotTestDatabase
 	}
@@ -109,9 +109,12 @@ func (c *Context) CheckDatabaseName() error {
 //         log.Fatal(err)
 //     }
 func (c *Context) Load() error {
-	if err := c.CheckDatabaseName(); err != nil {
-		return err
+	if !skipDatabaseNameCheck {
+		if err := c.DetectTestDatabase(); err != nil {
+			return err
+		}
 	}
+
 	err := c.helper.disableReferentialIntegrity(c.db, func(tx *sql.Tx) error {
 		for _, file := range c.fixturesFiles {
 			modified, err := c.helper.isTableModified(tx, file.fileNameWithoutExtension())
