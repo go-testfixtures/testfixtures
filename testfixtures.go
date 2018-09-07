@@ -89,18 +89,29 @@ func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, e
 	return c, nil
 }
 
+// DetectTestDatabase returns nil if databaseName matches regexp
+//     if err := fixtures.DetectTestDatabase(); err != nil {
+//         log.Fatal(err)
+//     }
+func (c *Context) DetectTestDatabase() error {
+	dbName, err := c.helper.databaseName(c.db)
+	if err != nil {
+		return err
+	}
+	if !dbnameRegexp.MatchString(dbName) {
+		return ErrNotTestDatabase
+	}
+	return nil
+}
+
 // Load wipes and after load all fixtures in the database.
 //     if err := fixtures.Load(); err != nil {
 //         log.Fatal(err)
 //     }
 func (c *Context) Load() error {
 	if !skipDatabaseNameCheck {
-		dbName, err := c.helper.databaseName(c.db)
-		if err != nil {
+		if err := c.DetectTestDatabase(); err != nil {
 			return err
-		}
-		if !dbnameRegexp.MatchString(dbName) {
-			return ErrNotTestDatabase
 		}
 	}
 

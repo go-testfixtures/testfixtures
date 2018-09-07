@@ -113,6 +113,39 @@ func TestQuoteKeyword(t *testing.T) {
 	}
 }
 
+func TestDetectTestDatabase(t *testing.T) {
+	tests := []struct {
+		name           string
+		isTestDatabase bool
+	}{
+		{"db_test", true},
+		{"dbTEST", true},
+		{"testdb", true},
+		{"production", false},
+		{"productionTestCopy", true},
+		{"t_e_s_t", false},
+		{"ТESТ", false}, // cyrillic T
+	}
+
+	var (
+		mockedHelper *MockHelper
+		c            *Context
+		err          error
+	)
+
+	for _, it := range tests {
+		mockedHelper = NewMockHelper(it.name)
+		c = &Context{db: nil, helper: mockedHelper, fixturesFiles: nil}
+		err = c.DetectTestDatabase()
+		if err != nil && it.isTestDatabase {
+			t.Errorf("DetectTestDatabase() should return nil for name = %s", it.name)
+		}
+		if err == nil && !it.isTestDatabase {
+			t.Errorf("DetectTestDatabase() should return error for name = %s", it.name)
+		}
+	}
+}
+
 func TestDatabaseNameHelperSurfacesErrors(t *testing.T) {
 	if len(databases) == 0 {
 		t.Error("No database chosen for tests!")
