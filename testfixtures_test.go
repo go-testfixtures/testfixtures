@@ -127,16 +127,12 @@ func TestDetectTestDatabase(t *testing.T) {
 		{"ТESТ", false}, // cyrillic T
 	}
 
-	var (
-		mockedHelper *MockHelper
-		c            *Context
-		err          error
-	)
-
 	for _, it := range tests {
-		mockedHelper = NewMockHelper(it.name)
-		c = &Context{db: nil, helper: mockedHelper, fixturesFiles: nil}
-		err = c.DetectTestDatabase()
+		var (
+			mockedHelper = NewMockHelper(it.name)
+			c            = &Context{db: nil, helper: mockedHelper, fixturesFiles: nil}
+			err          = c.DetectTestDatabase()
+		)
 		if err != nil && it.isTestDatabase {
 			t.Errorf("DetectTestDatabase() should return nil for name = %s", it.name)
 		}
