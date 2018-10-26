@@ -16,6 +16,10 @@ type PostgreSQL struct {
 	// which requires SUPERUSER privileges.
 	UseAlterConstraint bool
 
+	// DontResetSequences prevents the reset of the databases
+	// sequences after load fixtures time
+	DontResetSequences bool
+
 	tables                   []string
 	sequences                []string
 	nonDeferrableConstraints []pgConstraint
@@ -217,6 +221,9 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure sequences being reset after load
 	defer func() {
+		if h.DontResetSequences {
+			return
+		}
 		if err2 := h.resetSequences(db); err2 != nil && err == nil {
 			err = err2
 		}
