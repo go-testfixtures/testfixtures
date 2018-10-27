@@ -18,7 +18,7 @@ type PostgreSQL struct {
 
 	// DontResetSequences prevents the reset of the databases
 	// sequences after load fixtures time
-	DontResetSequences bool
+	SkipResetSequences bool
 
 	tables                   []string
 	sequences                []string
@@ -220,14 +220,13 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 
 func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure sequences being reset after load
-	defer func() {
-		if h.DontResetSequences {
-			return
-		}
-		if err2 := h.resetSequences(db); err2 != nil && err == nil {
-			err = err2
-		}
-	}()
+	if !h.SkipResetSequences {
+		defer func() {
+			if err2 := h.resetSequences(db); err2 != nil && err == nil {
+				err = err2
+			}
+		}()
+	}
 
 	if h.UseAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)
