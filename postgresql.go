@@ -16,7 +16,7 @@ type PostgreSQL struct {
 	// which requires SUPERUSER privileges.
 	UseAlterConstraint bool
 
-	// DontResetSequences prevents the reset of the databases
+	// SkipResetSequences prevents the reset of the databases
 	// sequences after load fixtures time
 	SkipResetSequences bool
 

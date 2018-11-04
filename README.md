@@ -229,6 +229,15 @@ errors with the previous approach. It is as simple as using:
 &testfixtures.PostgreSQL{UseAlterConstraint: true}
 ```
 
+#### Skipping reset of sequences
+
+You can skip the reset of PostgreSQL sequences if you're debugging a problem
+with it, but most of the time you shouldn't do it:
+
+```go
+&testfixtures.PostgreSQL{SkipResetSequences: true}
+```
+
 ### MySQL / MariaDB
 
 Just make sure the connection string have
