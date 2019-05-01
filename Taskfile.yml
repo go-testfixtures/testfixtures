@@ -62,3 +62,17 @@ tasks:
   test-db:
     cmds:
       - go test -v -tags {{.DATABASE}}
+
+  docker:
+    cmds:
+      - task: docker:build
+      - task: docker:test
+
+  docker:build:
+    cmds:
+      - docker build -t testfixtures .
+
+  docker:test:
+    cmds:
+      - docker-compose down -v
+      - docker-compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver'

@@ -44,7 +44,7 @@ func (*SQLServer) databaseName(q queryable) (string, error) {
 }
 
 func (*SQLServer) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> ?", "spt_values")
 	if err != nil {
 		return nil, err
 	}

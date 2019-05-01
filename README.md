@@ -366,6 +366,16 @@ these and also Microsoft SQL Server.
 To set the connection string of tests for each database, copy the `.sample.env`
 file as `.env` and edit it according to your environment.
 
+Or altenatively, you could use Docker to easily run tests on all databases
+at once. To do that, make sure Docker is installed and running in your machine
+and then run:
+
+```bash
+task docker
+```
+
+TODO: Setup tests to also run on Oracle on Docker.
+
 ## Alternatives
 
 If you don't think using fixtures is a good idea, you can try one of these

@@ -13,6 +13,12 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+func TestMain(m *testing.M) {
+	SkipDatabaseNameCheck(true)
+
+	os.Exit(m.Run())
+}
+
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
 	file := f.fileNameWithoutExtension()
