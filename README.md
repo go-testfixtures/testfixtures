@@ -197,7 +197,7 @@ testfixtures.ResetSequencesTo(10000)
 
 ## Compatible databases
 
-### PostgreSQL
+### PostgreSQL / TimescaleDB
 
 This package has two approaches to disable foreign keys while importing fixtures
 in PostgreSQL databases:
