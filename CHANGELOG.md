@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.6.0 - 2019-10-24
+
+- Add support for TimescaleDB
+  ([#53](https://github.com/go-testfixtures/testfixtures/pull/53)).
+
 ## v2.5.3 - 2018-12-15
 
 - Fixes related to use of foreign key pragmas on MySQL (#43).
