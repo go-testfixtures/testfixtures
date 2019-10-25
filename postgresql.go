@@ -71,7 +71,8 @@ func (h *PostgreSQL) tableNames(q queryable) ([]string, error) {
 		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		WHERE pg_class.relkind = 'r'
 		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
-		  AND pg_namespace.nspname NOT LIKE 'pg_toast%';
+		  AND pg_namespace.nspname NOT LIKE 'pg_toast%'
+		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%';
 	`
 	rows, err := q.Query(sql)
 	if err != nil {
@@ -98,6 +99,7 @@ func (h *PostgreSQL) getSequences(q queryable) ([]string, error) {
 		FROM pg_class
 		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		WHERE pg_class.relkind = 'S'
+		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%'
 	`
 
 	rows, err := q.Query(sql)
@@ -128,6 +130,7 @@ func (*PostgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 		FROM information_schema.table_constraints
 		WHERE constraint_type = 'FOREIGN KEY'
 		  AND is_deferrable = 'NO'
+		  AND table_schema NOT LIKE '\_timescaledb%'
   	`
 	rows, err := q.Query(sql)
 	if err != nil {
