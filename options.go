@@ -12,7 +12,7 @@ func SkipDatabaseNameCheck(value bool) {
 }
 
 // ResetSequencesTo sets the value the sequences will be reset to.
-// This is used by PostgreSQL and Oracle.
+// This is used by PostgreSQL.
 // Defaults to 10000.
 func ResetSequencesTo(value int64) {
 	resetSequencesTo = value

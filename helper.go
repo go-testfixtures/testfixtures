@@ -46,7 +46,6 @@ var (
 	_ Helper = &MySQL{}
 	_ Helper = &PostgreSQL{}
 	_ Helper = &SQLite{}
-	_ Helper = &Oracle{}
 	_ Helper = &SQLServer{}
 )
 

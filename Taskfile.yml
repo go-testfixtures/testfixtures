@@ -21,13 +21,12 @@ tasks:
       - task: test-sqlite
 
   test-all:
-    desc: Test all databases (PG, MySQL, SQLite, SQLServer and Oracle)
+    desc: Test all databases (PG, MySQL, SQLite, SQLServer)
     cmds:
       - task: test-pg
       - task: test-mysql
       - task: test-sqlite
       - task: test-sqlserver
-      - task: test-oracle
 
   test-pg:
     desc: Test PostgreSQL
@@ -52,12 +51,6 @@ tasks:
     cmds:
       - task: test-db
         vars: {DATABASE: sqlserver}
-
-  test-oracle:
-    desc: Test Oracle
-    cmds:
-      - task: test-db
-        vars: {DATABASE: oracle}
 
   test-db:
     cmds:

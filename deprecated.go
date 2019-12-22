@@ -33,12 +33,6 @@ type (
 	SQLServerHelper struct {
 		SQLServer
 	}
-
-	// OracleHelper is the Oracle helper
-	// Deprecated: Use Oracle{} instead
-	OracleHelper struct {
-		Oracle
-	}
 )
 
 func (h *PostgreSQLHelper) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) error {

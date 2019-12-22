@@ -187,7 +187,7 @@ testfixtures.SkipDatabaseNameCheck(true)
 
 ## Sequences
 
-For PostgreSQL or Oracle, this package also resets all sequences to a high
+For PostgreSQL, this package also resets all sequences to a high
 number to prevent duplicated primary keys while running the tests.
 The default is 10000, but you can change that with:
 
@@ -270,14 +270,6 @@ are handled as well. Just make sure you are logged in with a user with
 &testfixtures.SQLServer{}
 ```
 
-### Oracle
-
-Oracle is supported as well. Use:
-
-```go
-&testfixtures.Oracle{}
-```
-
 ## Generating fixtures for a existing database (experimental)
 
 The following code will generate a YAML file for each table of the database in
@@ -350,9 +342,6 @@ go test -tags sqlite
 # running tests for SQL Server
 go test -tags sqlserver
 
-# running tests for Oracle
-go test -tags oracle
-
 # running test for multiple databases at once
 go test -tags 'sqlite postgresql mysql'
 
@@ -373,8 +362,6 @@ and then run:
 ```bash
 task docker
 ```
-
-TODO: Setup tests to also run on Oracle on Docker.
 
 ## Alternatives
 
