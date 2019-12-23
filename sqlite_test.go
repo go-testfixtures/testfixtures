@@ -10,7 +10,7 @@ import (
 )
 
 func TestSQLite(t *testing.T) {
-	testTestFixtures(
+	testLoader(
 		t,
 		"sqlite3",
 		os.Getenv("SQLITE_CONN_STRING"),

@@ -10,7 +10,7 @@ import (
 )
 
 func TestMySQL(t *testing.T) {
-	testTestFixtures(
+	testLoader(
 		t,
 		"mysql",
 		os.Getenv("MYSQL_CONN_STRING"),

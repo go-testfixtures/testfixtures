@@ -10,7 +10,7 @@ import (
 )
 
 func TestSQLServer(t *testing.T) {
-	testTestFixtures(
+	testLoader(
 		t,
 		"mssql",
 		os.Getenv("SQLSERVER_CONN_STRING"),

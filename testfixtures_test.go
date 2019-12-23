@@ -26,7 +26,7 @@ func TestFixtureFile(t *testing.T) {
 	}
 }
 
-func testTestFixtures(t *testing.T, driver, connStr, schemaFilePath string, additionalOptions ...func(*TestFixtures) error) {
+func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
 	db, err := sql.Open(driver, connStr)
 	if err != nil {
 		t.Errorf("failed to open database: %v", err)
@@ -66,27 +66,27 @@ func testTestFixtures(t *testing.T, driver, connStr, schemaFilePath string, addi
 
 	t.Run("LoadFromDirectory", func(t *testing.T) {
 		options := append(
-			[]func(*TestFixtures) error{
+			[]func(*Loader) error{
 				Database(db),
 				Driver(driver),
 				Directory("testdata/fixtures"),
 			},
 			additionalOptions...,
 		)
-		tf, err := New(options...)
+		l, err := New(options...)
 		if err != nil {
-			t.Errorf("failed to create TestFixtures: %v", err)
+			t.Errorf("failed to create Loader: %v", err)
 			return
 		}
-		if err := tf.Load(); err != nil {
+		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, tf)
+		assertFixturesLoaded(t, l)
 	})
 
 	t.Run("LoadFromFiles", func(t *testing.T) {
 		options := append(
-			[]func(*TestFixtures) error{
+			[]func(*Loader) error{
 				Database(db),
 				Driver(driver),
 				Files(
@@ -99,29 +99,29 @@ func testTestFixtures(t *testing.T, driver, connStr, schemaFilePath string, addi
 			},
 			additionalOptions...,
 		)
-		tf, err := New(options...)
+		l, err := New(options...)
 		if err != nil {
-			t.Errorf("failed to create TestFixtures: %v", err)
+			t.Errorf("failed to create Loader: %v", err)
 			return
 		}
-		if err := tf.Load(); err != nil {
+		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, tf)
+		assertFixturesLoaded(t, l)
 	})
 
 	t.Run("GenerateAndLoad", func(t *testing.T) {
 		options := append(
-			[]func(*TestFixtures) error{
+			[]func(*Loader) error{
 				Database(db),
 				Driver(driver),
 				Directory("testdata/fixtures"),
 			},
 			additionalOptions...,
 		)
-		tf, err := New(options...)
+		l, err := New(options...)
 		if err != nil {
-			t.Errorf("failed to create TestFixtures: %v", err)
+			t.Errorf("failed to create Loader: %v", err)
 			return
 		}
 
@@ -130,12 +130,12 @@ func testTestFixtures(t *testing.T, driver, connStr, schemaFilePath string, addi
 			t.Errorf("cannot create temp dir: %v", err)
 			return
 		}
-		if err := GenerateFixtures(db, tf.helper, dir); err != nil {
+		if err := GenerateFixtures(db, l.helper, dir); err != nil {
 			t.Errorf("cannot generate fixtures: %v", err)
 			return
 		}
 
-		if err := tf.Load(); err != nil {
+		if err := l.Load(); err != nil {
 			t.Error(err)
 		}
 	})
@@ -160,19 +160,19 @@ func testTestFixtures(t *testing.T, driver, connStr, schemaFilePath string, addi
 	})
 }
 
-func assertFixturesLoaded(t *testing.T, tf *TestFixtures) {
-	assertCount(t, tf, "posts", 2)
-	assertCount(t, tf, "comments", 4)
-	assertCount(t, tf, "tags", 3)
-	assertCount(t, tf, "posts_tags", 2)
-	assertCount(t, tf, "users", 2)
+func assertFixturesLoaded(t *testing.T, l *Loader) {
+	assertCount(t, l, "posts", 2)
+	assertCount(t, l, "comments", 4)
+	assertCount(t, l, "tags", 3)
+	assertCount(t, l, "posts_tags", 2)
+	assertCount(t, l, "users", 2)
 }
 
-func assertCount(t *testing.T, tf *TestFixtures, table string, expectedCount int) {
+func assertCount(t *testing.T, l *Loader, table string, expectedCount int) {
 	count := 0
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", tf.helper.quoteKeyword(table))
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", l.helper.quoteKeyword(table))
 
-	row := tf.db.QueryRow(sql)
+	row := l.db.QueryRow(sql)
 	if err := row.Scan(&count); err != nil {
 		t.Errorf("cannot query table: %v", err)
 	}
@@ -220,8 +220,8 @@ func TestDetectTestDatabase(t *testing.T) {
 	for _, it := range tests {
 		var (
 			mockedHelper = NewMockHelper(it.name)
-			tf           = &TestFixtures{helper: mockedHelper}
-			err          = tf.DetectTestDatabase()
+			l            = &Loader{helper: mockedHelper}
+			err          = l.DetectTestDatabase()
 		)
 		if err != nil && it.isTestDatabase {
 			t.Errorf("DetectTestDatabase() should return nil for name = %s", it.name)

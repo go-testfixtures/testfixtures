@@ -10,7 +10,7 @@ import (
 )
 
 func TestPostgreSQL(t *testing.T) {
-	testTestFixtures(
+	testLoader(
 		t,
 		"postgres",
 		os.Getenv("PG_CONN_STRING"),
@@ -19,7 +19,7 @@ func TestPostgreSQL(t *testing.T) {
 }
 
 func TestPostgreSQLWithAlterConstraint(t *testing.T) {
-	testTestFixtures(
+	testLoader(
 		t,
 		"postgres",
 		os.Getenv("PG_CONN_STRING"),
