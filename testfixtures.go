@@ -184,7 +184,7 @@ func (l *Loader) DetectTestDatabase() error {
 		return err
 	}
 	if !dbnameRegexp.MatchString(dbName) {
-		return ErrNotTestDatabase
+		return fmt.Errorf(`testfixtures: database "%s" does not appear to be a test database`, dbName)
 	}
 	return nil
 }
@@ -239,11 +239,32 @@ func (l *Loader) Load() error {
 	return l.helper.afterLoad(l.db)
 }
 
+// InsertError will be returned if any error happens on database while
+// inserting the record.
+type InsertError struct {
+	Err    error
+	File   string
+	Index  int
+	SQL    string
+	Params []interface{}
+}
+
+func (e *InsertError) Error() string {
+	return fmt.Sprintf(
+		"testfixtures: error inserting record: %v, on file: %s, index: %d, sql: %s, params: %v",
+		e.Err,
+		e.File,
+		e.Index,
+		e.SQL,
+		e.Params,
+	)
+}
+
 func (l *Loader) buildInsertSQLs() error {
 	for _, f := range l.fixturesFiles {
 		var records interface{}
 		if err := yaml.Unmarshal(f.content, &records); err != nil {
-			return err
+			return fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
 		}
 
 		switch records := records.(type) {
@@ -251,7 +272,7 @@ func (l *Loader) buildInsertSQLs() error {
 			for _, record := range records {
 				recordMap, ok := record.(map[interface{}]interface{})
 				if !ok {
-					return ErrWrongCastNotAMap
+					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 				}
 
 				sql, values, err := f.buildInsertSQL(l.helper, recordMap)
@@ -265,7 +286,7 @@ func (l *Loader) buildInsertSQLs() error {
 			for _, record := range records {
 				recordMap, ok := record.(map[interface{}]interface{})
 				if !ok {
-					return ErrWrongCastNotAMap
+					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 				}
 
 				sql, values, err := f.buildInsertSQL(l.helper, recordMap)
@@ -276,7 +297,7 @@ func (l *Loader) buildInsertSQLs() error {
 				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
 			}
 		default:
-			return ErrFileIsNotSliceOrMap
+			return fmt.Errorf("testfixtures: fixture is not a slice or map")
 		}
 	}
 
@@ -288,8 +309,10 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 }
 
 func (f *fixtureFile) delete(tx *sql.Tx, h Helper) error {
-	_, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension())))
-	return err
+	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension()))); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, f.fileNameWithoutExtension(), err)
+	}
+	return nil
 }
 
 func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
@@ -301,7 +324,7 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 	for key, value := range record {
 		keyStr, ok := key.(string)
 		if !ok {
-			err = ErrKeyIsNotString
+			err = fmt.Errorf("testfixtures: record map key is not a string")
 			return
 		}
 
@@ -347,7 +370,7 @@ func fixturesFromDir(dir string) ([]*fixtureFile, error) {
 	var files []*fixtureFile
 	fileinfos, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`testfixtures: could not stat directory "%s": %w`, dir, err)
 	}
 
 	for _, fileinfo := range fileinfos {
@@ -359,7 +382,7 @@ func fixturesFromDir(dir string) ([]*fixtureFile, error) {
 			}
 			fixture.content, err = ioutil.ReadFile(fixture.path)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 			}
 			files = append(files, fixture)
 		}
@@ -380,7 +403,7 @@ func fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
 		}
 		fixture.content, err = ioutil.ReadFile(fixture.path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 		}
 		fixtureFiles = append(fixtureFiles, fixture)
 	}

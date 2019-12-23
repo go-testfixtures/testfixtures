@@ -1,7 +1,7 @@
 package testfixtures
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
@@ -19,9 +19,6 @@ var timeFormats = []string{
 	"2006-01-02T15:04:05-07:00",
 }
 
-// ErrCouldNotConvertToTime is returns when a string is not a reconizable time format
-var ErrCouldNotConvertToTime = errors.New("Could not convert string to time")
-
 func tryStrToDate(s string) (time.Time, error) {
 	for _, f := range timeFormats {
 		t, err := time.ParseInLocation(f, s, time.Local)
@@ -30,5 +27,5 @@ func tryStrToDate(s string) (time.Time, error) {
 		}
 		return t, nil
 	}
-	return time.Time{}, ErrCouldNotConvertToTime
+	return time.Time{}, fmt.Errorf(`testfixtures: could not convert string "%s" to time`, s)
 }

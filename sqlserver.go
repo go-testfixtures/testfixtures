@@ -81,13 +81,13 @@ func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 		defer func() {
 			_, err2 := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
 			if err2 != nil && err == nil {
-				err = err2
+				err = fmt.Errorf("testfixtures: could not disable identity insert: %w", err2)
 			}
 		}()
 
 		_, err := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON", h.quoteKeyword(tableName)))
 		if err != nil {
-			return err
+			return fmt.Errorf("testfixtures: could not enable identity insert: %w", err)
 		}
 	}
 	return fn()
