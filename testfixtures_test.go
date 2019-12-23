@@ -105,6 +105,25 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	})
 
 	t.Run("GenerateAndLoad", func(t *testing.T) {
+		dir, err := ioutil.TempDir(os.TempDir(), "testfixtures_test")
+		if err != nil {
+			t.Errorf("cannot create temp dir: %v", err)
+			return
+		}
+		dumper, err := NewDumper(
+			DumpDatabase(db),
+			DumpDialect(dialect),
+			DumpDirectory(dir),
+		)
+		if err != nil {
+			t.Errorf("could not create dumper: %v", err)
+			return
+		}
+		if err := dumper.Dump(); err != nil {
+			t.Errorf("cannot generate fixtures: %v", err)
+			return
+		}
+
 		options := append(
 			[]func(*Loader) error{
 				Database(db),
@@ -118,17 +137,6 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			t.Errorf("failed to create Loader: %v", err)
 			return
 		}
-
-		dir, err := ioutil.TempDir(os.TempDir(), "testfixtures_test")
-		if err != nil {
-			t.Errorf("cannot create temp dir: %v", err)
-			return
-		}
-		if err := GenerateFixtures(db, l.helper, dir); err != nil {
-			t.Errorf("cannot generate fixtures: %v", err)
-			return
-		}
-
 		if err := l.Load(); err != nil {
 			t.Error(err)
 		}

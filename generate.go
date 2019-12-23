@@ -4,56 +4,100 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"unicode/utf8"
 
 	"gopkg.in/yaml.v2"
 )
 
-// TableInfo is settings for generating a fixture for table.
-type TableInfo struct {
-	Name  string // Table name
-	Where string // A condition for extracting records. If this value is empty, extracts all records.
+// Dumper is resposible for dumping fixtures from the database into a
+// directory.
+type Dumper struct {
+	db     *sql.DB
+	helper Helper
+	dir    string
+
+	tables []string
 }
 
-func (ti *TableInfo) whereClause() string {
-	if ti.Where == "" {
-		return ""
+// NewDumper creates a new dumper with the given options.
+//
+// The "DumpDatabase", "DumpDialect" and "DumpDirectory" options are required.
+func NewDumper(options ...func(*Dumper) error) (*Dumper, error) {
+	d := &Dumper{}
+
+	for _, option := range options {
+		if err := option(d); err != nil {
+			return nil, err
+		}
 	}
-	return fmt.Sprintf(" WHERE %s", ti.Where)
+
+	return d, nil
 }
 
-// GenerateFixtures generates fixtures for the current contents of a database, and saves
-// them to the specified directory
-func GenerateFixtures(db *sql.DB, helper Helper, dir string) error {
-	tables, err := helper.tableNames(db)
-	if err != nil {
-		return err
+// DumpDatabase sets the database to be dumped.
+func DumpDatabase(db *sql.DB) func(*Dumper) error {
+	return func(d *Dumper) error {
+		d.db = db
+		return nil
 	}
+}
+
+// DumpDialect informs Loader about which database dialect you're using.
+//
+// Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
+// "sqlite" and "sqlserver".
+func DumpDialect(dialect string) func(*Dumper) error {
+	return func(d *Dumper) error {
+		h, err := helperForDialect(dialect)
+		if err != nil {
+			return err
+		}
+		d.helper = h
+		return nil
+	}
+}
+
+// DumpDirectory sets the directory where the fixtures files will be created.
+func DumpDirectory(dir string) func(*Dumper) error {
+	return func(d *Dumper) error {
+		d.dir = dir
+		return nil
+	}
+}
+
+// DumpTables allows you to choose which tables you want to dump.
+//
+// If not informed, Dumper will dump all tables by default.
+func DumpTables(tables ...string) func(*Dumper) error {
+	return func(d *Dumper) error {
+		d.tables = tables
+		return nil
+	}
+}
+
+// Dump dumps the databases as YAML fixtures.
+func (d *Dumper) Dump() error {
+	tables := d.tables
+	if len(tables) == 0 {
+		var err error
+		tables, err = d.helper.tableNames(d.db)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, table := range tables {
-		filename := path.Join(dir, table+".yml")
-		if err := generateFixturesForTable(db, helper, &TableInfo{Name: table}, filename); err != nil {
+		if err := d.dumpTable(table); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// GenerateFixturesForTables generates fixtures for the current contents of specified tables in a database, and saves
-// them to the specified directory
-func GenerateFixturesForTables(db *sql.DB, tables []*TableInfo, helper Helper, dir string) error {
-	for _, table := range tables {
-		filename := path.Join(dir, table.Name+".yml")
-		if err := generateFixturesForTable(db, helper, table, filename); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func generateFixturesForTable(db *sql.DB, h Helper, table *TableInfo, filename string) error {
-	query := fmt.Sprintf("SELECT * FROM %s%s", h.quoteKeyword(table.Name), table.whereClause())
-	rows, err := db.Query(query)
+func (d *Dumper) dumpTable(table string) error {
+	query := fmt.Sprintf("SELECT * FROM %s", d.helper.quoteKeyword(table))
+	rows, err := d.db.Query(query)
 	if err != nil {
 		return err
 	}
@@ -85,17 +129,18 @@ func generateFixturesForTable(db *sql.DB, h Helper, table *TableInfo, filename s
 		return err
 	}
 
-	f, err := os.Create(filename)
+	filePath := filepath.Join(d.dir, table+".yml")
+	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	marshaled, err := yaml.Marshal(fixtures)
+	data, err := yaml.Marshal(fixtures)
 	if err != nil {
 		return err
 	}
-	_, err = f.Write(marshaled)
+	_, err = f.Write(data)
 	return err
 }
 
