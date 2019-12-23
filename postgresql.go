@@ -10,15 +10,8 @@ import (
 type PostgreSQL struct {
 	baseHelper
 
-	// UseAlterConstraint If true, the contraint disabling will do
-	// using ALTER CONTRAINT sintax, only allowed in PG >= 9.4.
-	// If false, the constraint disabling will use DISABLE TRIGGER ALL,
-	// which requires SUPERUSER privileges.
-	UseAlterConstraint bool
-
-	// SkipResetSequences prevents the reset of the databases
-	// sequences after load fixtures time
-	SkipResetSequences bool
+	useAlterConstraint bool
+	skipResetSequences bool
 
 	tables                   []string
 	sequences                []string
@@ -223,7 +216,7 @@ func (h *PostgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 
 func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure sequences being reset after load
-	if !h.SkipResetSequences {
+	if !h.skipResetSequences {
 		defer func() {
 			if err2 := h.resetSequences(db); err2 != nil && err == nil {
 				err = err2
@@ -231,7 +224,7 @@ func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 		}()
 	}
 
-	if h.UseAlterConstraint {
+	if h.useAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)
 	}
 	return h.disableTriggers(db, loadFn)

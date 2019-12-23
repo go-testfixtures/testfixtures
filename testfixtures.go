@@ -12,8 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Context holds the fixtures to be loaded in the database.
-type Context struct {
+// TestFixtures is the responsible to loading fixtures.
+type TestFixtures struct {
 	db            *sql.DB
 	helper        Helper
 	fixturesFiles []*fixtureFile
@@ -35,66 +35,125 @@ var (
 	dbnameRegexp = regexp.MustCompile("(?i)test")
 )
 
-// NewFolder creates a context for all fixtures in a given folder into the database:
-//     NewFolder(db, &PostgreSQL{}, "my/fixtures/folder")
-func NewFolder(db *sql.DB, helper Helper, folderName string) (*Context, error) {
-	fixtures, err := fixturesFromFolder(folderName)
-	if err != nil {
+// New instantiates a new TestFixtures instance. The "Database" and "Driver"
+// options are required.
+func New(options ...func(*TestFixtures) error) (*TestFixtures, error) {
+	tf := &TestFixtures{}
+
+	for _, option := range options {
+		if err := option(tf); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tf.helper.init(tf.db); err != nil {
+		return nil, err
+	}
+	if err := tf.buildInsertSQLs(); err != nil {
 		return nil, err
 	}
 
-	c, err := newContext(db, helper, fixtures)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return tf, nil
 }
 
-// NewFiles creates a context for all specified fixtures files into database:
-//     NewFiles(db, &PostgreSQL{},
-//         "fixtures/customers.yml",
-//         "fixtures/orders.yml"
-//         // add as many files you want
-//     )
-func NewFiles(db *sql.DB, helper Helper, fileNames ...string) (*Context, error) {
-	fixtures, err := fixturesFromFiles(fileNames...)
-	if err != nil {
-		return nil, err
+// Database sets an existing sql.DB instant to TestFixtures.
+func Database(db *sql.DB) func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		tf.db = db
+		return nil
 	}
-
-	c, err := newContext(db, helper, fixtures)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
-func newContext(db *sql.DB, helper Helper, fixtures []*fixtureFile) (*Context, error) {
-	c := &Context{
-		db:            db,
-		helper:        helper,
-		fixturesFiles: fixtures,
+// Driver informs TestFixtures about which database driver you're using.
+// Possible options are "postgresql", "mysql", "sqlite" and "mssql".
+func Driver(driver string) func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		h, err := helperForDriver(driver)
+		if err != nil {
+			return err
+		}
+		tf.helper = h
+		return nil
 	}
+}
 
-	if err := c.helper.init(c.db); err != nil {
-		return nil, err
+func helperForDriver(driver string) (Helper, error) {
+	switch driver {
+	case "postgres":
+		return &PostgreSQL{}, nil
+	case "mysql":
+		return &MySQL{}, nil
+	case "sqlite3":
+		return &SQLite{}, nil
+	case "mssql":
+		return &SQLServer{}, nil
+	default:
+		return nil, fmt.Errorf(`testfixtures: unrecognized driver "%s"`, driver)
 	}
+}
 
-	if err := c.buildInsertSQLs(); err != nil {
-		return nil, err
+// UseAlterConstraint If true, the contraint disabling will do
+// using ALTER CONTRAINT sintax, only allowed in PG >= 9.4.
+// If false, the constraint disabling will use DISABLE TRIGGER ALL,
+// which requires SUPERUSER privileges.
+//
+// Only valid for PostgreSQL. Returns an error otherwise.
+func UseAlterConstraint() func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		pgHelper, ok := tf.helper.(*PostgreSQL)
+		if !ok {
+			return fmt.Errorf("testfixtures: UseAlterConstraint is only valid for PostgreSQL databases")
+		}
+		pgHelper.useAlterConstraint = true
+		return nil
 	}
+}
 
-	return c, nil
+// SkipResetSequences prevents the reset of the databases
+// sequences after load fixtures time
+//
+// Only valid for PostgreSQL. Returns an error otherwise.
+func SkipResetSequences() func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		pgHelper, ok := tf.helper.(*PostgreSQL)
+		if !ok {
+			return fmt.Errorf("testfixtures: SkipResetSequences is only valid for PostgreSQL databases")
+		}
+		pgHelper.skipResetSequences = true
+		return nil
+	}
+}
+
+// Directory informs TestFixtures to load YAML files from a given directory.
+func Directory(dir string) func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		fixtures, err := fixturesFromDir(dir)
+		if err != nil {
+			return err
+		}
+		tf.fixturesFiles = fixtures
+		return nil
+	}
+}
+
+// Files informs TextFixtures to load a given set of YAML files.
+func Files(files ...string) func(*TestFixtures) error {
+	return func(tf *TestFixtures) error {
+		fixtures, err := fixturesFromFiles(files...)
+		if err != nil {
+			return err
+		}
+		tf.fixturesFiles = fixtures
+		return nil
+	}
 }
 
 // DetectTestDatabase returns nil if databaseName matches regexp
 //     if err := fixtures.DetectTestDatabase(); err != nil {
 //         log.Fatal(err)
 //     }
-func (c *Context) DetectTestDatabase() error {
-	dbName, err := c.helper.databaseName(c.db)
+func (tf *TestFixtures) DetectTestDatabase() error {
+	dbName, err := tf.helper.databaseName(tf.db)
 	if err != nil {
 		return err
 	}
@@ -108,27 +167,27 @@ func (c *Context) DetectTestDatabase() error {
 //     if err := fixtures.Load(); err != nil {
 //         log.Fatal(err)
 //     }
-func (c *Context) Load() error {
+func (tf *TestFixtures) Load() error {
 	if !skipDatabaseNameCheck {
-		if err := c.DetectTestDatabase(); err != nil {
+		if err := tf.DetectTestDatabase(); err != nil {
 			return err
 		}
 	}
 
-	err := c.helper.disableReferentialIntegrity(c.db, func(tx *sql.Tx) error {
-		for _, file := range c.fixturesFiles {
-			modified, err := c.helper.isTableModified(tx, file.fileNameWithoutExtension())
+	err := tf.helper.disableReferentialIntegrity(tf.db, func(tx *sql.Tx) error {
+		for _, file := range tf.fixturesFiles {
+			modified, err := tf.helper.isTableModified(tx, file.fileNameWithoutExtension())
 			if err != nil {
 				return err
 			}
 			if !modified {
 				continue
 			}
-			if err := file.delete(tx, c.helper); err != nil {
+			if err := file.delete(tx, tf.helper); err != nil {
 				return err
 			}
 
-			err = c.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+			err = tf.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for j, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
 						return &InsertError{
@@ -151,11 +210,11 @@ func (c *Context) Load() error {
 	if err != nil {
 		return err
 	}
-	return c.helper.afterLoad(c.db)
+	return tf.helper.afterLoad(tf.db)
 }
 
-func (c *Context) buildInsertSQLs() error {
-	for _, f := range c.fixturesFiles {
+func (tf *TestFixtures) buildInsertSQLs() error {
+	for _, f := range tf.fixturesFiles {
 		var records interface{}
 		if err := yaml.Unmarshal(f.content, &records); err != nil {
 			return err
@@ -169,7 +228,7 @@ func (c *Context) buildInsertSQLs() error {
 					return ErrWrongCastNotAMap
 				}
 
-				sql, values, err := f.buildInsertSQL(c.helper, recordMap)
+				sql, values, err := f.buildInsertSQL(tf.helper, recordMap)
 				if err != nil {
 					return err
 				}
@@ -183,7 +242,7 @@ func (c *Context) buildInsertSQLs() error {
 					return ErrWrongCastNotAMap
 				}
 
-				sql, values, err := f.buildInsertSQL(c.helper, recordMap)
+				sql, values, err := f.buildInsertSQL(tf.helper, recordMap)
 				if err != nil {
 					return err
 				}
@@ -243,8 +302,6 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 			sqlValues = append(sqlValues, fmt.Sprintf("$%d", i))
 		case paramTypeQuestion:
 			sqlValues = append(sqlValues, "?")
-		case paramTypeColon:
-			sqlValues = append(sqlValues, fmt.Sprintf(":%d", i))
 		}
 
 		values = append(values, value)
@@ -260,9 +317,9 @@ func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{
 	return
 }
 
-func fixturesFromFolder(folderName string) ([]*fixtureFile, error) {
+func fixturesFromDir(dir string) ([]*fixtureFile, error) {
 	var files []*fixtureFile
-	fileinfos, err := ioutil.ReadDir(folderName)
+	fileinfos, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +328,7 @@ func fixturesFromFolder(folderName string) ([]*fixtureFile, error) {
 		fileExt := filepath.Ext(fileinfo.Name())
 		if !fileinfo.IsDir() && (fileExt == ".yml" || fileExt == ".yaml") {
 			fixture := &fixtureFile{
-				path:     path.Join(folderName, fileinfo.Name()),
+				path:     path.Join(dir, fileinfo.Name()),
 				fileName: fileinfo.Name(),
 			}
 			fixture.content, err = ioutil.ReadFile(fixture.path)
