@@ -17,6 +17,8 @@ type Loader struct {
 	db            *sql.DB
 	helper        Helper
 	fixturesFiles []*fixtureFile
+
+	skipDatabaseNameCheck bool
 }
 
 type fixtureFile struct {
@@ -109,8 +111,8 @@ func UseAlterConstraint() func(*Loader) error {
 	}
 }
 
-// SkipResetSequences prevents the reset of the databases
-// sequences after load fixtures time
+// SkipResetSequences prevents Loader from reseting sequences after loading
+// fixtures.
 //
 // Only valid for PostgreSQL. Returns an error otherwise.
 func SkipResetSequences() func(*Loader) error {
@@ -120,6 +122,30 @@ func SkipResetSequences() func(*Loader) error {
 			return fmt.Errorf("testfixtures: SkipResetSequences is only valid for PostgreSQL databases")
 		}
 		pgHelper.skipResetSequences = true
+		return nil
+	}
+}
+
+// ResetSequencesTo sets the value the sequences will be reset to.
+// Defaults to 10000.
+//
+// Only valid for PostgreSQL. Returns an error otherwise.
+func ResetSequencesTo(value int64) func(*Loader) error {
+	return func(l *Loader) error {
+		pgHelper, ok := l.helper.(*PostgreSQL)
+		if !ok {
+			return fmt.Errorf("testfixtures: ResetSequencesTo is only valid for PostgreSQL databases")
+		}
+		pgHelper.resetSequencesTo = value
+		return nil
+	}
+}
+
+// SkipDatabaseNameCheck will make Loader not check if the database
+// name contains "test". Use with caution!
+func SkipDatabaseNameCheck() func(*Loader) error {
+	return func(l *Loader) error {
+		l.skipDatabaseNameCheck = true
 		return nil
 	}
 }
@@ -168,7 +194,7 @@ func (l *Loader) DetectTestDatabase() error {
 //         log.Fatal(err)
 //     }
 func (l *Loader) Load() error {
-	if !skipDatabaseNameCheck {
+	if !l.skipDatabaseNameCheck {
 		if err := l.DetectTestDatabase(); err != nil {
 			return err
 		}

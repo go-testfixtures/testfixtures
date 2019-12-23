@@ -12,6 +12,7 @@ type PostgreSQL struct {
 
 	useAlterConstraint bool
 	skipResetSequences bool
+	resetSequencesTo   int64
 
 	tables                   []string
 	sequences                []string
@@ -231,6 +232,11 @@ func (h *PostgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 }
 
 func (h *PostgreSQL) resetSequences(db *sql.DB) error {
+	resetSequencesTo := h.resetSequencesTo
+	if resetSequencesTo == 0 {
+		resetSequencesTo = 10000
+	}
+
 	for _, sequence := range h.sequences {
 		_, err := db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, resetSequencesTo))
 		if err != nil {
