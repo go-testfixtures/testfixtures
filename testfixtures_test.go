@@ -20,8 +20,8 @@ func TestFixtureFile(t *testing.T) {
 	}
 }
 
-func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
-	db, err := sql.Open(driver, connStr)
+func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
+	db, err := sql.Open(dialect, connStr)
 	if err != nil {
 		t.Errorf("failed to open database: %v", err)
 		return
@@ -38,7 +38,7 @@ func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additional
 		t.Errorf("cannot read schema file: %v", err)
 		return
 	}
-	helper, err := helperForDriver(driver)
+	helper, err := helperForDialect(dialect)
 	if err != nil {
 		t.Errorf("cannot get helper: %v", err)
 		return
@@ -62,7 +62,7 @@ func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additional
 		options := append(
 			[]func(*Loader) error{
 				Database(db),
-				Driver(driver),
+				Dialect(dialect),
 				Directory("testdata/fixtures"),
 			},
 			additionalOptions...,
@@ -82,7 +82,7 @@ func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additional
 		options := append(
 			[]func(*Loader) error{
 				Database(db),
-				Driver(driver),
+				Dialect(dialect),
 				Files(
 					"testdata/fixtures/posts.yml",
 					"testdata/fixtures/comments.yml",
@@ -108,7 +108,7 @@ func testLoader(t *testing.T, driver, connStr, schemaFilePath string, additional
 		options := append(
 			[]func(*Loader) error{
 				Database(db),
-				Driver(driver),
+				Dialect(dialect),
 				Directory("testdata/fixtures"),
 			},
 			additionalOptions...,

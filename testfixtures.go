@@ -66,11 +66,13 @@ func Database(db *sql.DB) func(*Loader) error {
 	}
 }
 
-// Driver informs Loader about which database driver you're using.
-// Possible options are "postgresql", "mysql", "sqlite" and "mssql".
-func Driver(driver string) func(*Loader) error {
+// Dialect informs Loader about which database dialect you're using.
+//
+// Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
+// "sqlite" and "sqlserver".
+func Dialect(dialect string) func(*Loader) error {
 	return func(l *Loader) error {
-		h, err := helperForDriver(driver)
+		h, err := helperForDialect(dialect)
 		if err != nil {
 			return err
 		}
@@ -79,18 +81,18 @@ func Driver(driver string) func(*Loader) error {
 	}
 }
 
-func helperForDriver(driver string) (Helper, error) {
-	switch driver {
-	case "postgres":
+func helperForDialect(dialect string) (Helper, error) {
+	switch dialect {
+	case "postgres", "postgresql", "timescaledb":
 		return &PostgreSQL{}, nil
-	case "mysql":
+	case "mysql", "mariadb":
 		return &MySQL{}, nil
-	case "sqlite3":
+	case "sqlite", "sqlite3":
 		return &SQLite{}, nil
-	case "mssql":
+	case "mssql", "sqlserver":
 		return &SQLServer{}, nil
 	default:
-		return nil, fmt.Errorf(`testfixtures: unrecognized driver "%s"`, driver)
+		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
 }
 
