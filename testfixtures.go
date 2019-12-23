@@ -18,7 +18,7 @@ type Loader struct {
 	helper        Helper
 	fixturesFiles []*fixtureFile
 
-	skipDatabaseNameCheck bool
+	skipTestDatabaseCheck bool
 }
 
 type fixtureFile struct {
@@ -34,7 +34,7 @@ type insertSQL struct {
 }
 
 var (
-	dbnameRegexp = regexp.MustCompile("(?i)test")
+	testDatabaseRegexp = regexp.MustCompile("(?i)test")
 )
 
 // New instantiates a new Loader instance. The "Database" and "Driver"
@@ -141,11 +141,11 @@ func ResetSequencesTo(value int64) func(*Loader) error {
 	}
 }
 
-// SkipDatabaseNameCheck will make Loader not check if the database
+// DangerousSkipTestDatabaseCheck will make Loader not check if the database
 // name contains "test". Use with caution!
-func SkipDatabaseNameCheck() func(*Loader) error {
+func DangerousSkipTestDatabaseCheck() func(*Loader) error {
 	return func(l *Loader) error {
-		l.skipDatabaseNameCheck = true
+		l.skipTestDatabaseCheck = true
 		return nil
 	}
 }
@@ -174,16 +174,14 @@ func Files(files ...string) func(*Loader) error {
 	}
 }
 
-// DetectTestDatabase returns nil if databaseName matches regexp
-//     if err := fixtures.DetectTestDatabase(); err != nil {
-//         log.Fatal(err)
-//     }
-func (l *Loader) DetectTestDatabase() error {
+// EnsureTestDatabase returns an error if the database name does not contains
+// "test".
+func (l *Loader) EnsureTestDatabase() error {
 	dbName, err := l.helper.databaseName(l.db)
 	if err != nil {
 		return err
 	}
-	if !dbnameRegexp.MatchString(dbName) {
+	if !testDatabaseRegexp.MatchString(dbName) {
 		return fmt.Errorf(`testfixtures: database "%s" does not appear to be a test database`, dbName)
 	}
 	return nil
@@ -194,8 +192,8 @@ func (l *Loader) DetectTestDatabase() error {
 //         log.Fatal(err)
 //     }
 func (l *Loader) Load() error {
-	if !l.skipDatabaseNameCheck {
-		if err := l.DetectTestDatabase(); err != nil {
+	if !l.skipTestDatabaseCheck {
+		if err := l.EnsureTestDatabase(); err != nil {
 			return err
 		}
 	}

@@ -197,7 +197,7 @@ func TestQuoteKeyword(t *testing.T) {
 	}
 }
 
-func TestDetectTestDatabase(t *testing.T) {
+func TestEnsureTestDatabase(t *testing.T) {
 	tests := []struct {
 		name           string
 		isTestDatabase bool
@@ -215,13 +215,13 @@ func TestDetectTestDatabase(t *testing.T) {
 		var (
 			mockedHelper = NewMockHelper(it.name)
 			l            = &Loader{helper: mockedHelper}
-			err          = l.DetectTestDatabase()
+			err          = l.EnsureTestDatabase()
 		)
 		if err != nil && it.isTestDatabase {
-			t.Errorf("DetectTestDatabase() should return nil for name = %s", it.name)
+			t.Errorf("EnsureTestDatabase() should return nil for name = %s", it.name)
 		}
 		if err == nil && !it.isTestDatabase {
-			t.Errorf("DetectTestDatabase() should return error for name = %s", it.name)
+			t.Errorf("EnsureTestDatabase() should return error for name = %s", it.name)
 		}
 	}
 }

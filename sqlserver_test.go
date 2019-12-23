@@ -15,6 +15,6 @@ func TestSQLServer(t *testing.T) {
 		"mssql",
 		os.Getenv("SQLSERVER_CONN_STRING"),
 		"testdata/schema/sqlserver.sql",
-		SkipDatabaseNameCheck(),
+		DangerousSkipTestDatabaseCheck(),
 	)
 }
