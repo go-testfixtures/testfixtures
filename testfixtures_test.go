@@ -20,6 +20,22 @@ func TestFixtureFile(t *testing.T) {
 	}
 }
 
+func TestRequiredOptions(t *testing.T) {
+	t.Run("DatabaseIsRequired", func(t *testing.T) {
+		_, err := New()
+		if err != errDatabaseIsRequired {
+			t.Error("should return an error if database if not given")
+		}
+	})
+
+	t.Run("DialectIsRequired", func(t *testing.T) {
+		_, err := New(Database(&sql.DB{}))
+		if err != errDialectIsRequired {
+			t.Error("should return an error if dialect if not given")
+		}
+	})
+}
+
 func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
 	db, err := sql.Open(dialect, connStr)
 	if err != nil {

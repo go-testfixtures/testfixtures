@@ -35,6 +35,9 @@ type insertSQL struct {
 
 var (
 	testDatabaseRegexp = regexp.MustCompile("(?i)test")
+
+	errDatabaseIsRequired = fmt.Errorf("testfixtures: database is required")
+	errDialectIsRequired  = fmt.Errorf("testfixtures: dialect is required")
 )
 
 // New instantiates a new Loader instance. The "Database" and "Driver"
@@ -46,6 +49,13 @@ func New(options ...func(*Loader) error) (*Loader, error) {
 		if err := option(l); err != nil {
 			return nil, err
 		}
+	}
+
+	if l.db == nil {
+		return nil, errDatabaseIsRequired
+	}
+	if l.helper == nil {
+		return nil, errDialectIsRequired
 	}
 
 	if err := l.helper.init(l.db); err != nil {
