@@ -23,11 +23,15 @@ func main() {
 	log.SetOutput(os.Stderr)
 
 	var (
-		versionFlag bool
-		dialect     string
-		connString  string
-		dir         string
-		files       []string
+		versionFlag           bool
+		dialect               string
+		connString            string
+		dir                   string
+		files                 []string
+		useAlterContraint     bool
+		skipResetSequences    bool
+		resetSequencesTo      int64
+		skipTestDatabaseCheck bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show testfixtures version")
@@ -35,6 +39,10 @@ func main() {
 	pflag.StringVarP(&connString, "conn", "c", "", "a database connection string")
 	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load")
 	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load")
+	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
+	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL only)")
+	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL only, defaults to 10000)")
+	pflag.BoolVar(&skipTestDatabaseCheck, "dangerous-no-test-database-check", false, `skips check for "test" in database name (use with caution)`)
 	pflag.Parse()
 
 	if versionFlag {
@@ -82,6 +90,19 @@ func main() {
 	} else {
 		options = append(options, testfixtures.Files(files...))
 	}
+	if useAlterContraint {
+		options = append(options, testfixtures.UseAlterConstraint())
+	}
+	if skipResetSequences {
+		options = append(options, testfixtures.SkipResetSequences())
+	}
+	if resetSequencesTo > 0 {
+		options = append(options, testfixtures.ResetSequencesTo(resetSequencesTo))
+	}
+	if skipTestDatabaseCheck {
+		options = append(options, testfixtures.DangerousSkipTestDatabaseCheck())
+	}
+
 	loader, err := testfixtures.New(options...)
 	if err != nil {
 		log.Fatal(err)
