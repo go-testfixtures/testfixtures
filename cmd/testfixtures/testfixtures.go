@@ -16,8 +16,6 @@ import (
 
 var version = "master"
 
-const usage = `TODO`
-
 func main() {
 	log.SetFlags(0)
 	log.SetOutput(os.Stderr)
