@@ -6,6 +6,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible
+	github.com/spf13/pflag v1.0.5
 	google.golang.org/appengine v1.3.0 // indirect
 	gopkg.in/yaml.v2 v2.2.7
 )

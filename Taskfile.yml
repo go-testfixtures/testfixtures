@@ -3,15 +3,13 @@
 version: '2'
 
 tasks:
-  dl-deps:
-    desc: Download cli deps
+  build:
     cmds:
-      - go get -u golang.org/x/lint/golint
+      - go build -v -tags sqlite -o ./testfixtures{{exeExt}} ./cmd/testfixtures
 
-  lint:
-    desc: Runs golint
+  test-cli:
     cmds:
-      - golint .
+      - ./testfixtures -d sqlite -c testdb.sqlite3 -D testdata/fixtures
 
   test-free:
     desc: Test free databases (PG, MySQL and SQLite)

@@ -1,0 +1,108 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	"github.com/spf13/pflag"
+
+	"github.com/go-testfixtures/testfixtures/v3"
+)
+
+var version = "master"
+
+const usage = `TODO`
+
+func main() {
+	log.SetFlags(0)
+	log.SetOutput(os.Stderr)
+
+	var (
+		versionFlag bool
+		dialect     string
+		connString  string
+		dir         string
+		files       []string
+	)
+
+	pflag.BoolVarP(&versionFlag, "version", "v", false, "show testfixtures version")
+	pflag.StringVarP(&dialect, "dialect", "d", "", "which database system you're using (postgres, timescaledb, mysql, mariadb, sqlite or sqlserver)")
+	pflag.StringVarP(&connString, "conn", "c", "", "a database connection string")
+	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load")
+	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load")
+	pflag.Parse()
+
+	if versionFlag {
+		log.Printf("testfixtures version: %s", version)
+		return
+	}
+
+	if dialect == "" && connString == "" {
+		log.Fatal("testfixtures: both --dialect (-d) and --conn (-c) are required")
+		return
+	}
+	if dir == "" && len(files) == 0 {
+		log.Fatal("testfixtures: either --dir (-D) or --files (-f) need to be given")
+		return
+	}
+	if dir != "" && len(files) > 0 {
+		log.Fatal("testfixtures: you can use --dir (-D) and --files (-f) together")
+		return
+	}
+
+	dialect, err := getDialect(dialect)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	db, err := sql.Open(dialect, connString)
+	if err != nil {
+		log.Fatalf("testfixtures: could not connect to database: %v", err)
+		return
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("testfixtures: could not ping database: %v", err)
+		return
+	}
+
+	options := []func(*testfixtures.Loader) error{
+		testfixtures.Database(db),
+		testfixtures.Dialect(dialect),
+	}
+	if dir != "" {
+		options = append(options, testfixtures.Directory(dir))
+	} else {
+		options = append(options, testfixtures.Files(files...))
+	}
+	loader, err := testfixtures.New(options...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := loader.Load(); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("testfixtures: fixtures loaded successfully")
+}
+
+func getDialect(dialect string) (string, error) {
+	switch dialect {
+	case "postgres", "postgresql", "timescaledb":
+		return "postgres", nil
+	case "mysql", "mariadb":
+		return "mysql", nil
+	case "sqlite", "sqlite3":
+		return "sqlite3", nil
+	case "mssql", "sqlserver":
+		return "mssql", nil
+	default:
+		return "", fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
+	}
+}
