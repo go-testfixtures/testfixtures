@@ -1,0 +1,17 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Task
+        uses: Arduino/actions/setup-taskfile@master
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Test
+        run: ./bin/task docker
