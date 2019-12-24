@@ -30,7 +30,7 @@ func main() {
 		files       []string
 	)
 
-	pflag.BoolVarP(&versionFlag, "version", "v", false, "show testfixtures version")
+	pflag.BoolVar(&versionFlag, "version", false, "show testfixtures version")
 	pflag.StringVarP(&dialect, "dialect", "d", "", "which database system you're using (postgres, timescaledb, mysql, mariadb, sqlite or sqlserver)")
 	pflag.StringVarP(&connString, "conn", "c", "", "a database connection string")
 	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load")
