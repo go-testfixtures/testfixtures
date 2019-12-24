@@ -120,10 +120,22 @@ func getDialect(dialect string) (string, error) {
 	case "mysql", "mariadb":
 		return "mysql", nil
 	case "sqlite", "sqlite3":
+		if !isSQLiteSupported() {
+			return "", fmt.Errorf("testfixtures: SQLite is not supported in this build")
+		}
 		return "sqlite3", nil
 	case "mssql", "sqlserver":
 		return "mssql", nil
 	default:
 		return "", fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
+}
+
+func isSQLiteSupported() bool {
+	for _, d := range sql.Drivers() {
+		if d == "sqlite3" {
+			return true
+		}
+	}
+	return false
 }
