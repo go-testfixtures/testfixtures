@@ -142,7 +142,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		}
 	})
 
-	t.Run("InserAfterLoad", func(t *testing.T) {
+	t.Run("InsertAfterLoad", func(t *testing.T) {
 		// This test was originally written to catch a bug where it
 		// wasn't possible to insert a record on PostgreSQL due
 		// sequence issues.
