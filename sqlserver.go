@@ -6,15 +6,13 @@ import (
 	"strings"
 )
 
-// SQLServer is the helper for SQL Server for this package.
-// SQL Server >= 2008 is required.
-type SQLServer struct {
+type sqlserver struct {
 	baseHelper
 
 	tables []string
 }
 
-func (h *SQLServer) init(db *sql.DB) error {
+func (h *sqlserver) init(db *sql.DB) error {
 	var err error
 
 	h.tables, err = h.tableNames(db)
@@ -25,11 +23,11 @@ func (h *SQLServer) init(db *sql.DB) error {
 	return nil
 }
 
-func (*SQLServer) paramType() int {
+func (*sqlserver) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*SQLServer) quoteKeyword(s string) string {
+func (*sqlserver) quoteKeyword(s string) string {
 	parts := strings.Split(s, ".")
 	for i, p := range parts {
 		parts[i] = fmt.Sprintf(`[%s]`, p)
@@ -37,13 +35,13 @@ func (*SQLServer) quoteKeyword(s string) string {
 	return strings.Join(parts, ".")
 }
 
-func (*SQLServer) databaseName(q queryable) (string, error) {
+func (*sqlserver) databaseName(q queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DB_NAME()").Scan(&dbName)
 	return dbName, err
 }
 
-func (*SQLServer) tableNames(q queryable) ([]string, error) {
+func (*sqlserver) tableNames(q queryable) ([]string, error) {
 	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> ?", "spt_values")
 	if err != nil {
 		return nil, err
@@ -64,7 +62,7 @@ func (*SQLServer) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (h *SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
+func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) bool {
 	sql := `
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
@@ -76,7 +74,7 @@ func (h *SQLServer) tableHasIdentityColumn(q queryable, tableName string) bool {
 
 }
 
-func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) (err error) {
+func (h *sqlserver) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) (err error) {
 	if h.tableHasIdentityColumn(tx, tableName) {
 		defer func() {
 			_, err2 := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
@@ -93,7 +91,7 @@ func (h *SQLServer) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() e
 	return fn()
 }
 
-func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
+func (h *sqlserver) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	// ensure the triggers are re-enable after all
 	defer func() {
 		var sql string
@@ -130,6 +128,6 @@ func (h *SQLServer) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 // SQL Server because commands like a `CREATE SCHEMA...` and a `CREATE TABLE...`
 // could not be executed in the same batch.
 // See https://docs.microsoft.com/en-us/previous-versions/sql/sql-server-2008-r2/ms175502(v=sql.105)#rules-for-using-batches
-func (*SQLServer) splitter() []byte {
+func (*sqlserver) splitter() []byte {
 	return []byte("GO\n")
 }

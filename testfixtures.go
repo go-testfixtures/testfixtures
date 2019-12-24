@@ -15,7 +15,7 @@ import (
 // Loader is the responsible to loading fixtures.
 type Loader struct {
 	db            *sql.DB
-	helper        Helper
+	helper        helper
 	fixturesFiles []*fixtureFile
 
 	skipTestDatabaseCheck bool
@@ -81,16 +81,16 @@ func Dialect(dialect string) func(*Loader) error {
 	}
 }
 
-func helperForDialect(dialect string) (Helper, error) {
+func helperForDialect(dialect string) (helper, error) {
 	switch dialect {
 	case "postgres", "postgresql", "timescaledb":
-		return &PostgreSQL{}, nil
+		return &postgreSQL{}, nil
 	case "mysql", "mariadb":
-		return &MySQL{}, nil
+		return &mySQL{}, nil
 	case "sqlite", "sqlite3":
-		return &SQLite{}, nil
+		return &sqlite{}, nil
 	case "mssql", "sqlserver":
-		return &SQLServer{}, nil
+		return &sqlserver{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
@@ -104,7 +104,7 @@ func helperForDialect(dialect string) (Helper, error) {
 // Only valid for PostgreSQL. Returns an error otherwise.
 func UseAlterConstraint() func(*Loader) error {
 	return func(l *Loader) error {
-		pgHelper, ok := l.helper.(*PostgreSQL)
+		pgHelper, ok := l.helper.(*postgreSQL)
 		if !ok {
 			return fmt.Errorf("testfixtures: UseAlterConstraint is only valid for PostgreSQL databases")
 		}
@@ -119,7 +119,7 @@ func UseAlterConstraint() func(*Loader) error {
 // Only valid for PostgreSQL. Returns an error otherwise.
 func SkipResetSequences() func(*Loader) error {
 	return func(l *Loader) error {
-		pgHelper, ok := l.helper.(*PostgreSQL)
+		pgHelper, ok := l.helper.(*postgreSQL)
 		if !ok {
 			return fmt.Errorf("testfixtures: SkipResetSequences is only valid for PostgreSQL databases")
 		}
@@ -134,7 +134,7 @@ func SkipResetSequences() func(*Loader) error {
 // Only valid for PostgreSQL. Returns an error otherwise.
 func ResetSequencesTo(value int64) func(*Loader) error {
 	return func(l *Loader) error {
-		pgHelper, ok := l.helper.(*PostgreSQL)
+		pgHelper, ok := l.helper.(*postgreSQL)
 		if !ok {
 			return fmt.Errorf("testfixtures: ResetSequencesTo is only valid for PostgreSQL databases")
 		}
@@ -308,14 +308,14 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
 }
 
-func (f *fixtureFile) delete(tx *sql.Tx, h Helper) error {
+func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
 	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension()))); err != nil {
 		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, f.fileNameWithoutExtension(), err)
 	}
 	return nil
 }
 
-func (f *fixtureFile) buildInsertSQL(h Helper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
+func (f *fixtureFile) buildInsertSQL(h helper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
 	var (
 		sqlColumns []string
 		sqlValues  []string

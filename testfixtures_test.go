@@ -186,21 +186,21 @@ func assertCount(t *testing.T, l *Loader, table string, expectedCount int) {
 
 func TestQuoteKeyword(t *testing.T) {
 	tests := []struct {
-		Helper   Helper
-		Keyword  string
-		Expected string
+		helper   helper
+		keyword  string
+		expected string
 	}{
-		{&PostgreSQL{}, `posts_tags`, `"posts_tags"`},
-		{&PostgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
-		{&SQLServer{}, `posts_tags`, `[posts_tags]`},
-		{&SQLServer{}, `test_schema.posts_tags`, `[test_schema].[posts_tags]`},
+		{&postgreSQL{}, `posts_tags`, `"posts_tags"`},
+		{&postgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
+		{&sqlserver{}, `posts_tags`, `[posts_tags]`},
+		{&sqlserver{}, `test_schema.posts_tags`, `[test_schema].[posts_tags]`},
 	}
 
 	for _, test := range tests {
-		actual := test.Helper.quoteKeyword(test.Keyword)
+		actual := test.helper.quoteKeyword(test.keyword)
 
-		if test.Expected != actual {
-			t.Errorf("TestQuoteKeyword keyword %s should have escaped to %s. Received %s instead", test.Keyword, test.Expected, actual)
+		if test.expected != actual {
+			t.Errorf("TestQuoteKeyword keyword %s should have escaped to %s. Received %s instead", test.keyword, test.expected, actual)
 		}
 	}
 }

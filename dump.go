@@ -14,7 +14,7 @@ import (
 // directory.
 type Dumper struct {
 	db     *sql.DB
-	helper Helper
+	helper helper
 	dir    string
 
 	tables []string
