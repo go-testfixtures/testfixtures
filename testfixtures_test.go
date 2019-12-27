@@ -144,7 +144,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			[]func(*Loader) error{
 				Database(db),
 				Dialect(dialect),
-				Directory("testdata/fixtures"),
+				Directory(dir),
 			},
 			additionalOptions...,
 		)
