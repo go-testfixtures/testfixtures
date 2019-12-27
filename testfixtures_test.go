@@ -79,6 +79,11 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			[]func(*Loader) error{
 				Database(db),
 				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
 				Directory("testdata/fixtures"),
 			},
 			additionalOptions...,
@@ -99,6 +104,11 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			[]func(*Loader) error{
 				Database(db),
 				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
 				Files(
 					"testdata/fixtures/posts.yml",
 					"testdata/fixtures/comments.yml",
@@ -182,7 +192,7 @@ func assertFixturesLoaded(t *testing.T, l *Loader) {
 	assertCount(t, l, "posts", 2)
 	assertCount(t, l, "comments", 4)
 	assertCount(t, l, "tags", 3)
-	assertCount(t, l, "posts_tags", 2)
+	assertCount(t, l, "posts_tags", 6)
 	assertCount(t, l, "users", 2)
 }
 

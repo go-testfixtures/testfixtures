@@ -1,6 +1,7 @@
 package testfixtures
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -21,6 +23,13 @@ type Loader struct {
 
 	skipTestDatabaseCheck bool
 	location              *time.Location
+
+	template           bool
+	templateFuncs      template.FuncMap
+	templateLeftDelim  string
+	templateRightDelim string
+	templateOptions    []string
+	templateData       interface{}
 }
 
 type fixtureFile struct {
@@ -45,7 +54,11 @@ var (
 // New instantiates a new Loader instance. The "Database" and "Driver"
 // options are required.
 func New(options ...func(*Loader) error) (*Loader, error) {
-	l := &Loader{}
+	l := &Loader{
+		templateLeftDelim:  "{{",
+		templateRightDelim: "}}",
+		templateOptions:    []string{"missingkey=zero"},
+	}
 
 	for _, option := range options {
 		if err := option(l); err != nil {
@@ -141,6 +154,7 @@ func SkipResetSequences() func(*Loader) error {
 }
 
 // ResetSequencesTo sets the value the sequences will be reset to.
+//
 // Defaults to 10000.
 //
 // Only valid for PostgreSQL. Returns an error otherwise.
@@ -167,7 +181,7 @@ func DangerousSkipTestDatabaseCheck() func(*Loader) error {
 // Directory informs Loader to load YAML files from a given directory.
 func Directory(dir string) func(*Loader) error {
 	return func(l *Loader) error {
-		fixtures, err := fixturesFromDir(dir)
+		fixtures, err := l.fixturesFromDir(dir)
 		if err != nil {
 			return err
 		}
@@ -179,7 +193,7 @@ func Directory(dir string) func(*Loader) error {
 // Files informs Loader to load a given set of YAML files.
 func Files(files ...string) func(*Loader) error {
 	return func(l *Loader) error {
-		fixtures, err := fixturesFromFiles(files...)
+		fixtures, err := l.fixturesFromFiles(files...)
 		if err != nil {
 			return err
 		}
@@ -193,6 +207,81 @@ func Files(files ...string) func(*Loader) error {
 func Location(location *time.Location) func(*Loader) error {
 	return func(l *Loader) error {
 		l.location = location
+		return nil
+	}
+}
+
+// Template makes loader process each YAML file as an template using the
+// text/template package.
+//
+// For more information on how templates work in Go please read:
+// https://golang.org/pkg/text/template/
+//
+// If not given the YAML files are parsed as is.
+func Template() func(*Loader) error {
+	return func(l *Loader) error {
+		l.template = true
+		return nil
+	}
+}
+
+// TemplateFuncs allow choosing which functions will be available
+// when processing templates.
+//
+// For more information see: https://golang.org/pkg/text/template/#Template.Funcs
+func TemplateFuncs(funcs template.FuncMap) func(*Loader) error {
+	return func(l *Loader) error {
+		if !l.template {
+			return fmt.Errorf(`testfixtures: the Template() options is required in order to use the TemplateFuns() option`)
+		}
+
+		l.templateFuncs = funcs
+		return nil
+	}
+}
+
+// TemplateDelims allow choosing which delimiters will be used for templating.
+// This defaults to "{{" and "}}".
+//
+// For more information see https://golang.org/pkg/text/template/#Template.Delims
+func TemplateDelims(left, right string) func(*Loader) error {
+	return func(l *Loader) error {
+		if !l.template {
+			return fmt.Errorf(`testfixtures: the Template() options is required in order to use the TemplateDelims() option`)
+		}
+
+		l.templateLeftDelim = left
+		l.templateRightDelim = right
+		return nil
+	}
+}
+
+// TemplateOptions allows you to specific which text/template options will
+// be enabled when processing templates.
+//
+// This defaults to "missingkey=zero". Check the available options here:
+// https://golang.org/pkg/text/template/#Template.Option
+func TemplateOptions(options ...string) func(*Loader) error {
+	return func(l *Loader) error {
+		if !l.template {
+			return fmt.Errorf(`testfixtures: the Template() options is required in order to use the TemplateOptions() option`)
+		}
+
+		l.templateOptions = options
+		return nil
+	}
+}
+
+// TemplateData allows you to specify which data will be available
+// when processing templates. Data is accesible by prefixing it with a "."
+// like {{.MyKey}}.
+func TemplateData(data interface{}) func(*Loader) error {
+	return func(l *Loader) error {
+		if !l.template {
+			return fmt.Errorf(`testfixtures: the Template() options is required in order to use the TemplateData() option`)
+		}
+
+		l.templateData = data
 		return nil
 	}
 }
@@ -391,7 +480,7 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 	return
 }
 
-func fixturesFromDir(dir string) ([]*fixtureFile, error) {
+func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
 	fileinfos, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf(`testfixtures: could not stat directory "%s": %w`, dir, err)
@@ -410,13 +499,16 @@ func fixturesFromDir(dir string) ([]*fixtureFile, error) {
 			if err != nil {
 				return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 			}
+			if err := l.processFileTemplate(fixture); err != nil {
+				return nil, err
+			}
 			files = append(files, fixture)
 		}
 	}
 	return files, nil
 }
 
-func fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
+func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
 	var (
 		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
 		err          error
@@ -431,8 +523,34 @@ func fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 		}
+		if err := l.processFileTemplate(fixture); err != nil {
+			return nil, err
+		}
 		fixtureFiles = append(fixtureFiles, fixture)
 	}
 
 	return fixtureFiles, nil
+}
+
+func (l *Loader) processFileTemplate(f *fixtureFile) error {
+	if !l.template {
+		return nil
+	}
+
+	t := template.New("").
+		Funcs(l.templateFuncs).
+		Delims(l.templateLeftDelim, l.templateRightDelim).
+		Option(l.templateOptions...)
+	t, err := t.Parse(string(f.content))
+	if err != nil {
+		return fmt.Errorf(`textfixtures: error on parsing template in %s: %w`, f.fileName, err)
+	}
+
+	var buffer bytes.Buffer
+	if err := t.Execute(&buffer, l.templateData); err != nil {
+		return fmt.Errorf(`textfixtures: error on executing template in %s: %w`, f.fileName, err)
+	}
+
+	f.content = buffer.Bytes()
+	return nil
 }
