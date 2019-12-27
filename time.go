@@ -1,11 +1,11 @@
 package testfixtures
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
-var timeFormats = []string{
+var timeFormats = [...]string{
 	"2006-01-02",
 	"2006-01-02 15:04",
 	"2006-01-02 15:04:05",
@@ -17,18 +17,27 @@ var timeFormats = []string{
 	"02/01/2006 15:04:05",
 	"2006-01-02T15:04-07:00",
 	"2006-01-02T15:04:05-07:00",
+	"2006-01-02T15:04:05Z07:00",
+	"2006-01-02 15:04:05Z07:00",
+	"2006-01-02T15:04:05Z0700",
+	"2006-01-02 15:04:05Z0700",
+	"2006-01-02T15:04:05Z07",
+	"2006-01-02 15:04:05Z07",
+	"2006-01-02 15:04:05 MST",
 }
 
-// ErrCouldNotConvertToTime is returns when a string is not a reconizable time format
-var ErrCouldNotConvertToTime = errors.New("Could not convert string to time")
+func (l *Loader) tryStrToDate(s string) (time.Time, error) {
+	loc := l.location
+	if loc == nil {
+		loc = time.Local
+	}
 
-func tryStrToDate(s string) (time.Time, error) {
 	for _, f := range timeFormats {
-		t, err := time.ParseInLocation(f, s, time.Local)
+		t, err := time.ParseInLocation(f, s, loc)
 		if err != nil {
 			continue
 		}
 		return t, nil
 	}
-	return time.Time{}, ErrCouldNotConvertToTime
+	return time.Time{}, fmt.Errorf(`testfixtures: could not convert string "%s" to time`, s)
 }

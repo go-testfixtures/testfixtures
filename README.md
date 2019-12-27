@@ -1,19 +1,19 @@
 # Go Test Fixtures
 
-[![GoDoc](https://godoc.org/gopkg.in/testfixtures.v2?status.svg)](https://godoc.org/gopkg.in/testfixtures.v2)
-[![Go Report Card](https://goreportcard.com/badge/github.com/go-testfixtures/testfixtures)](https://goreportcard.com/report/github.com/go-testfixtures/testfixtures)
-[![Build Status](https://travis-ci.org/go-testfixtures/testfixtures.svg?branch=master)](https://travis-ci.org/go-testfixtures/testfixtures)
-[![Build status](https://ci.appveyor.com/api/projects/status/d2h6gq37wxbus1x7?svg=true)](https://ci.appveyor.com/project/andreynering/testfixtures)
+[![GoDoc](https://godoc.org/github.com/go-testfixtures/testfixtures?status.svg)](https://godoc.org/github.com/go-testfixtures/testfixtures)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
 if you are running it against the correct database.
 
+> **TIP**: There are options not described in this README page. It's
+> recommended that you also check [the documentation](https://godoc.org/github.com/go-testfixtures/testfixtures).
+
 Writing tests is hard, even more when you have to deal with an SQL database.
 This package aims to make writing functional tests for web apps written in
 Go easier.
 
-Basically this package mimics the ["Rails' way"][railstests] of writing tests
+Basically this package mimics the ["Ruby on Rails' way"][railstests] of writing tests
 for database applications, where sample data is kept in fixtures files. Before
 the execution of every test, the test database is cleaned and the fixture data
 is loaded into the database.
@@ -24,10 +24,12 @@ the tests.
 
 ## Installation
 
-First, get it:
+First, import it like this:
 
-```bash
-go get -u -v gopkg.in/testfixtures.v2
+```go
+import (
+        "github.com/go-testfixtures/testfixtures/v3"
+)
 ```
 
 ## Usage
@@ -57,21 +59,21 @@ The file would look like this (it can have as many record you want):
   content: A comment...
   author_name: John Doe
   author_email: john@doe.com
-  created_at: 2016-01-01 12:30:12
-  updated_at: 2016-01-01 12:30:12
+  created_at: 2020-12-31 23:59:59
+  updated_at: 2020-12-31 23:59:59
 
 - id: 2
   post_id: 2
   content: Another comment...
   author_name: John Doe
   author_email: john@doe.com
-  created_at: 2016-01-01 12:30:12
-  updated_at: 2016-01-01 12:30:12
+  created_at: 2020-12-31 23:59:59
+  updated_at: 2020-12-31 23:59:59
 
 # ...
 ```
 
-An YAML object or array will be converted to JSON. It can be stored on a native
+An YAML object or array will be converted to JSON. It will be stored on a native
 JSON type like JSONB on PostgreSQL or as a TEXT or VARCHAR column on other
 databases.
 
@@ -105,72 +107,88 @@ Your tests would look like this:
 package myapp
 
 import (
-    "database/sql"
-    "log"
+        "database/sql"
 
-    _ "github.com/lib/pq"
-    "gopkg.in/testfixtures.v2"
+        _ "github.com/lib/pq"
+        "github.com/go-testfixtures/testfixtures/v3"
 )
 
 var (
-    db *sql.DB
-    fixtures *testfixtures.Context
+        db *sql.DB
+        fixtures *testfixtures.Loader
 )
 
 func TestMain(m *testing.M) {
-    var err error
+        var err error
 
-    // Open connection with the test database.
-    // Do NOT import fixtures in a production database!
-    // Existing data would be deleted
-    db, err = sql.Open("postgres", "dbname=myapp_test")
-    if err != nil {
-        log.Fatal(err)
-    }
+        // Open connection to the test database.
+        // Do NOT import fixtures in a production database!
+        // Existing data would be deleted.
+        db, err = sql.Open("postgres", "dbname=myapp_test")
+        if err != nil {
+                ...
+        }
 
-    // creating the context that hold the fixtures
-    // see about all compatible databases in this page below
-    fixtures, err = testfixtures.NewFolder(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
-    if err != nil {
-        log.Fatal(err)
-    }
+        fixtures, err := testfixtures.New(
+                testfixtures.Database(db), // You database connection
+                testfixtures.Dialect("postgres"), // Available: "postgresql", "timescaledb", "mysql", "mariadb", "sqlite" and "sqlserver"
+                testfixtures.Directory("testdata/fixtures"), // the directory containing the YAML files
+        )
+        if err != nil {
+                ...
+        }
 
-    os.Exit(m.Run())
+        os.Exit(m.Run())
 }
 
 func prepareTestDatabase() {
-    if err := fixtures.Load(); err != nil {
-        log.Fatal(err)
-    }
+        if err := fixtures.Load(); err != nil {
+                ...
+        }
 }
 
 func TestX(t *testing.T) {
-    prepareTestDatabase()
-    // your test here ...
+        prepareTestDatabase()
+
+        // Your test here ...
 }
 
 func TestY(t *testing.T) {
-    prepareTestDatabase()
-    // your test here ...
+        prepareTestDatabase()
+
+        // Your test here ...
 }
 
 func TestZ(t *testing.T) {
-    prepareTestDatabase()
-    // your test here ...
+        prepareTestDatabase()
+
+        // Your test here ...
 }
 ```
 
-Alternatively, you can use the `NewFiles` function, to specify which
+Alternatively, you can use the `Files` option, to specify which
 files you want to load into the database:
 
 ```go
-fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
-    "fixtures/orders.yml",
-    "fixtures/customers.yml",
-    // add as many files you want
+fixtures, err := testfixtures.New(
+        testfixtures.Database(db),
+        testfixtures.Dialect("postgres"),
+        testfixtures.Files(
+                "fixtures/orders.yml",
+                "fixtures/customers.yml",
+        ),
 )
 if err != nil {
-    log.Fatal(err)
+        ...
+}
+
+fixtures, err := testfixtures.NewFiles(db, &testfixtures.PostgreSQL{},
+        "fixtures/orders.yml",
+        "fixtures/customers.yml",
+        // add as many files you want
+)
+if err != nil {
+        ...
 }
 ```
 
@@ -182,17 +200,32 @@ filename for SQLite) doesn't contains "test". If you want to disable this
 check, use:
 
 ```go
-testfixtures.SkipDatabaseNameCheck(true)
+testfixtures.New(
+        ...
+        testfixtures.DangerousSkipTestDatabaseCheck(),
+)
 ```
 
 ## Sequences
 
-For PostgreSQL or Oracle, this package also resets all sequences to a high
+For PostgreSQL, this package also resets all sequences to a high
 number to prevent duplicated primary keys while running the tests.
 The default is 10000, but you can change that with:
 
 ```go
-testfixtures.ResetSequencesTo(10000)
+testfixtures.New(
+        ...
+        testfixtures.ResetSequencesTo(10000),
+)
+```
+
+Or, if you want to skip the reset of sequences entirely:
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.SkipResetSequences(),
+)
 ```
 
 ## Compatible databases
@@ -200,14 +233,17 @@ testfixtures.ResetSequencesTo(10000)
 ### PostgreSQL / TimescaleDB
 
 This package has two approaches to disable foreign keys while importing fixtures
-in PostgreSQL databases:
+for PostgreSQL databases:
 
 #### With `DISABLE TRIGGER`
 
 This is the default approach. For that use:
 
 ```go
-&testfixtures.PostgreSQL{}
+testfixtures.New(
+        ...
+        testfixtures.Dialect("postgres"), // or "timescaledb"
+)
 ```
 
 With the above snippet this package will use `DISABLE TRIGGER` to temporarily
@@ -226,16 +262,11 @@ PostgreSQL versions >= 9.4. Try this if you are getting foreign key violation
 errors with the previous approach. It is as simple as using:
 
 ```go
-&testfixtures.PostgreSQL{UseAlterConstraint: true}
-```
-
-#### Skipping reset of sequences
-
-You can skip the reset of PostgreSQL sequences if you're debugging a problem
-with it, but most of the time you shouldn't do it:
-
-```go
-&testfixtures.PostgreSQL{SkipResetSequences: true}
+testfixtures.New(
+        ...
+        testfixtures.Dialect("postgres"),
+        testfixtures.UseAlterConstraint(),
+)
 ```
 
 ### MySQL / MariaDB
@@ -245,7 +276,10 @@ Just make sure the connection string have
 set to true, and use:
 
 ```go
-&testfixtures.MySQL{}
+testfixtures.New(
+        ...
+        testfixtures.Dialect("postgres"), // or "mariadb"
+)
 ```
 
 ### SQLite
@@ -257,7 +291,10 @@ SQLite is also supported. It is recommended to create foreign keys as
 recommended).
 
 ```go
-&testfixtures.SQLite{}
+testfixtures.New(
+        ...
+        testfixtures.Dialect("sqlite"),
+)
 ```
 
 ### Microsoft SQL Server
@@ -267,48 +304,74 @@ are handled as well. Just make sure you are logged in with a user with
 `ALTER TABLE` permission.
 
 ```go
-&testfixtures.SQLServer{}
+testfixtures.New(
+        ...
+        testfixtures.Dialect("mssql"),
+)
 ```
 
-### Oracle
+## Templating
 
-Oracle is supported as well. Use:
+Testfixtures supports templating, but it's disabled by default. Most people
+won't need it, but it may be useful to dynamically generate data.
+
+Enable it by doing:
 
 ```go
-&testfixtures.Oracle{}
+testfixtures.New(
+        ...
+        testfixtures.Template(),
+
+        // the above options are optional
+        TemplateFuncs(...),
+        TemplateDelims("{{", "}}"),
+        TemplateOptions("missingkey=zero"),
+        TemplateData(...),
+)
 ```
 
-## Generating fixtures for a existing database (experimental)
+The YAML file could look like this:
 
-The following code will generate a YAML file for each table of the database in
-the given folder. It may be useful to boostrap a test scenario from a sample
+```yaml
+# It's possible generate values...
+- id: {{sha256 "my-awesome-post}}
+  title: My Awesome Post
+  text: {{randomText}}
+
+# ... or records
+{{range $post := $.Posts}}
+- id: {{$post.Id}}
+  title: {{$post.Title}}
+  text: {{$post.Text}}
+{{end}}
+```
+
+## Generating fixtures for a existing database
+
+The following code will generate a YAML file for each table of the database
+into a given folder. It may be useful to boostrap a test scenario from a sample
 database of your app.
 
 ```go
-err := testfixtures.GenerateFixtures(db, &testfixtures.PostgreSQL{}, "testdata/fixtures")
-if err != nil {
-    log.Fatalf("Error generating fixtures: %v", err)
-}
-```
-
-Or
-
-```go
-err := testfixtures.GenerateFixturesForTables(
-    db,
-    []*TableInfo{
-        &TableInfo{Name: "table_name", Where: "foo = 'bar'"},
-        // ...
-    },
-    &testfixtures.PostgreSQL{},
-    "testdata/fixtures",
+dumper, err := testfixtures.NewDumper(
+        testfixtures.DumpDatabase(db),
+        testfixtures.DumpDialect("postgres"), // or your database of choice
+        testfixtures.DumpDirectory("tmp/fixtures"),
+        textfixtures.DumpTables( // optional, will dump all table if not given
+          "posts",
+          "comments",
+          "tags",
+        )
 )
 if err != nil {
-    log.Fatalf("Error generating fixtures: %v", err)
+        ...
+}
+if err := dumper.Dump(); err != nil {
+        ...
 }
 ```
 
-> This was thought to run in small sample databases. It will likely break
+> This was intended to run in small sample databases. It will likely break
 if run in a production/big database.
 
 ## Gotchas
@@ -324,57 +387,50 @@ run tests for each package in parallel. If more than one package use this
 library, you can face this issue. Please, use `go test -p 1 ./...` or run tests
 for each package in separated commands to fix this issue.
 
-See [#40](https://github.com/go-testfixtures/testfixtures/issues/40)
-and [golang/go#11521](https://github.com/golang/go/issues/11521) for more information.
+If you're looking into being able to run tests in parallel you can try using
+testfixtures together with the [txdb][gotxdb] package, which allows wrapping
+each test run in a transaction.
 
-We're also planning to implement transactional tests to allow running tests
-in parallel (see [#24](https://github.com/go-testfixtures/testfixtures/issues/24)).
-Running each test package in a separated database would also allow you to do that.
-Open issues for other ideas :slightly_smiling_face:.
+## CLI
+
+We also have a CLI to load fixtures in a given database.
+Grab it from the [released page](https://github.com/go-testfixtures/testfixtures/releases)
+and use it like:
+
+```bash
+testfixtures -d postgres -c "postgres://user:password@localhost/database" -D testdata/fixtures
+```
+
+The connection string changes for each database driver.
+
+Use `--help` for all flags.
 
 ## Contributing
 
-Tests were written to ensure everything work as expected. You can run the tests
-with:
+We recommend you to [install Task](https://taskfile.dev/#/installation) and
+Docker before contributing to this package, since some stuff is automated
+using these tools.
 
-```bash
-# running tests for PostgreSQL
-go test -tags postgresql
-
-# running test for MySQL
-go test -tags mysql
-
-# running tests for SQLite
-go test -tags sqlite
-
-# running tests for SQL Server
-go test -tags sqlserver
-
-# running tests for Oracle
-go test -tags oracle
-
-# running test for multiple databases at once
-go test -tags 'sqlite postgresql mysql'
-
-# running tests + benchmark
-go test -v -bench=. -tags postgresql
-```
-
-Travis runs tests for PostgreSQL, MySQL and SQLite. AppVeyor run for all
-these and also Microsoft SQL Server.
-
-To set the connection string of tests for each database, copy the `.sample.env`
-file as `.env` and edit it according to your environment.
-
-Or altenatively, you could use Docker to easily run tests on all databases
-at once. To do that, make sure Docker is installed and running in your machine
-and then run:
+It's recommended to use Docker Compose to run tests, since it runs tests for
+all supported databases once. To do that you just need to run:
 
 ```bash
 task docker
 ```
 
-TODO: Setup tests to also run on Oracle on Docker.
+But if you want to run tests locally, copy the `.sample.env` file as `.env`
+and edit it according to your database setup. You'll need to create a database
+(likely names `testfixtures_test`) before continuing. Then run the command
+for the database you want to run tests against:
+
+```bash
+task test:pg # PostgreSQL
+task test:mysql # MySQL
+task test:sqlite # SQLite
+task test:sqlserver # Microsoft SQL Server
+```
+
+GitHub Actions (CI) runs the same Docker setup available locally.
 
 ## Alternatives
 

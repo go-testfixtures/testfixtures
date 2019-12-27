@@ -3,16 +3,18 @@
 package testfixtures
 
 import (
+	"os"
+	"testing"
+
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
-func init() {
-	databases = append(databases,
-		databaseTest{
-			"mssql",
-			"SQLSERVER_CONN_STRING",
-			"testdata/schema/sqlserver.sql",
-			&SQLServer{},
-		},
+func TestSQLServer(t *testing.T) {
+	testLoader(
+		t,
+		"mssql",
+		os.Getenv("SQLSERVER_CONN_STRING"),
+		"testdata/schema/sqlserver.sql",
+		DangerousSkipTestDatabaseCheck(),
 	)
 }

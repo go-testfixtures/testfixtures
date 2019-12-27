@@ -1,6 +1,5 @@
-# json object
--
-  id: 1
+# JSON object
+- id: 1
   attributes:
     name: John
     surname: Due
@@ -10,9 +9,8 @@
       - red
       - yellow
 
-# json array
--
-  id: 2
+# JSON array
+- id: 2
   attributes:
     - foo
     - bar

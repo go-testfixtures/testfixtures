@@ -1,7 +1,6 @@
--
-  post_id: 1
-  tag_id: 2
-
--
-  post_id: 2
-  tag_id: 1
+{{range $postId := $.PostIds}}
+{{range $tagId := $.TagIds}}
+- post_id: {{$postId}}
+  tag_id: {{$tagId}}
+{{end}}
+{{end}}
