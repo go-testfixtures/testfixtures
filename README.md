@@ -394,7 +394,7 @@ each test run in a transaction.
 ## CLI
 
 We also have a CLI to load fixtures in a given database.
-Grab it from the [released page](https://github.com/go-testfixtures/testfixtures/releases)
+Grab it from the [releases page](https://github.com/go-testfixtures/testfixtures/releases)
 and use it like:
 
 ```bash

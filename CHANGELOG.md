@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.0.0 - 2019-12-16
+## v3.0.0 - 2019-12-26
 
 ### Breaking changes
 
