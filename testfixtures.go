@@ -301,7 +301,7 @@ func (l *Loader) EnsureTestDatabase() error {
 
 // Load wipes and after load all fixtures in the database.
 //     if err := fixtures.Load(); err != nil {
-//         log.Fatal(err)
+//             ...
 //     }
 func (l *Loader) Load() error {
 	if !l.skipTestDatabaseCheck {

@@ -1,13 +1,13 @@
 # Go Test Fixtures
 
-[![GoDoc](https://godoc.org/github.com/go-testfixtures/testfixtures?status.svg)](https://godoc.org/github.com/go-testfixtures/testfixtures)
+[![GoDoc](https://godoc.org/github.com/go-testfixtures/testfixtures?status.svg)][doc]
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
 if you are running it against the correct database.
 
 > **TIP**: There are options not described in this README page. It's
-> recommended that you also check [the documentation](https://godoc.org/github.com/go-testfixtures/testfixtures).
+> recommended that you also check [the documentation][doc].
 
 Writing tests is hard, even more when you have to deal with an SQL database.
 This package aims to make writing functional tests for web apps written in
@@ -447,6 +447,7 @@ unit test database code without having to connect to a real database
 - [dbcleaner][dbcleaner] - Clean database for testing, inspired by
 database_cleaner for Ruby
 
+[doc]: https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc
 [railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
 [gotxdb]: https://github.com/DATA-DOG/go-txdb
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
