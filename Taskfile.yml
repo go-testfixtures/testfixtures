@@ -11,40 +11,25 @@ tasks:
     cmds:
       - ./testfixtures -d sqlite -c testdb.sqlite3 -D testdata/fixtures
 
-  test-free:
-    desc: Test free databases (PG, MySQL and SQLite)
-    cmds:
-      - task: test-pg
-      - task: test-mysql
-      - task: test-sqlite
-
-  test-all:
-    desc: Test all databases (PG, MySQL, SQLite, SQLServer)
-    cmds:
-      - task: test-pg
-      - task: test-mysql
-      - task: test-sqlite
-      - task: test-sqlserver
-
-  test-pg:
+  test:pg:
     desc: Test PostgreSQL
     cmds:
       - task: test-db
         vars: {DATABASE: postgresql}
 
-  test-mysql:
+  test:mysql:
     desc: Test MySQL
     cmds:
-      - task: test-db
+      - task: test:db
         vars: {DATABASE: mysql}
 
-  test-sqlite:
+  test:sqlite:
     desc: Test SQLite
     cmds:
       - task: test-db
         vars: {DATABASE: sqlite}
 
-  test-sqlserver:
+  test:sqlserver:
     desc: Test SQLServer
     cmds:
       - task: test-db
