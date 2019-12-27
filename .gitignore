@@ -26,3 +26,4 @@ _testmain.go
 *.sqlite3
 .env
 /testfixtures
+/dist

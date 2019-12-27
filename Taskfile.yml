@@ -54,6 +54,11 @@ tasks:
     cmds:
       - go test -v -tags {{.DATABASE}}
 
+  goreleaser:test:
+    desc: Tests release process without publishing
+    cmds:
+      - goreleaser --snapshot --rm-dist
+
   docker:
     cmds:
       - task: docker:build
