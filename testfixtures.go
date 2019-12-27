@@ -290,6 +290,8 @@ func (l *Loader) buildInsertSQLs() error {
 
 		switch records := records.(type) {
 		case []interface{}:
+			f.insertSQLs = make([]insertSQL, 0, len(records))
+
 			for _, record := range records {
 				recordMap, ok := record.(map[interface{}]interface{})
 				if !ok {
@@ -304,6 +306,8 @@ func (l *Loader) buildInsertSQLs() error {
 				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
 			}
 		case map[interface{}]interface{}:
+			f.insertSQLs = make([]insertSQL, 0, len(records))
+
 			for _, record := range records {
 				recordMap, ok := record.(map[interface{}]interface{})
 				if !ok {
@@ -338,8 +342,8 @@ func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
 
 func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
 	var (
-		sqlColumns []string
-		sqlValues  []string
+		sqlColumns = make([]string, 0, len(record))
+		sqlValues  = make([]string, 0, len(record))
 		i          = 1
 	)
 	for key, value := range record {
@@ -388,11 +392,12 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 }
 
 func fixturesFromDir(dir string) ([]*fixtureFile, error) {
-	var files []*fixtureFile
 	fileinfos, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf(`testfixtures: could not stat directory "%s": %w`, dir, err)
 	}
+
+	files := make([]*fixtureFile, 0, len(fileinfos))
 
 	for _, fileinfo := range fileinfos {
 		fileExt := filepath.Ext(fileinfo.Name())
@@ -413,7 +418,7 @@ func fixturesFromDir(dir string) ([]*fixtureFile, error) {
 
 func fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) {
 	var (
-		fixtureFiles []*fixtureFile
+		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
 		err          error
 	)
 
