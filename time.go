@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var timeFormats = []string{
+var timeFormats = [...]string{
 	"2006-01-02",
 	"2006-01-02 15:04",
 	"2006-01-02 15:04:05",
@@ -19,9 +19,14 @@ var timeFormats = []string{
 	"2006-01-02T15:04:05-07:00",
 }
 
-func tryStrToDate(s string) (time.Time, error) {
+func (l *Loader) tryStrToDate(s string) (time.Time, error) {
+	loc := l.location
+	if loc == nil {
+		loc = time.Local
+	}
+
 	for _, f := range timeFormats {
-		t, err := time.ParseInLocation(f, s, time.Local)
+		t, err := time.ParseInLocation(f, s, loc)
 		if err != nil {
 			continue
 		}

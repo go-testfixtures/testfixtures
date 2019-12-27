@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -19,6 +20,7 @@ type Loader struct {
 	fixturesFiles []*fixtureFile
 
 	skipTestDatabaseCheck bool
+	location              *time.Location
 }
 
 type fixtureFile struct {
@@ -186,6 +188,15 @@ func Files(files ...string) func(*Loader) error {
 	}
 }
 
+// Location makes Loader use the given location by default when parsing
+// dates. If not given, by default it uses the value of time.Local.
+func Location(location *time.Location) func(*Loader) error {
+	return func(l *Loader) error {
+		l.location = location
+		return nil
+	}
+}
+
 // EnsureTestDatabase returns an error if the database name does not contains
 // "test".
 func (l *Loader) EnsureTestDatabase() error {
@@ -285,7 +296,7 @@ func (l *Loader) buildInsertSQLs() error {
 					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 				}
 
-				sql, values, err := f.buildInsertSQL(l.helper, recordMap)
+				sql, values, err := l.buildInsertSQL(f, recordMap)
 				if err != nil {
 					return err
 				}
@@ -299,7 +310,7 @@ func (l *Loader) buildInsertSQLs() error {
 					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 				}
 
-				sql, values, err := f.buildInsertSQL(l.helper, recordMap)
+				sql, values, err := l.buildInsertSQL(f, recordMap)
 				if err != nil {
 					return err
 				}
@@ -325,7 +336,7 @@ func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
 	return nil
 }
 
-func (f *fixtureFile) buildInsertSQL(h helper, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
+func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {
 	var (
 		sqlColumns []string
 		sqlValues  []string
@@ -338,7 +349,7 @@ func (f *fixtureFile) buildInsertSQL(h helper, record map[interface{}]interface{
 			return
 		}
 
-		sqlColumns = append(sqlColumns, h.quoteKeyword(keyStr))
+		sqlColumns = append(sqlColumns, l.helper.quoteKeyword(keyStr))
 
 		// if string, try convert to SQL or time
 		// if map or array, convert to json
@@ -349,14 +360,14 @@ func (f *fixtureFile) buildInsertSQL(h helper, record map[interface{}]interface{
 				continue
 			}
 
-			if t, err := tryStrToDate(v); err == nil {
+			if t, err := l.tryStrToDate(v); err == nil {
 				value = t
 			}
 		case []interface{}, map[interface{}]interface{}:
 			value = recursiveToJSON(v)
 		}
 
-		switch h.paramType() {
+		switch l.helper.paramType() {
 		case paramTypeDollar:
 			sqlValues = append(sqlValues, fmt.Sprintf("$%d", i))
 		case paramTypeQuestion:
@@ -369,7 +380,7 @@ func (f *fixtureFile) buildInsertSQL(h helper, record map[interface{}]interface{
 
 	sqlStr = fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s)",
-		h.quoteKeyword(f.fileNameWithoutExtension()),
+		l.helper.quoteKeyword(f.fileNameWithoutExtension()),
 		strings.Join(sqlColumns, ", "),
 		strings.Join(sqlValues, ", "),
 	)
