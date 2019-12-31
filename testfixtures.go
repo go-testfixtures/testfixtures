@@ -465,6 +465,8 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 			sqlValues = append(sqlValues, fmt.Sprintf("$%d", i))
 		case paramTypeQuestion:
 			sqlValues = append(sqlValues, "?")
+		case paramTypeAtSign:
+			sqlValues = append(sqlValues, fmt.Sprintf("@p%d", i))
 		}
 
 		values = append(values, value)

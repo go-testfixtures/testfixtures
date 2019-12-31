@@ -179,6 +179,8 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)"
 		case paramTypeQuestion:
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (?, ?, ?, ?)"
+		case paramTypeAtSign:
+			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (@p1, @p2, @p3, @p4)"
 		}
 
 		_, err = db.Exec(sql, "Post title", "Post content", time.Now(), time.Now())

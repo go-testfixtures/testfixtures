@@ -306,7 +306,7 @@ are handled as well. Just make sure you are logged in with a user with
 ```go
 testfixtures.New(
         ...
-        testfixtures.Dialect("mssql"),
+        testfixtures.Dialect("sqlserver"),
 )
 ```
 

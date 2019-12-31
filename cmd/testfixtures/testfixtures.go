@@ -123,7 +123,7 @@ func getDialect(dialect string) (string, error) {
 		}
 		return "sqlite3", nil
 	case "mssql", "sqlserver":
-		return "mssql", nil
+		return "sqlserver", nil
 	default:
 		return "", fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
