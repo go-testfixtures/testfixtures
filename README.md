@@ -278,7 +278,7 @@ set to true, and use:
 ```go
 testfixtures.New(
         ...
-        testfixtures.Dialect("postgres"), // or "mariadb"
+        testfixtures.Dialect("mysql"), // or "mariadb"
 )
 ```
 
