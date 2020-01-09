@@ -24,7 +24,7 @@ func (h *sqlserver) init(db *sql.DB) error {
 }
 
 func (*sqlserver) paramType() int {
-	return paramTypeQuestion
+	return paramTypeAtSign
 }
 
 func (*sqlserver) quoteKeyword(s string) string {
@@ -42,7 +42,7 @@ func (*sqlserver) databaseName(q queryable) (string, error) {
 }
 
 func (*sqlserver) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> ?", "spt_values")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> @p1", "spt_values")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) bool {
 	sql := `
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
-		WHERE OBJECT_ID = OBJECT_ID(?)
+		WHERE OBJECT_ID = OBJECT_ID(@p1)
 	`
 	var count int
 	q.QueryRow(sql, h.quoteKeyword(tableName)).Scan(&count)

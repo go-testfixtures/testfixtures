@@ -12,7 +12,7 @@ import (
 func TestSQLServer(t *testing.T) {
 	testLoader(
 		t,
-		"mssql",
+		"sqlserver",
 		os.Getenv("SQLSERVER_CONN_STRING"),
 		"testdata/schema/sqlserver.sql",
 		DangerousSkipTestDatabaseCheck(),

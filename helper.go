@@ -8,6 +8,7 @@ import (
 const (
 	paramTypeDollar = iota + 1
 	paramTypeQuestion
+	paramTypeAtSign
 )
 
 type loadFunction func(tx *sql.Tx) error
