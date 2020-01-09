@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.0 - 2019-01-09
+
+- Using `sqlserver` driver instead of the deprecated `mssql`
+  ([#58](https://github.com/go-testfixtures/testfixtures/pull/58)).
+
 ## v3.0.0 - 2019-12-26
 
 ### Breaking changes
