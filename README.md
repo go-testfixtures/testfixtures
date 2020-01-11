@@ -269,6 +269,8 @@ testfixtures.New(
 )
 ```
 
+Tested using the [github.com/lib/pq](https://github.com/lib/pq) driver.
+
 ### MySQL / MariaDB
 
 Just make sure the connection string have
@@ -281,6 +283,8 @@ testfixtures.New(
         testfixtures.Dialect("mysql"), // or "mariadb"
 )
 ```
+
+Tested using the [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) driver.
 
 ### SQLite
 
@@ -297,6 +301,8 @@ testfixtures.New(
 )
 ```
 
+Tested using the [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) driver.
+
 ### Microsoft SQL Server
 
 SQL Server support requires SQL Server >= 2008. Inserting on `IDENTITY` columns
@@ -309,6 +315,9 @@ testfixtures.New(
         testfixtures.Dialect("sqlserver"),
 )
 ```
+
+Tested using the `mssql` and `sqlserver` drivers from the
+[github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb) lib.
 
 ## Templating
 
