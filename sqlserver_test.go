@@ -18,3 +18,13 @@ func TestSQLServer(t *testing.T) {
 		DangerousSkipTestDatabaseCheck(),
 	)
 }
+
+func TestDeprecatedMssql(t *testing.T) {
+	testLoader(
+		t,
+		"mssql",
+		os.Getenv("SQLSERVER_CONN_STRING"),
+		"testdata/schema/sqlserver.sql",
+		DangerousSkipTestDatabaseCheck(),
+	)
+}

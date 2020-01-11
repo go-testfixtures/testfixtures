@@ -59,6 +59,10 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		t.Errorf("cannot get helper: %v", err)
 		return
 	}
+	if err := helper.init(db); err != nil {
+		t.Errorf("cannot init helper: %v", err)
+		return
+	}
 
 	var batches [][]byte
 	if h, ok := helper.(batchSplitter); ok {
@@ -181,6 +185,8 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (?, ?, ?, ?)"
 		case paramTypeAtSign:
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (@p1, @p2, @p3, @p4)"
+		default:
+			panic("unrecognized param type")
 		}
 
 		_, err = db.Exec(sql, "Post title", "Post content", time.Now(), time.Now())

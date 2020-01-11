@@ -9,11 +9,25 @@ import (
 type sqlserver struct {
 	baseHelper
 
-	tables []string
+	paramTypeCache int
+	tables         []string
 }
 
 func (h *sqlserver) init(db *sql.DB) error {
 	var err error
+
+	// NOTE(@andreynering): The SQL Server lib (github.com/denisenkom/go-mssqldb)
+	// supports both the "?" style (when using the deprecated "mssql" driver)
+	// and the "@p1" style (when using the new "sqlserver" driver).
+	//
+	// Since we don't have a way to know which driver it's been used,
+	// this is a small hack to detect the allowed param style.
+	var v int
+	if err := db.QueryRow("SELECT ?", 1).Scan(&v); err == nil && v == 1 {
+		h.paramTypeCache = paramTypeQuestion
+	} else {
+		h.paramTypeCache = paramTypeAtSign
+	}
 
 	h.tables, err = h.tableNames(db)
 	if err != nil {
@@ -23,8 +37,8 @@ func (h *sqlserver) init(db *sql.DB) error {
 	return nil
 }
 
-func (*sqlserver) paramType() int {
-	return paramTypeAtSign
+func (h *sqlserver) paramType() int {
+	return h.paramTypeCache
 }
 
 func (*sqlserver) quoteKeyword(s string) string {
@@ -42,7 +56,7 @@ func (*sqlserver) databaseName(q queryable) (string, error) {
 }
 
 func (*sqlserver) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> @p1", "spt_values")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> 'spt_values'")
 	if err != nil {
 		return nil, err
 	}
@@ -62,20 +76,26 @@ func (*sqlserver) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) bool {
-	sql := `
+func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
+	sql := fmt.Sprintf(`
 		SELECT COUNT(*)
 		FROM SYS.IDENTITY_COLUMNS
-		WHERE OBJECT_ID = OBJECT_ID(@p1)
-	`
+		WHERE OBJECT_ID = OBJECT_ID('%s')
+	`, tableName)
 	var count int
-	q.QueryRow(sql, h.quoteKeyword(tableName)).Scan(&count)
-	return count > 0
+	if err := q.QueryRow(sql).Scan(&count); err != nil {
+		return false, err
+	}
+	return count > 0, nil
 
 }
 
 func (h *sqlserver) whileInsertOnTable(tx *sql.Tx, tableName string, fn func() error) (err error) {
-	if h.tableHasIdentityColumn(tx, tableName) {
+	hasIdentityColumn, err := h.tableHasIdentityColumn(tx, tableName)
+	if err != nil {
+		return err
+	}
+	if hasIdentityColumn {
 		defer func() {
 			_, err2 := tx.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF", h.quoteKeyword(tableName)))
 			if err2 != nil && err == nil {
