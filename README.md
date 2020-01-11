@@ -1,4 +1,4 @@
-# Go Test Fixtures
+# testfixtures
 
 [![GoDoc](https://godoc.org/github.com/go-testfixtures/testfixtures?status.svg)][doc]
 
