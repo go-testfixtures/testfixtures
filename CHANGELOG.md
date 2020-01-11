@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.1 - 2019-01-11
+
+- testfixtures now work with both `mssql` and `sqlserver` drivers.
+  Note that [the `mssql` one is deprecated](https://github.com/denisenkom/go-mssqldb#deprecated),
+  though. So try to migrate to `sqlserver` once possible.
+
 ## v3.1.0 - 2019-01-09
 
 - Using `sqlserver` driver instead of the deprecated `mssql`
