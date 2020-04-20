@@ -108,7 +108,7 @@ func (d *Dumper) dumpTable(table string) error {
 		return err
 	}
 
-	fixtures := make([]interface{}, 0, 10)
+	fixtures := make([]yaml.MapSlice, 0, 10)
 	for rows.Next() {
 		entries := make([]interface{}, len(columns))
 		entryPtrs := make([]interface{}, len(entries))
@@ -119,9 +119,12 @@ func (d *Dumper) dumpTable(table string) error {
 			return err
 		}
 
-		entryMap := make(map[string]interface{}, len(entries))
+		entryMap := make([]yaml.MapItem, len(entries))
 		for i, column := range columns {
-			entryMap[column] = convertValue(entries[i])
+			entryMap[i] = yaml.MapItem{
+				Key:   column,
+				Value: convertValue(entries[i]),
+			}
 		}
 		fixtures = append(fixtures, entryMap)
 	}
