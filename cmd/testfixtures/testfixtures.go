@@ -26,6 +26,7 @@ func main() {
 		connString            string
 		dir                   string
 		files                 []string
+		paths                 []string
 		useAlterContraint     bool
 		skipResetSequences    bool
 		resetSequencesTo      int64
@@ -37,6 +38,7 @@ func main() {
 	pflag.StringVarP(&connString, "conn", "c", "", "a database connection string")
 	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load")
 	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load")
+	pflag.StringSliceVarP(&paths, "paths", "p", nil, "a list of fixture paths to load (directory or file)")
 	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
 	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL only)")
 	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL only, defaults to 10000)")
@@ -52,12 +54,8 @@ func main() {
 		log.Fatal("testfixtures: both --dialect (-d) and --conn (-c) are required")
 		return
 	}
-	if dir == "" && len(files) == 0 {
-		log.Fatal("testfixtures: either --dir (-D) or --files (-f) need to be given")
-		return
-	}
-	if dir != "" && len(files) > 0 {
-		log.Fatal("testfixtures: you can use --dir (-D) and --files (-f) together")
+	if dir == "" && len(files) == 0 && len(paths) == 0 {
+		log.Fatal("testfixtures: either --dir (-D) or --files (-f) or --paths (-p) need to be given")
 		return
 	}
 
@@ -85,8 +83,12 @@ func main() {
 	}
 	if dir != "" {
 		options = append(options, testfixtures.Directory(dir))
-	} else {
+	}
+	if len(files) > 0 {
 		options = append(options, testfixtures.Files(files...))
+	}
+	if len(paths) > 0 {
+		options = append(options, testfixtures.Paths(paths...))
 	}
 	if useAlterContraint {
 		options = append(options, testfixtures.UseAlterConstraint())
