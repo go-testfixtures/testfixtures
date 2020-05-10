@@ -103,6 +103,32 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		assertFixturesLoaded(t, l)
 	})
 
+	t.Run("LoadFromDirectory-Multiple", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Directory("testdata/fixtures_dirs/fixtures1"),
+				Directory("testdata/fixtures_dirs/fixtures2"),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
 	t.Run("LoadFromFiles", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
@@ -119,6 +145,156 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromFiles-Multiple", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Files(
+					"testdata/fixtures/posts.yml",
+					"testdata/fixtures/comments.yml",
+				),
+				Files(
+					"testdata/fixtures/tags.yml",
+					"testdata/fixtures/posts_tags.yml",
+					"testdata/fixtures/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Directory("testdata/fixtures_dirs/fixtures1"),
+				Files(
+					"testdata/fixtures/tags.yml",
+					"testdata/fixtures/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromPaths", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Paths(
+					"testdata/fixtures_dirs/fixtures1",
+					"testdata/fixtures_dirs/fixtures2/tags.yml",
+					"testdata/fixtures_dirs/fixtures2/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromPaths-OnlyFiles", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Paths(
+					"testdata/fixtures/posts.yml",
+					"testdata/fixtures/comments.yml",
+					"testdata/fixtures/tags.yml",
+					"testdata/fixtures/posts_tags.yml",
+					"testdata/fixtures/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromPaths-OnlyDirs", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Paths(
+					"testdata/fixtures_dirs/fixtures1",
+					"testdata/fixtures_dirs/fixtures2",
 				),
 			},
 			additionalOptions...,
