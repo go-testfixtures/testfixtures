@@ -128,7 +128,7 @@ func (h *mySQL) getChecksum(q queryable, tableName string) (int64, error) {
 		return 0, err
 	}
 	if !checksum.Valid {
-		return 0, fmt.Errorf("table %s does not exist", tableName)
+		return 0, fmt.Errorf("testfixtures: table %s does not exist", tableName)
 	}
 	return checksum.Int64, nil
 }
