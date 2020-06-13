@@ -3,6 +3,11 @@ DECLARE
     C INT;
 BEGIN
     -- DROPPING TABLES IF EXISTS
+    SELECT COUNT(*) INTO c FROM user_tables WHERE table_name = 'VOTES';
+    IF c = 1 THEN
+        EXECUTE IMMEDIATE 'DROP TABLE VOTES';
+    END IF;
+
     SELECT COUNT(*) INTO c FROM user_tables WHERE table_name = 'COMMENTS';
     IF c = 1 THEN
         EXECUTE IMMEDIATE 'DROP TABLE COMMENTS';
@@ -44,6 +49,11 @@ BEGIN
         EXECUTE IMMEDIATE 'DROP SEQUENCE COMMENTS_SEQ';
     END IF;
 
+    SELECT COUNT(*) INTO c FROM all_sequences WHERE sequence_name = 'VOTES_SEQ';
+    IF c = 1 THEN
+        EXECUTE IMMEDIATE 'DROP SEQUENCE VOTES_SEQ';
+    END IF;
+
     SELECT COUNT(*) INTO c FROM all_sequences WHERE sequence_name = 'USERS_SEQ';
     IF c = 1 THEN
         EXECUTE IMMEDIATE 'DROP SEQUENCE USERS_SEQ';
@@ -53,6 +63,7 @@ BEGIN
     EXECUTE IMMEDIATE 'CREATE SEQUENCE posts_seq';
     EXECUTE IMMEDIATE 'CREATE SEQUENCE tags_seq';
     EXECUTE IMMEDIATE 'CREATE SEQUENCE comments_seq';
+    EXECUTE IMMEDIATE 'CREATE SEQUENCE votes_seq';
     EXECUTE IMMEDIATE 'CREATE SEQUENCE users_seq';
 
     EXECUTE IMMEDIATE 'CREATE TABLE posts (
@@ -74,8 +85,8 @@ BEGIN
     	post_id INTEGER NOT NULL
     	,tag_id INTEGER NOT NULL
     	,PRIMARY KEY (post_id, tag_id)
-    	,FOREIGN KEY (post_id) REFERENCES posts (id)
-    	,FOREIGN KEY (tag_id) REFERENCES tags (id)
+    	,FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+    	,FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
     )';
 
     EXECUTE IMMEDIATE 'CREATE TABLE comments (
@@ -86,7 +97,15 @@ BEGIN
     	,content VARCHAR2(4000) NOT NULL
     	,created_at TIMESTAMP NOT NULL
     	,updated_at TIMESTAMP NOT NULL
-    	,FOREIGN KEY (post_id) REFERENCES posts (id)
+    	,FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+    )';
+
+    EXECUTE IMMEDIATE 'CREATE TABLE votes (
+    	id INTEGER PRIMARY KEY NOT NULL
+    	,comment_id INTEGER NOT NULL
+    	,created_at TIMESTAMP NOT NULL
+    	,updated_at TIMESTAMP NOT NULL
+    	,FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
     )';
 
     EXECUTE IMMEDIATE 'CREATE TABLE users (

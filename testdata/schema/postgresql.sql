@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS votes;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS posts_tags;
 DROP TABLE IF EXISTS posts;
@@ -23,8 +24,8 @@ CREATE TABLE posts_tags (
 	post_id INTEGER NOT NULL
 	,tag_id INTEGER NOT NULL
 	,PRIMARY KEY (post_id, tag_id)
-	,FOREIGN KEY (post_id) REFERENCES posts (id)
-	,FOREIGN KEY (tag_id) REFERENCES tags (id)
+	,FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+	,FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
 );
 
 CREATE TABLE comments (
@@ -35,7 +36,15 @@ CREATE TABLE comments (
 	,content TEXT NOT NULL
 	,created_at TIMESTAMP NOT NULL
 	,updated_at TIMESTAMP NOT NULL
-	,FOREIGN KEY (post_id) REFERENCES posts (id)
+	,FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+);
+
+CREATE TABLE votes (
+	id SERIAL PRIMARY KEY NOT NULL
+	,comment_id INTEGER NOT NULL
+	,created_at TIMESTAMP NOT NULL
+	,updated_at TIMESTAMP NOT NULL
+	,FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
 );
 
 CREATE TABLE users (
