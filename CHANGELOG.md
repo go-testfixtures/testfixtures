@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- On MySQL, return a clearer error message when a table doesn't exist
+  ([#69](https://github.com/go-testfixtures/testfixtures/pull/69)).
+
 ## v3.2.0 - 2020-05-10
 
 - Add support for loading multiple files and directories
