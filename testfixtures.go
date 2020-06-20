@@ -324,13 +324,20 @@ func (l *Loader) Load() error {
 	}
 
 	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
-		// Delete existing table data for specified fixtures before populating the data. This helps avoid
-		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
+		modifiedTables := make(map[string]bool, len(l.fixturesFiles))
 		for _, file := range l.fixturesFiles {
-			modified, err := l.helper.isTableModified(tx, file.fileNameWithoutExtension())
+			tableName := file.fileNameWithoutExtension()
+			modified, err := l.helper.isTableModified(tx, tableName)
 			if err != nil {
 				return err
 			}
+			modifiedTables[tableName] = modified
+		}
+
+		// Delete existing table data for specified fixtures before populating the data. This helps avoid
+		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
+		for _, file := range l.fixturesFiles {
+			modified := modifiedTables[file.fileNameWithoutExtension()]
 			if !modified {
 				continue
 			}
@@ -340,14 +347,11 @@ func (l *Loader) Load() error {
 		}
 
 		for _, file := range l.fixturesFiles {
-			modified, err := l.helper.isTableModified(tx, file.fileNameWithoutExtension())
-			if err != nil {
-				return err
-			}
+			modified := modifiedTables[file.fileNameWithoutExtension()]
 			if !modified {
 				continue
 			}
-			err = l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
+			err := l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
 				for j, i := range file.insertSQLs {
 					if _, err := tx.Exec(i.sql, i.params...); err != nil {
 						return &InsertError{
