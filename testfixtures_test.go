@@ -100,6 +100,12 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
+
+		// Call load again to test against a database with existing data.
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+
 		assertFixturesLoaded(t, l)
 	})
 
