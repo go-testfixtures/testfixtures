@@ -109,7 +109,7 @@ func Dialect(dialect string) func(*Loader) error {
 
 func helperForDialect(dialect string) (helper, error) {
 	switch dialect {
-	case "postgres", "postgresql", "timescaledb":
+	case "postgres", "postgresql", "timescaledb", "pgx":
 		return &postgreSQL{}, nil
 	case "mysql", "mariadb":
 		return &mySQL{}, nil
