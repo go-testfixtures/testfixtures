@@ -117,6 +117,8 @@ func helperForDialect(dialect string) (helper, error) {
 		return &sqlite{}, nil
 	case "mssql", "sqlserver":
 		return &sqlserver{}, nil
+	case "cockroach", "cockroachdb":
+		return &cockroachDB{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}

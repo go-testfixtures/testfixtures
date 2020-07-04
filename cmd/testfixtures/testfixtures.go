@@ -59,13 +59,18 @@ func main() {
 		return
 	}
 
+	driver := dialect
+	if driver == "cockroach" || driver == "cockroachdb" {
+		driver = "postgres"
+	}
+
 	dialect, err := getDialect(dialect)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	db, err := sql.Open(dialect, connString)
+	db, err := sql.Open(driver, connString)
 	if err != nil {
 		log.Fatalf("testfixtures: could not connect to database: %v", err)
 		return
@@ -117,6 +122,8 @@ func getDialect(dialect string) (string, error) {
 	switch dialect {
 	case "postgres", "postgresql", "timescaledb":
 		return "postgres", nil
+	case "cockroach", "cockroachdb":
+		return "cockroachdb", nil
 	case "mysql", "mariadb":
 		return "mysql", nil
 	case "sqlite", "sqlite3":

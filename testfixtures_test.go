@@ -36,8 +36,8 @@ func TestRequiredOptions(t *testing.T) {
 	})
 }
 
-func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
-	db, err := sql.Open(dialect, connStr)
+func testLoader(t *testing.T, dialect, driver, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
+	db, err := sql.Open(driver, connStr)
 	if err != nil {
 		t.Errorf("failed to open database: %v", err)
 		return

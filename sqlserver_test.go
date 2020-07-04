@@ -13,6 +13,7 @@ func TestSQLServer(t *testing.T) {
 	testLoader(
 		t,
 		"sqlserver",
+		"sqlserver",
 		os.Getenv("SQLSERVER_CONN_STRING"),
 		"testdata/schema/sqlserver.sql",
 		DangerousSkipTestDatabaseCheck(),
@@ -22,6 +23,7 @@ func TestSQLServer(t *testing.T) {
 func TestDeprecatedMssql(t *testing.T) {
 	testLoader(
 		t,
+		"mssql",
 		"mssql",
 		os.Getenv("SQLSERVER_CONN_STRING"),
 		"testdata/schema/sqlserver.sql",

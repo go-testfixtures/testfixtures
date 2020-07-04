@@ -74,7 +74,7 @@ The file would look like this (it can have as many record you want):
 ```
 
 An YAML object or array will be converted to JSON. It will be stored on a native
-JSON type like JSONB on PostgreSQL or as a TEXT or VARCHAR column on other
+JSON type like JSONB on PostgreSQL and CockroachDB or as a TEXT or VARCHAR column on other
 databases.
 
 ```yml
@@ -290,6 +290,21 @@ testfixtures.New(
 
 Tested using the [github.com/lib/pq](https://github.com/lib/pq) driver.
 
+### CockroachDB
+
+This package drops foreign keys while importing fixtures and recreate it after import.
+
+To use:
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.Dialect("cockroachdb"), // or "cockroachdb"
+)
+```
+
+Tested using the [github.com/lib/pq](https://github.com/lib/pq) and [github.com/jackc/pgx](https://github.com/jackc/pgx) drivers.
+
 ### MySQL / MariaDB
 
 Just make sure the connection string have
@@ -453,6 +468,7 @@ for the database you want to run tests against:
 
 ```bash
 task test:pg # PostgreSQL
+task test:crdb # Cockroach
 task test:mysql # MySQL
 task test:sqlite # SQLite
 task test:sqlserver # Microsoft SQL Server
