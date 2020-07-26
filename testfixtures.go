@@ -139,6 +139,22 @@ func UseAlterConstraint() func(*Loader) error {
 	}
 }
 
+// UseDropConstraint If true, the constraints will be dropped
+// and recreated after loading fixtures. This is implemented mainly to support
+// CockroachDB which does not support other methods.
+// Only valid for PostgreSQL dialect. Returns an error otherwise.
+
+func UseDropConstraint() func(*Loader) error {
+	return func(l *Loader) error {
+		pgHelper, ok := l.helper.(*postgreSQL)
+		if !ok {
+			return fmt.Errorf("testfixtures: UseDropConstraint is only valid for PostgreSQL databases")
+		}
+		pgHelper.useDropConstraint = true
+		return nil
+	}
+}
+
 // SkipResetSequences prevents Loader from reseting sequences after loading
 // fixtures.
 //

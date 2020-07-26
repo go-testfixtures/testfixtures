@@ -35,6 +35,12 @@ tasks:
       - task: test-db
         vars: {DATABASE: sqlserver}
 
+  test:crdb:
+    desc: Test CockroachDB
+    cmds:
+      - task: test-db
+        vars: {DATABASE: cockroachdb}
+
   test-db:
     cmds:
       - go test -v -tags {{.DATABASE}}
@@ -56,4 +62,4 @@ tasks:
   docker:test:
     cmds:
       - docker-compose down -v
-      - docker-compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver'
+      - docker-compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb'

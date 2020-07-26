@@ -32,3 +32,15 @@ func TestPostgreSQLWithAlterConstraint(t *testing.T) {
 		)
 	}
 }
+
+func TestPostgreSQLWithDropConstraint(t *testing.T) {
+	for _, dialect := range []string{"postgres", "pgx"} {
+		testLoader(
+			t,
+			dialect,
+			os.Getenv("PG_CONN_STRING"),
+			"testdata/schema/postgresql.sql",
+			UseDropConstraint(),
+		)
+	}
+}

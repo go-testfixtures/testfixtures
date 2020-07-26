@@ -10,18 +10,21 @@ type postgreSQL struct {
 	baseHelper
 
 	useAlterConstraint bool
+	useDropConstraint  bool
 	skipResetSequences bool
 	resetSequencesTo   int64
 
 	tables                   []string
 	sequences                []string
 	nonDeferrableConstraints []pgConstraint
+	constraints              []pgConstraint
 	tablesChecksum           map[string]string
 }
 
 type pgConstraint struct {
 	tableName      string
 	constraintName string
+	definition     string
 }
 
 func (h *postgreSQL) init(db *sql.DB) error {
@@ -42,6 +45,10 @@ func (h *postgreSQL) init(db *sql.DB) error {
 		return err
 	}
 
+	h.constraints, err = h.getConstraints(db)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -63,7 +70,7 @@ func (h *postgreSQL) tableNames(q queryable) ([]string, error) {
 		FROM pg_class
 		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		WHERE pg_class.relkind = 'r'
-		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema')
+		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal')
 		  AND pg_namespace.nspname NOT LIKE 'pg_toast%'
 		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%';
 	`
@@ -123,6 +130,7 @@ func (*postgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 		FROM information_schema.table_constraints
 		WHERE constraint_type = 'FOREIGN KEY'
 		  AND is_deferrable = 'NO'
+		  AND table_schema != 'crdb_internal'
 		  AND table_schema NOT LIKE '\_timescaledb%'
   	`
 	rows, err := q.Query(sql)
@@ -142,6 +150,78 @@ func (*postgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 		return nil, err
 	}
 	return constraints, nil
+}
+
+func (h *postgreSQL) getConstraints(q queryable) ([]pgConstraint, error) {
+	var constraints []pgConstraint
+
+	sql := `
+		SELECT conrelid::regclass AS table_from
+		      ,conname
+		      ,pg_get_constraintdef(c.oid)
+		FROM   pg_constraint c
+		JOIN   pg_namespace n ON n.oid = c.connamespace
+		WHERE  contype IN ('f')
+                       AND    n.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal')
+		AND    n.nspname NOT LIKE 'pg_toast%'
+		AND    n.nspname NOT LIKE '\_timescaledb%';
+		`
+	rows, err := q.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var constraint pgConstraint
+		if err = rows.Scan(&constraint.tableName,
+			&constraint.constraintName,
+			&constraint.definition); err != nil {
+			return nil, err
+		}
+		constraints = append(constraints, constraint)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return constraints, nil
+}
+
+func (h *postgreSQL) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (err error) {
+	defer func() {
+		// recreate constraints again after load
+		var sql string
+		for _, constraint := range h.constraints {
+			sql += fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s %s;",
+				h.quoteKeyword(constraint.tableName),
+				h.quoteKeyword(constraint.constraintName),
+				constraint.definition)
+		}
+		if _, err2 := db.Exec(sql); err2 != nil && err == nil {
+			err = err2
+		}
+	}()
+
+	var sql string
+	for _, constraint := range h.constraints {
+		sql += fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT %s;", h.quoteKeyword(constraint.tableName), h.quoteKeyword(constraint.constraintName))
+	}
+	if _, err := db.Exec(sql); err != nil {
+		return err
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err = loadFn(tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (h *postgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) (err error) {
@@ -224,7 +304,9 @@ func (h *postgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 		}()
 	}
 
-	if h.useAlterConstraint {
+	if h.useDropConstraint {
+		return h.dropAndRecreateConstraints(db, loadFn)
+	} else if h.useAlterConstraint {
 		return h.makeConstraintsDeferrable(db, loadFn)
 	}
 	return h.disableTriggers(db, loadFn)
@@ -274,7 +356,7 @@ func (h *postgreSQL) afterLoad(q queryable) error {
 
 func (h *postgreSQL) getChecksum(q queryable, tableName string) (string, error) {
 	sqlStr := fmt.Sprintf(`
-			SELECT md5(CAST((array_agg(t.*)) AS TEXT))
+			SELECT md5(CAST((json_agg(t.*)) AS TEXT))
 			FROM %s AS t
 		`,
 		h.quoteKeyword(tableName),
