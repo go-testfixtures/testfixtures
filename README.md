@@ -436,8 +436,15 @@ each test run in a transaction.
 ## CLI
 
 We also have a CLI to load fixtures in a given database.
+
 Grab it from the [releases page](https://github.com/go-testfixtures/testfixtures/releases)
-and use it like:
+or install with Homebrew:
+
+```bash
+brew install go-testfixtures/tap/testfixtures
+```
+
+Usage is like this:
 
 ```bash
 testfixtures -d postgres -c "postgres://user:password@localhost/database" -D testdata/fixtures
@@ -445,7 +452,7 @@ testfixtures -d postgres -c "postgres://user:password@localhost/database" -D tes
 
 The connection string changes for each database driver.
 
-Use `--help` for all flags.
+Use `testfixtures --help` for all flags.
 
 ## Contributing
 
