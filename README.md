@@ -290,7 +290,8 @@ testfixtures.New(
 
 #### With `DROP CONSTRAINT`
 
-This approach is implemented to support databases that do not support above methods(namely CockroachDB)
+This approach is implemented to support databases that do not support above
+methods (namely CockroachDB).
 
 ```go
 testfixtures.New(
@@ -300,7 +301,8 @@ testfixtures.New(
 )
 ```
 
-Tested using the [github.com/lib/pq](https://github.com/lib/pq) and [github.com/jackc/pgx](https://github.com/jackc/pgx) drivers.
+Tested using the [github.com/lib/pq](https://github.com/lib/pq) and
+[github.com/jackc/pgx](https://github.com/jackc/pgx) drivers.
 
 ### MySQL / MariaDB
 
