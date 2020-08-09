@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.4.0 - 2020-08-09
+
+- Add support to CockroachDB
+  ([#77](https://github.com/go-testfixtures/testfixtures/pull/77)).
+
 ## v3.3.0 - 2020-06-27
 
 - Add support for the [github.com/jackc/pgx](https://github.com/jackc/pgx)
