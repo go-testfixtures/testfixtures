@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix for Microsoft SQL Server databases with views
+  ([#78](https://github.com/go-testfixtures/testfixtures/pull/78)).
+
 ## v3.4.0 - 2020-08-09
 
 - Add support to CockroachDB
