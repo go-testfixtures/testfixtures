@@ -1,6 +1,6 @@
 # testfixtures
 
-[![GoDoc](https://godoc.org/github.com/go-testfixtures/testfixtures?status.svg)][doc]
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/go-testfixtures/testfixtures/v3?tab=doc)](https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc)
 
 > ***Warning***: this package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
@@ -497,7 +497,6 @@ unit test database code without having to connect to a real database
 - [dbcleaner][dbcleaner] - Clean database for testing, inspired by
 database_cleaner for Ruby
 
-[doc]: https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc
 [railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
 [gotxdb]: https://github.com/DATA-DOG/go-txdb
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
