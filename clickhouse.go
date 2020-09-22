@@ -5,21 +5,13 @@ import (
 	"fmt"
 )
 
-type mySQL struct {
+type clickhouse struct {
 	baseHelper
 	tables         []string
 	tablesChecksum map[string]int64
 }
 
-func (h *mySQL) cleanTable(tx *sql.Tx, tableName string) error {
-	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", tableName)); err != nil {
-		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, tableName, err)
-	}
-
-	return nil
-}
-
-func (h *mySQL) init(db *sql.DB) error {
+func (h *clickhouse) init(db *sql.DB) error {
 	var err error
 	h.tables, err = h.tableNames(db)
 	if err != nil {
@@ -29,26 +21,33 @@ func (h *mySQL) init(db *sql.DB) error {
 	return nil
 }
 
-func (*mySQL) paramType() int {
+func (h *clickhouse) cleanTable(tx *sql.Tx, tableName string) error {
+	if _, err := tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", tableName)); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, tableName, err)
+	}
+
+	return nil
+}
+
+func (*clickhouse) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*mySQL) quoteKeyword(str string) string {
+func (*clickhouse) quoteKeyword(str string) string {
 	return fmt.Sprintf("`%s`", str)
 }
 
-func (*mySQL) databaseName(q queryable) (string, error) {
+func (*clickhouse) databaseName(q queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	return dbName, err
 }
 
-func (h *mySQL) tableNames(q queryable) ([]string, error) {
+func (h *clickhouse) tableNames(q queryable) ([]string, error) {
 	query := `
-		SELECT table_name
-		FROM information_schema.tables
-		WHERE table_schema = ?
-		  AND table_type = 'BASE TABLE';
+		SELECT name
+		FROM system.tables
+		WHERE database = ?;
 	`
 	dbName, err := h.databaseName(q)
 	if err != nil {
@@ -76,30 +75,23 @@ func (h *mySQL) tableNames(q queryable) ([]string, error) {
 
 }
 
-func (h *mySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
+func (h *clickhouse) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if _, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0"); err != nil {
-		return err
-	}
 
 	err = loadFn(tx)
-	_, err2 := tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
 	if err != nil {
 		return err
-	}
-	if err2 != nil {
-		return err2
 	}
 
 	return tx.Commit()
 }
 
-func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
+func (h *clickhouse) isTableModified(q queryable, tableName string) (bool, error) {
 	checksum, err := h.getChecksum(q, tableName)
 	if err != nil {
 		return true, err
@@ -110,7 +102,7 @@ func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
 	return oldChecksum == 0 || checksum != oldChecksum, nil
 }
 
-func (h *mySQL) afterLoad(q queryable) error {
+func (h *clickhouse) afterLoad(q queryable) error {
 	if h.tablesChecksum != nil {
 		return nil
 	}
@@ -126,17 +118,15 @@ func (h *mySQL) afterLoad(q queryable) error {
 	return nil
 }
 
-func (h *mySQL) getChecksum(q queryable, tableName string) (int64, error) {
-	query := fmt.Sprintf("CHECKSUM TABLE %s", h.quoteKeyword(tableName))
+func (h *clickhouse) getChecksum(q queryable, tableName string) (int64, error) {
+	query := fmt.Sprintf("SELECT groupBitXor(cityHash64(*)) FROM %s", h.quoteKeyword(tableName))
 	var (
-		table    string
 		checksum sql.NullInt64
 	)
-	if err := q.QueryRow(query).Scan(&table, &checksum); err != nil {
+
+	if err := q.QueryRow(query).Scan(&checksum); err != nil {
 		return 0, err
 	}
-	if !checksum.Valid {
-		return 0, fmt.Errorf("testfixtures: table %s does not exist", tableName)
-	}
+
 	return checksum.Int64, nil
 }

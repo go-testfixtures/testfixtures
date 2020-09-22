@@ -13,6 +13,14 @@ type sqlserver struct {
 	tables         []string
 }
 
+func (h *sqlserver) cleanTable(tx *sql.Tx, tableName string) error {
+	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", tableName)); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, tableName, err)
+	}
+
+	return nil
+}
+
 func (h *sqlserver) init(db *sql.DB) error {
 	var err error
 

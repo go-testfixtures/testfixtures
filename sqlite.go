@@ -2,6 +2,7 @@ package testfixtures
 
 import (
 	"database/sql"
+	"fmt"
 	"path/filepath"
 )
 
@@ -22,6 +23,14 @@ func (*sqlite) databaseName(q queryable) (string, error) {
 	}
 	dbName = filepath.Base(dbName)
 	return dbName, nil
+}
+
+func (h *sqlite) cleanTable(tx *sql.Tx, tableName string) error {
+	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", tableName)); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, tableName, err)
+	}
+
+	return nil
 }
 
 func (*sqlite) tableNames(q queryable) ([]string, error) {
