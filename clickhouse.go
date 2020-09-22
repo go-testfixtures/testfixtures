@@ -119,7 +119,9 @@ func (h *clickhouse) afterLoad(q queryable) error {
 }
 
 func (h *clickhouse) getChecksum(q queryable, tableName string) (int64, error) {
-	query := fmt.Sprintf("SELECT groupBitXor(cityHash64(*)) FROM %s", h.quoteKeyword(tableName))
+	// This is an equivalent query to get the checksum of the content of the table
+	// We divide by 2 because it returns an uint64 instead of an int64
+	query := fmt.Sprintf("SELECT toInt64(groupBitXor(cityHash64(*)) / 2) FROM %s", h.quoteKeyword(tableName))
 	var (
 		checksum sql.NullInt64
 	)
