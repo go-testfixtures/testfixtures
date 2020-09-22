@@ -359,7 +359,7 @@ func (l *Loader) Load() error {
 			if !modified {
 				continue
 			}
-			if err := file.delete(tx, l.helper); err != nil {
+			if err := l.helper.cleanTable(tx, l.helper.quoteKeyword(file.fileNameWithoutExtension())); err != nil {
 				return err
 			}
 		}
@@ -466,13 +466,6 @@ func (l *Loader) buildInsertSQLs() error {
 
 func (f *fixtureFile) fileNameWithoutExtension() string {
 	return strings.Replace(f.fileName, filepath.Ext(f.fileName), "", 1)
-}
-
-func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
-	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension()))); err != nil {
-		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, f.fileNameWithoutExtension(), err)
-	}
-	return nil
 }
 
 func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface{}) (sqlStr string, values []interface{}, err error) {

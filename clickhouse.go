@@ -1,0 +1,126 @@
+package testfixtures
+
+import (
+	"database/sql"
+	"fmt"
+)
+
+type clickhouse struct {
+	baseHelper
+	tables         []string
+	tablesChecksum map[string]int64
+}
+
+func (h *clickhouse) init(db *sql.DB) error {
+	var err error
+	h.tables, err = h.tableNames(db)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (*clickhouse) paramType() int {
+	return paramTypeQuestion
+}
+
+func (*clickhouse) quoteKeyword(str string) string {
+	return fmt.Sprintf("`%s`", str)
+}
+
+func (*clickhouse) databaseName(q queryable) (string, error) {
+	var dbName string
+	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)
+	return dbName, err
+}
+
+func (h *clickhouse) tableNames(q queryable) ([]string, error) {
+	query := `
+		SELECT table_name
+		FROM system.tables
+		WHERE database = ?;
+	`
+	dbName, err := h.databaseName(q)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := q.Query(query, dbName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err = rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		tables = append(tables, table)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return tables, nil
+
+}
+
+func (h *clickhouse) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+
+	err = loadFn(tx)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (h *clickhouse) isTableModified(q queryable, tableName string) (bool, error) {
+	checksum, err := h.getChecksum(q, tableName)
+	if err != nil {
+		return true, err
+	}
+
+	oldChecksum := h.tablesChecksum[tableName]
+
+	return oldChecksum == 0 || checksum != oldChecksum, nil
+}
+
+func (h *clickhouse) afterLoad(q queryable) error {
+	if h.tablesChecksum != nil {
+		return nil
+	}
+
+	h.tablesChecksum = make(map[string]int64, len(h.tables))
+	for _, t := range h.tables {
+		checksum, err := h.getChecksum(q, t)
+		if err != nil {
+			return err
+		}
+		h.tablesChecksum[t] = checksum
+	}
+	return nil
+}
+
+func (h *clickhouse) getChecksum(q queryable, tableName string) (int64, error) {
+	query := fmt.Sprintf("SELECT groupBitXor(cityHash64(*)) FROM %s", h.quoteKeyword(tableName))
+	var (
+		table    string
+		checksum sql.NullInt64
+	)
+	if err := q.QueryRow(query).Scan(&table, &checksum); err != nil {
+		return 0, err
+	}
+	if !checksum.Valid {
+		return 0, fmt.Errorf("testfixtures: table %s does not exist", tableName)
+	}
+	return checksum.Int64, nil
+}
