@@ -496,8 +496,9 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 				sqlValues = append(sqlValues, strings.TrimPrefix(v, "RAW="))
 				continue
 			}
-
-			if t, err := l.tryStrToDate(v); err == nil {
+			if b, err := l.tryHexStringToBytes(v); err == nil {
+				value = b
+			} else if t, err := l.tryStrToDate(v); err == nil {
 				value = t
 			}
 		case []interface{}, map[interface{}]interface{}:
