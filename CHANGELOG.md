@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.4.1 - 2020-10-19
 
 - Fix for Microsoft SQL Server databases with views
   ([#78](https://github.com/go-testfixtures/testfixtures/pull/78)).
