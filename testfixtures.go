@@ -3,6 +3,7 @@ package testfixtures // import "github.com/go-testfixtures/testfixtures/v3"
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -501,7 +502,12 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 				value = t
 			}
 		case []interface{}, map[interface{}]interface{}:
-			value = recursiveToJSON(v)
+			var jsn []byte
+			jsn, err = json.Marshal(recursiveToJSON(v))
+			if err != nil {
+				return
+			}
+			value = string(jsn)
 		}
 
 		switch l.helper.paramType() {
