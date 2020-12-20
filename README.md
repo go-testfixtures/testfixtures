@@ -129,7 +129,7 @@ func TestMain(m *testing.M) {
                 ...
         }
 
-        fixtures, err := testfixtures.New(
+        fixtures, err = testfixtures.New(
                 testfixtures.Database(db), // You database connection
                 testfixtures.Dialect("postgres"), // Available: "postgresql", "timescaledb", "mysql", "mariadb", "sqlite" and "sqlserver"
                 testfixtures.Directory("testdata/fixtures"), // the directory containing the YAML files
