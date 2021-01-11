@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Officially support binary columns through hexadecimal strings
+  ([#48](https://github.com/go-testfixtures/testfixtures/issues/48), [#82](https://github.com/go-testfixtures/testfixtures/pull/82)).
+
 ## v3.4.1 - 2020-10-19
 
 - Fix for Microsoft SQL Server databases with views

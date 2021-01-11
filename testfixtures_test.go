@@ -151,6 +151,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/assets.yml",
 				),
 			},
 			additionalOptions...,
@@ -184,6 +185,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/assets.yml",
 				),
 			},
 			additionalOptions...,
@@ -273,6 +275,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/assets.yml",
 				),
 			},
 			additionalOptions...,
@@ -384,6 +387,7 @@ func assertFixturesLoaded(t *testing.T, l *Loader) {
 	assertCount(t, l, "tags", 3)
 	assertCount(t, l, "posts_tags", 6)
 	assertCount(t, l, "users", 2)
+	assertCount(t, l, "assets", 1)
 }
 
 func assertCount(t *testing.T, l *Loader, table string, expectedCount int) {

@@ -90,6 +90,13 @@ databases.
     post: "..."
 ```
 
+Binary columns can be represented as hexadecimal strings (should start with `0x`):
+
+```yaml
+- id: 1
+  binary_column: 0x1234567890abcdef
+```
+
 If you need to write raw SQL, probably to call a function, prefix the value
 of the column with `RAW=`:
 
