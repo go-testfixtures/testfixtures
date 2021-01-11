@@ -503,12 +503,12 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[interface{}]interface
 				value = t
 			}
 		case []interface{}, map[interface{}]interface{}:
-			var jsn []byte
-			jsn, err = json.Marshal(recursiveToJSON(v))
+			var bytes []byte
+			bytes, err = json.Marshal(recursiveToJSON(v))
 			if err != nil {
 				return
 			}
-			value = string(jsn)
+			value = string(bytes)
 		}
 
 		switch l.helper.paramType() {
