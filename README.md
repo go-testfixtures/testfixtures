@@ -504,6 +504,7 @@ unit test database code without having to connect to a real database
 - [dbcleaner][dbcleaner] - Clean database for testing, inspired by
 database_cleaner for Ruby
 
+[doc]: https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc
 [railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
 [gotxdb]: https://github.com/DATA-DOG/go-txdb
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
