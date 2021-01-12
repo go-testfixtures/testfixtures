@@ -27,6 +27,14 @@ type pgConstraint struct {
 	definition     string
 }
 
+func (h *postgreSQL) cleanTable(tx *sql.Tx, tableName string) error {
+	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", tableName)); err != nil {
+		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, tableName, err)
+	}
+
+	return nil
+}
+
 func (h *postgreSQL) init(db *sql.DB) error {
 	var err error
 

@@ -8,11 +8,14 @@ services:
       - mysql
       - sqlserver
       - cockroachdb
+      - clickhousedb
     environment:
       PGPASSWORD: postgres
       PG_CONN_STRING: host=postgresql user=postgres dbname=testfixtures_test port=5432 sslmode=disable
 
       MYSQL_CONN_STRING: root:mysql@tcp(mysql)/testfixtures_test?multiStatements=true
+
+      CLICKHOUSE_CONN_STRING: tcp://clickhousedb:9000?debug=0&allowMultiQueries=true&parseTime=true&username=default&password=&database=testfixtures_test
 
       SQLITE_CONN_STRING: testfixtures_test.sqlite3
 
@@ -32,6 +35,11 @@ services:
     environment:
       MYSQL_DATABASE: testfixtures_test
       MYSQL_ROOT_PASSWORD: mysql
+
+  clickhousedb:
+    image: yandex/clickhouse-server:20.9.2.20
+    environment:
+      CLICKHOUSE_DB: testfixtures_test
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest

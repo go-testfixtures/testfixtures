@@ -19,6 +19,7 @@ type helper interface {
 	paramType() int
 	databaseName(queryable) (string, error)
 	tableNames(queryable) ([]string, error)
+	cleanTable(*sql.Tx, string) error
 	isTableModified(queryable, string) (bool, error)
 	afterLoad(queryable) error
 	quoteKeyword(string) string
@@ -43,6 +44,7 @@ type batchSplitter interface {
 
 var (
 	_ helper = &mySQL{}
+	_ helper = &clickhouse{}
 	_ helper = &postgreSQL{}
 	_ helper = &sqlite{}
 	_ helper = &sqlserver{}
