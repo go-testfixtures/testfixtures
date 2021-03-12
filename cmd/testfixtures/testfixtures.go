@@ -31,6 +31,9 @@ func main() {
 		skipResetSequences    bool
 		resetSequencesTo      int64
 		skipTestDatabaseCheck bool
+		dumperFlag            bool
+		dumperTables          []string
+		dumperDir             string
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show testfixtures version")
@@ -43,6 +46,9 @@ func main() {
 	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL only)")
 	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL only, defaults to 10000)")
 	pflag.BoolVar(&skipTestDatabaseCheck, "dangerous-no-test-database-check", false, `skips check for "test" in database name (use with caution)`)
+	pflag.BoolVar(&dumperFlag, "dumper", false, "dumping fixtures from the database into a directory")
+	pflag.StringSliceVarP(&dumperTables, "dumper-tables", "t", nil, "a list of table to choose which tables you want to dump")
+	pflag.StringVarP(&dumperDir, "dumper-dir", "s", "", "sets the directory where the dumping fixtures files will be created")
 	pflag.Parse()
 
 	if versionFlag {
@@ -54,7 +60,10 @@ func main() {
 		log.Fatal("testfixtures: both --dialect (-d) and --conn (-c) are required")
 		return
 	}
-	if dir == "" && len(files) == 0 && len(paths) == 0 {
+	if dumperFlag && dumperDir == "" {
+		log.Fatalf("testfixtures: if use dumper, --dumper-dir (-s) are required")
+	}
+	if !dumperFlag && dir == "" && len(files) == 0 && len(paths) == 0 {
 		log.Fatal("testfixtures: either --dir (-D) or --files (-f) or --paths (-p) need to be given")
 		return
 	}
@@ -74,6 +83,26 @@ func main() {
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("testfixtures: could not ping database: %v", err)
+		return
+	}
+
+	if dumperFlag {
+		dumperOptions := []func(*testfixtures.Dumper) error{
+			testfixtures.DumpDatabase(db),
+			testfixtures.DumpDialect(dialect),
+			testfixtures.DumpDirectory(dumperDir),
+		}
+		if len(dumperTables) > 0 {
+			dumperOptions = append(dumperOptions, testfixtures.DumpTables(dumperTables...))
+		}
+		dumper, err := testfixtures.NewDumper(dumperOptions...)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := dumper.Dump(); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("testfixtures: dumped fixtures file has been created successfully")
 		return
 	}
 
