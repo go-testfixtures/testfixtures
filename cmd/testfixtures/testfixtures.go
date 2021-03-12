@@ -47,7 +47,7 @@ func main() {
 	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL only, defaults to 10000)")
 	pflag.BoolVar(&skipTestDatabaseCheck, "dangerous-no-test-database-check", false, `skips check for "test" in database name (use with caution)`)
 	pflag.BoolVar(&dumperFlag, "dumper", false, "dumping fixtures from the database into a directory")
-	pflag.StringSliceVarP(&dumperTables, "dumper-tables", "t", nil, "a list of table to choose which tables you want to dump")
+	pflag.StringSliceVarP(&dumperTables, "dumper-tables", "t", nil, "a list of tables which you want to dump")
 	pflag.StringVarP(&dumperDir, "dumper-dir", "s", "", "sets the directory where the dumping fixtures files will be created")
 	pflag.Parse()
 
