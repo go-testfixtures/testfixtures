@@ -5,7 +5,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/joho/godotenv v1.3.0
-	github.com/lib/pq v1.3.0
+	github.com/lib/pq v1.10.0
 	github.com/mattn/go-sqlite3 v1.14.0
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/appengine v1.3.0 // indirect
