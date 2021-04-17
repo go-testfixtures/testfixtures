@@ -9,7 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.0
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/appengine v1.3.0 // indirect
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 go 1.13
