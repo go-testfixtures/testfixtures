@@ -36,7 +36,7 @@ func (*mySQL) databaseName(q queryable) (string, error) {
 }
 
 func (h *mySQL) tableNames(q queryable) ([]string, error) {
-	query := `
+	const query = `
 		SELECT table_name
 		FROM information_schema.tables
 		WHERE table_schema = ?
