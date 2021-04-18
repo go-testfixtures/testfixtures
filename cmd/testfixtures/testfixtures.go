@@ -31,24 +31,20 @@ func main() {
 		skipResetSequences    bool
 		resetSequencesTo      int64
 		skipTestDatabaseCheck bool
-		dumperFlag            bool
-		dumperTables          []string
-		dumperDir             string
+		dumpFlag              bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show testfixtures version")
 	pflag.StringVarP(&dialect, "dialect", "d", "", "which database system you're using (postgres, timescaledb, mysql, mariadb, sqlite or sqlserver)")
 	pflag.StringVarP(&connString, "conn", "c", "", "a database connection string")
-	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load")
-	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load")
+	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load or to dump to")
+	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load or tables to dump")
 	pflag.StringSliceVarP(&paths, "paths", "p", nil, "a list of fixture paths to load (directory or file)")
 	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
-	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL only)")
-	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL only, defaults to 10000)")
+	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL and MySQL/MariaDB only)")
+	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL and MySQL/MariaDB only, defaults to 10000)")
 	pflag.BoolVar(&skipTestDatabaseCheck, "dangerous-no-test-database-check", false, `skips check for "test" in database name (use with caution)`)
-	pflag.BoolVar(&dumperFlag, "dumper", false, "dumping fixtures from the database into a directory")
-	pflag.StringSliceVarP(&dumperTables, "dumper-tables", "t", nil, "a list of tables which you want to dump")
-	pflag.StringVarP(&dumperDir, "dumper-dir", "s", "", "sets the directory where the dumping fixtures files will be created")
+	pflag.BoolVar(&dumpFlag, "dump", false, "dumping fixtures from the database into a directory")
 	pflag.Parse()
 
 	if versionFlag {
@@ -60,10 +56,10 @@ func main() {
 		log.Fatal("testfixtures: both --dialect (-d) and --conn (-c) are required")
 		return
 	}
-	if dumperFlag && dumperDir == "" {
-		log.Fatalf("testfixtures: if use dumper, --dumper-dir (-s) are required")
+	if dumpFlag && dir == "" {
+		log.Fatalf("testfixtures: if use dump, --dir (-D) is required")
 	}
-	if !dumperFlag && dir == "" && len(files) == 0 && len(paths) == 0 {
+	if !dumpFlag && dir == "" && len(files) == 0 && len(paths) == 0 {
 		log.Fatal("testfixtures: either --dir (-D) or --files (-f) or --paths (-p) need to be given")
 		return
 	}
@@ -86,15 +82,20 @@ func main() {
 		return
 	}
 
-	if dumperFlag {
+	if dumpFlag {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Fatal(err)
+		}
+
 		dumperOptions := []func(*testfixtures.Dumper) error{
 			testfixtures.DumpDatabase(db),
 			testfixtures.DumpDialect(dialect),
-			testfixtures.DumpDirectory(dumperDir),
+			testfixtures.DumpDirectory(dir),
 		}
-		if len(dumperTables) > 0 {
-			dumperOptions = append(dumperOptions, testfixtures.DumpTables(dumperTables...))
+		if len(files) > 0 {
+			dumperOptions = append(dumperOptions, testfixtures.DumpTables(files...))
 		}
+
 		dumper, err := testfixtures.NewDumper(dumperOptions...)
 		if err != nil {
 			log.Fatal(err)

@@ -459,8 +459,8 @@ testfixtures -d postgres -c "postgres://user:password@localhost/database" -D tes
 ```
 
 ```bash
-# dumper
-testfixtures --dumper -d postgres -c "postgres://user:password@localhost/database" -s testdata/fixtures
+# dump
+testfixtures --dump -d postgres -c "postgres://user:password@localhost/database" -D testdata/fixtures
 ```
 
 The connection string changes for each database driver.
