@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Support SkipResetSequences and ResetSequencesTo for MySQL and MariaDB
+  ([#91](https://github.com/go-testfixtures/testfixtures/pull/91)).
+
 ## v3.5.0 - 2021-01-11
 
 - Fix insert of JSON values on PostgreSQL when using `binary_parameters=yes` in
