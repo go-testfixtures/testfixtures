@@ -1,6 +1,6 @@
 # https://taskfile.org
 
-version: '3'
+version: '2'
 
 tasks:
   build:
