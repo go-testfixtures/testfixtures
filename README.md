@@ -494,6 +494,7 @@ packages instead:
 
 - [factory-go][factorygo]: Factory for Go. Inspired by Python's Factory Boy
 and Ruby's Factory Girl
+- [fixtory][fixtory]: go generate based type-safe, DRY, flexible test fixture factory
 - [go-txdb (Single transaction SQL driver for Go)][gotxdb]: Use a single
 database transaction for each functional test, so you can rollback to
 previous state between tests to have the same database state in all tests
@@ -507,4 +508,5 @@ database_cleaner for Ruby
 [gotxdb]: https://github.com/DATA-DOG/go-txdb
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
 [factorygo]: https://github.com/bluele/factory-go
+[fixtory]: https://github.com/k-yomo/fixtory
 [dbcleaner]: https://github.com/khaiql/dbcleaner
