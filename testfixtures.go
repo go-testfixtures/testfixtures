@@ -335,6 +335,21 @@ func (l *Loader) EnsureTestDatabase() error {
 	return nil
 }
 
+func setModifiedTables(l *Loader, tx *sql.Tx) (map[string]bool, error) {
+	modifiedTables := make(map[string]bool, len(l.fixturesFiles))
+
+	for _, file := range l.fixturesFiles {
+		tableName := file.fileNameWithoutExtension()
+		modified, err := l.helper.isTableModified(tx, tableName)
+		if err != nil {
+			return nil, err
+		}
+		modifiedTables[tableName] = modified
+	}
+
+	return modifiedTables, nil
+}
+
 // Load wipes and after load all fixtures in the database.
 //     if err := fixtures.Load(); err != nil {
 //             ...
@@ -346,27 +361,14 @@ func (l *Loader) Load() error {
 		}
 	}
 
-	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
-		modifiedTables := make(map[string]bool, len(l.fixturesFiles))
-		for _, file := range l.fixturesFiles {
-			tableName := file.fileNameWithoutExtension()
-			modified, err := l.helper.isTableModified(tx, tableName)
-			if err != nil {
-				return err
-			}
-			modifiedTables[tableName] = modified
-		}
+	// Delete existing table data for specified fixtures before populating the data. This helps avoid
+	// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
+	l.Wipe()
 
-		// Delete existing table data for specified fixtures before populating the data. This helps avoid
-		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
-		for _, file := range l.fixturesFiles {
-			modified := modifiedTables[file.fileNameWithoutExtension()]
-			if !modified {
-				continue
-			}
-			if err := file.delete(tx, l.helper); err != nil {
-				return err
-			}
+	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
+		modifiedTables, err := setModifiedTables(l, tx)
+		if err != nil {
+			return err
 		}
 
 		for _, file := range l.fixturesFiles {
@@ -398,6 +400,32 @@ func (l *Loader) Load() error {
 		return err
 	}
 	return l.helper.afterLoad(l.db)
+}
+
+func (l *Loader) Wipe() error {
+	err := l.helper.disableReferentialIntegrity(l.db, func(tx *sql.Tx) error {
+		modifiedTables, err := setModifiedTables(l, tx)
+		if err != nil {
+			return err
+		}
+
+		for _, file := range l.fixturesFiles {
+			modified := modifiedTables[file.fileNameWithoutExtension()]
+			if !modified {
+				continue
+			}
+			if err := file.delete(tx, l.helper); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // InsertError will be returned if any error happens on database while
