@@ -36,6 +36,26 @@ func TestRequiredOptions(t *testing.T) {
 	})
 }
 
+func MustBinaryFixturesFromFiles(paths ...string) []*BinaryFixture {
+	var (
+		err error
+		binaries []*BinaryFixture
+	)
+
+	for _, p := range paths {
+		fixture := &BinaryFixture{
+			Path: p,
+		}
+
+		fixture.Content, err = ioutil.ReadFile(p)
+		if err != nil {
+			panic(fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.Path, err))
+		}
+	}
+
+	return binaries
+}
+
 func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
 	db, err := sql.Open(dialect, connStr)
 	if err != nil {
@@ -153,6 +173,39 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
 				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromBinaries", func(t *testing.T) {
+		files := []string{
+			"testdata/fixtures/posts.yml",
+			"testdata/fixtures/comments.yml",
+			"testdata/fixtures/tags.yml",
+			"testdata/fixtures/posts_tags.yml",
+			"testdata/fixtures/users.yml",
+			"testdata/fixtures/assets.yml",
+		}
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Binaries(MustBinaryFixturesFromFiles(files...)...),
 			},
 			additionalOptions...,
 		)

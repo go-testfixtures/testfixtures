@@ -34,6 +34,11 @@ type Loader struct {
 	templateData       interface{}
 }
 
+type BinaryFixture struct {
+	Path    string
+	Content []byte
+}
+
 type fixtureFile struct {
 	path       string
 	fileName   string
@@ -218,6 +223,18 @@ func Directory(dir string) func(*Loader) error {
 func Files(files ...string) func(*Loader) error {
 	return func(l *Loader) error {
 		fixtures, err := l.fixturesFromFiles(files...)
+		if err != nil {
+			return err
+		}
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		return nil
+	}
+}
+
+// Binaries informs Loader to load features from binary content
+func Binaries(binaries ...*BinaryFixture) func(*Loader) error {
+	return func(l *Loader) error {
+		fixtures, err := l.fixturesFromBinaries(binaries...)
 		if err != nil {
 			return err
 		}
@@ -582,6 +599,26 @@ func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) 
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 		}
+		if err := l.processFileTemplate(fixture); err != nil {
+			return nil, err
+		}
+		fixtureFiles = append(fixtureFiles, fixture)
+	}
+
+	return fixtureFiles, nil
+}
+
+func (l *Loader) fixturesFromBinaries(binaries ...*BinaryFixture) ([]*fixtureFile, error) {
+	var (
+		fixtureFiles = make([]*fixtureFile, 0, len(binaries))
+	)
+
+	for _, b := range binaries {
+		fixture := &fixtureFile{
+			path:     b.Path,
+			fileName: filepath.Base(b.Path),
+		}
+		fixture.content = b.Content
 		if err := l.processFileTemplate(fixture); err != nil {
 			return nil, err
 		}
