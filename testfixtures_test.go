@@ -374,9 +374,27 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 			panic("unrecognized param type")
 		}
 
-		_, err = db.Exec(sql, "Post title", "Post content", time.Now(), time.Now())
+		tx, err := db.Begin()
 		if err != nil {
+			t.Error(err)
+		}
+
+		stmt, err := tx.Prepare(sql)
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = stmt.Exec("Post title", "Post content", time.Now(), time.Now())
+		if err != nil {
+			if rollbackError := tx.Rollback(); rollbackError != nil {
+				t.Error(rollbackError)
+			}
+
 			t.Errorf("cannot insert post: %v", err)
+		}
+
+		if err = tx.Commit(); err != nil {
+			t.Error(err)
 		}
 	})
 }

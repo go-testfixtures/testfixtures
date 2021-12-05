@@ -5,16 +5,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"text/template"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
 
 // Loader is the responsible to loading fixtures.
@@ -96,7 +96,7 @@ func Database(db *sql.DB) func(*Loader) error {
 // Dialect informs Loader about which database dialect you're using.
 //
 // Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
-// "sqlite" and "sqlserver".
+// "sqlite", "sqlserver" and "clickhouse".
 func Dialect(dialect string) func(*Loader) error {
 	return func(l *Loader) error {
 		h, err := helperForDialect(dialect)
@@ -118,6 +118,8 @@ func helperForDialect(dialect string) (helper, error) {
 		return &sqlite{}, nil
 	case "mssql", "sqlserver":
 		return &sqlserver{}, nil
+	case "clickhouse":
+		return &clickhouse{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
@@ -374,20 +376,18 @@ func (l *Loader) Load() error {
 			if !modified {
 				continue
 			}
-			err := l.helper.whileInsertOnTable(tx, file.fileNameWithoutExtension(), func() error {
-				for j, i := range file.insertSQLs {
-					if _, err := tx.Exec(i.sql, i.params...); err != nil {
-						return &InsertError{
-							Err:    err,
-							File:   file.fileName,
-							Index:  j,
-							SQL:    i.sql,
-							Params: i.params,
-						}
-					}
-				}
-				return nil
-			})
+
+			whileInsertOnTableFn := defaultWileInsertOnTableFn(tx, file)
+
+			if reflect.TypeOf(l.helper) == reflect.TypeOf(&clickhouse{}) {
+				whileInsertOnTableFn = clickhouseWileInsertOnTableFn(l.db, file)
+			}
+
+			err := l.helper.whileInsertOnTable(
+				tx,
+				file.fileNameWithoutExtension(),
+				whileInsertOnTableFn,
+			)
 			if err != nil {
 				return err
 			}
@@ -398,6 +398,23 @@ func (l *Loader) Load() error {
 		return err
 	}
 	return l.helper.afterLoad(l.db)
+}
+
+func defaultWileInsertOnTableFn(tx *sql.Tx, file *fixtureFile) func() error {
+	return func() error {
+		for j, i := range file.insertSQLs {
+			if _, err := tx.Exec(i.sql, i.params...); err != nil {
+				return &InsertError{
+					Err:    err,
+					File:   file.fileName,
+					Index:  j,
+					SQL:    i.sql,
+					Params: i.params,
+				}
+			}
+		}
+		return nil
+	}
 }
 
 // InsertError will be returned if any error happens on database while
@@ -474,7 +491,9 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 }
 
 func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
-	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension()))); err != nil {
+	deleteQuery := h.cleanTableQuery(h.quoteKeyword(f.fileNameWithoutExtension()))
+
+	if _, err := tx.Exec(deleteQuery); err != nil {
 		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, f.fileNameWithoutExtension(), err)
 	}
 	return nil

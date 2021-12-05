@@ -41,6 +41,12 @@ tasks:
       - task: test-db
         vars: {DATABASE: cockroachdb}
 
+  test:clickhouse:
+    desc: Test Clickhouse
+    cmds:
+      - task: test-db
+        vars: {DATABASE: clickhouse}
+
   test-db:
     cmds:
       - go test -v -tags {{.DATABASE}}
@@ -62,4 +68,4 @@ tasks:
   docker:test:
     cmds:
       - docker-compose down -v
-      - docker-compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb'
+      - docker-compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse'

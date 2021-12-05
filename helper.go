@@ -23,6 +23,7 @@ type helper interface {
 	afterLoad(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
+	cleanTableQuery(string) string
 }
 
 type queryable interface {
@@ -46,6 +47,7 @@ var (
 	_ helper = &postgreSQL{}
 	_ helper = &sqlite{}
 	_ helper = &sqlserver{}
+	_ helper = &clickhouse{}
 )
 
 type baseHelper struct{}
@@ -68,4 +70,8 @@ func (baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 
 func (baseHelper) afterLoad(_ queryable) error {
 	return nil
+}
+
+func (baseHelper) cleanTableQuery(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s", tableName)
 }

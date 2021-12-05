@@ -36,6 +36,10 @@ func (h *MockHelper) databaseName(queryable) (string, error) {
 	return h.dbName, nil
 }
 
+func (h *MockHelper) cleanTableQuery(string) string {
+	return ""
+}
+
 // NewMockHelper returns MockHelper
 func NewMockHelper(dbName string) *MockHelper {
 	return &MockHelper{dbName: dbName}
