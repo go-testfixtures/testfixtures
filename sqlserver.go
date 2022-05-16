@@ -135,7 +135,7 @@ func (h *sqlserver) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if err = loadFn(tx); err != nil {
 		return err

@@ -222,7 +222,7 @@ func (h *postgreSQL) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if err = loadFn(tx); err != nil {
 		return err
@@ -256,7 +256,7 @@ func (h *postgreSQL) disableTriggers(db *sql.DB, loadFn loadFunction) (err error
 	}
 
 	if err = loadFn(tx); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 
@@ -287,7 +287,7 @@ func (h *postgreSQL) makeConstraintsDeferrable(db *sql.DB, loadFn loadFunction) 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	if _, err = tx.Exec("SET CONSTRAINTS ALL DEFERRED"); err != nil {
 		return err

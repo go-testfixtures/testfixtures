@@ -36,7 +36,7 @@ func TestRequiredOptions(t *testing.T) {
 	})
 }
 
-func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) {
+func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) { //nolint
 	db, err := sql.Open(dialect, connStr)
 	if err != nil {
 		t.Errorf("failed to open database: %v", err)
@@ -381,7 +381,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	})
 }
 
-func assertFixturesLoaded(t *testing.T, l *Loader) {
+func assertFixturesLoaded(t *testing.T, l *Loader) { //nolint
 	assertCount(t, l, "posts", 2)
 	assertCount(t, l, "comments", 4)
 	assertCount(t, l, "tags", 3)
@@ -390,7 +390,7 @@ func assertFixturesLoaded(t *testing.T, l *Loader) {
 	assertCount(t, l, "assets", 1)
 }
 
-func assertCount(t *testing.T, l *Loader, table string, expectedCount int) {
+func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //nolint
 	count := 0
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", l.helper.quoteKeyword(table))
 
