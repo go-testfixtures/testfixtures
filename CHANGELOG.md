@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.2 - 2022-05-15
+
+- Upgrade dependencies
+
 ## v3.6.1 - 2021-05-20
 
 - Fix possible security vulnerability by upgrading golang.org/x/crypto
