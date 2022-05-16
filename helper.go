@@ -37,7 +37,7 @@ type queryable interface {
 //
 // For Microsoft SQL Server batch splitter is "GO". For details see
 // https://docs.microsoft.com/en-us/sql/t-sql/language-elements/sql-server-utilities-statements-go
-type batchSplitter interface {
+type batchSplitter interface { //nolint
 	splitter() []byte
 }
 

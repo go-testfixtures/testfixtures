@@ -1,11 +1,16 @@
-# https://taskfile.org
+# https://taskfile.dev
 
-version: '2'
+version: '3'
 
 tasks:
   build:
     cmds:
       - go build -v -tags sqlite -o ./testfixtures{{exeExt}} ./cmd/testfixtures
+
+  lint:
+    desc: Runs golangci-lint
+    cmds:
+      - golangci-lint run
 
   test-cli:
     cmds:
