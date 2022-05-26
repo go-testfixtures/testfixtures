@@ -209,6 +209,59 @@ if err != nil {
 }
 ```
 
+## <a name="singleFileOnMultipleTables"></a> Single file on multiple tables
+
+You can use the `FilesMultiTables` option, to specify which
+files you want to load into the database with support multiple tables
+(file name does not affect table names):
+
+```go
+fixtures, err := testfixtures.New(
+        testfixtures.Database(db),
+        testfixtures.Dialect("postgres"),
+        testfixtures.FilesMultiTables(
+                "fixtures/test_case1.yml",
+                "fixtures/test_case2.yml",
+                "fixtures/posts_comments.yml",
+        ),
+)
+if err != nil {
+        ...
+}
+```
+
+The file would look like this (it can have as many tables and records you want):
+
+```yml
+# test_case1.yml
+posts:
+  - id: 1
+    post_id: 1
+    content: A comment...
+    author_name: John Doe
+    author_email: john@doe.com
+    created_at: 2020-12-31 23:59:59
+    updated_at: 2020-12-31 23:59:59
+
+  - id: 2
+    post_id: 2
+    content: Another comment...
+    author_name: John Doe
+    author_email: john@doe.com
+    created_at: 2020-12-31 23:59:59
+    updated_at: 2020-12-31 23:59:59
+
+comments:
+  - id: 1
+    post_id: 1
+    content: Post 1 comment 1
+    author_name: John Doe
+    author_email: john@doe.com
+    created_at: 2016-01-01 12:30:12
+    updated_at: 2016-01-01 12:30:12
+# ...
+```
+
 ## Security check
 
 In order to prevent you from accidentally wiping the wrong database, this

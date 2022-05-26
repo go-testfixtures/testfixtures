@@ -201,6 +201,37 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		assertFixturesLoaded(t, l)
 	})
 
+	t.Run("LoadFromFiles-MultiTables", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				FilesMultiTables(
+					"testdata/fixtures_multiple/posts_comments.yml",
+					"testdata/fixtures_multiple/tags.yml",
+					"testdata/fixtures_multiple/users.yml",
+					"testdata/fixtures_multiple/posts_tags.yml",
+					"testdata/fixtures_multiple/assets.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
 	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
