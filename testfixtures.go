@@ -433,6 +433,21 @@ func (e *InsertError) Error() string {
 	)
 }
 
+func (l *Loader) buildInterfacesSlice(records interface{}) ([]interface{}, error) {
+	switch records := records.(type) {
+	case []interface{}:
+		return records, nil
+	case map[interface{}]interface{}:
+		var result []interface{}
+		for _, record := range records {
+			result = append(result, record)
+		}
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("testfixtures: fixture is not a slice or map")
+}
+
 func (l *Loader) buildInsertSQLs() error {
 	for _, f := range l.fixturesFiles {
 		var records interface{}
@@ -440,41 +455,25 @@ func (l *Loader) buildInsertSQLs() error {
 			return fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
 		}
 
-		switch records := records.(type) {
-		case []interface{}:
-			f.insertSQLs = make([]insertSQL, 0, len(records))
+		result, err := l.buildInterfacesSlice(records)
+		if err != nil {
+			return err
+		}
 
-			for _, record := range records {
-				recordMap, ok := record.(map[interface{}]interface{})
-				if !ok {
-					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
-				}
+		f.insertSQLs = make([]insertSQL, 0, len(result))
 
-				sql, values, err := l.buildInsertSQL(f, recordMap)
-				if err != nil {
-					return err
-				}
-
-				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
+		for _, record := range result {
+			recordMap, ok := record.(map[interface{}]interface{})
+			if !ok {
+				return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 			}
-		case map[interface{}]interface{}:
-			f.insertSQLs = make([]insertSQL, 0, len(records))
 
-			for _, record := range records {
-				recordMap, ok := record.(map[interface{}]interface{})
-				if !ok {
-					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
-				}
-
-				sql, values, err := l.buildInsertSQL(f, recordMap)
-				if err != nil {
-					return err
-				}
-
-				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
+			sql, values, err := l.buildInsertSQL(f, recordMap)
+			if err != nil {
+				return err
 			}
-		default:
-			return fmt.Errorf("testfixtures: fixture is not a slice or map")
+
+			f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
 		}
 	}
 
@@ -668,13 +667,13 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 				return nil, fmt.Errorf("testfixtures: could not cast tableName: not a string")
 			}
 
-			records, ok := records.([]interface{})
-			if !ok {
-				return nil, fmt.Errorf("testfixtures: could not cast records: not a []interface{}")
+			result, err := l.buildInterfacesSlice(records)
+			if err != nil {
+				return nil, err
 			}
 
 			var content []byte
-			if content, err = yaml.Marshal(records); err != nil {
+			if content, err = yaml.Marshal(result); err != nil {
 				return nil, fmt.Errorf("testfixtures: could not marshal YAML: %w", err)
 			}
 
