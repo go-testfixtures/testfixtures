@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.7.0 - 2022-05-29
+
+- Add support for declaring multiples tables in the same YAML file
+  ([#98](https://github.com/go-testfixtures/testfixtures/issues/98), [#130](https://github.com/go-testfixtures/testfixtures/pull/130)).
+- Upgrade dependencies
+
 ## v3.6.2 - 2022-05-15
 
 - Upgrade dependencies
