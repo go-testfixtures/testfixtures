@@ -238,6 +238,18 @@ func Paths(paths ...string) func(*Loader) error {
 	}
 }
 
+// Files informs Loader to load a given set of YAML files as mutiple fixtures.
+func FilesMultiTables(files ...string) func(*Loader) error {
+	return func(l *Loader) error {
+		fixtures, err := l.fixturesFromFilesMultiTables(files...)
+		if err != nil {
+			return err
+		}
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		return nil
+	}
+}
+
 // Location makes Loader use the given location by default when parsing
 // dates. If not given, by default it uses the value of time.Local.
 func Location(location *time.Location) func(*Loader) error {
@@ -421,6 +433,21 @@ func (e *InsertError) Error() string {
 	)
 }
 
+func (l *Loader) buildInterfacesSlice(records interface{}) ([]interface{}, error) {
+	switch records := records.(type) {
+	case []interface{}:
+		return records, nil
+	case map[interface{}]interface{}:
+		var result []interface{}
+		for _, record := range records {
+			result = append(result, record)
+		}
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("testfixtures: fixture is not a slice or map")
+}
+
 func (l *Loader) buildInsertSQLs() error {
 	for _, f := range l.fixturesFiles {
 		var records interface{}
@@ -428,41 +455,25 @@ func (l *Loader) buildInsertSQLs() error {
 			return fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
 		}
 
-		switch records := records.(type) {
-		case []interface{}:
-			f.insertSQLs = make([]insertSQL, 0, len(records))
+		result, err := l.buildInterfacesSlice(records)
+		if err != nil {
+			return err
+		}
 
-			for _, record := range records {
-				recordMap, ok := record.(map[interface{}]interface{})
-				if !ok {
-					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
-				}
+		f.insertSQLs = make([]insertSQL, 0, len(result))
 
-				sql, values, err := l.buildInsertSQL(f, recordMap)
-				if err != nil {
-					return err
-				}
-
-				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
+		for _, record := range result {
+			recordMap, ok := record.(map[interface{}]interface{})
+			if !ok {
+				return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 			}
-		case map[interface{}]interface{}:
-			f.insertSQLs = make([]insertSQL, 0, len(records))
 
-			for _, record := range records {
-				recordMap, ok := record.(map[interface{}]interface{})
-				if !ok {
-					return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
-				}
-
-				sql, values, err := l.buildInsertSQL(f, recordMap)
-				if err != nil {
-					return err
-				}
-
-				f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
+			sql, values, err := l.buildInsertSQL(f, recordMap)
+			if err != nil {
+				return err
 			}
-		default:
-			return fmt.Errorf("testfixtures: fixture is not a slice or map")
+
+			f.insertSQLs = append(f.insertSQLs, insertSQL{sql, values})
 		}
 	}
 
@@ -619,25 +630,94 @@ func (l *Loader) fixturesFromPaths(paths ...string) ([]*fixtureFile, error) {
 	return fixtureFiles, nil
 }
 
+func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFile, error) {
+	var (
+		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
+	)
+
+	for _, f := range fileNames {
+		var (
+			content []byte
+			err     error
+		)
+
+		content, err = ioutil.ReadFile(f)
+		if err != nil {
+			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, f, err)
+		}
+
+		content, err = l.processTemplate(content)
+		if err != nil {
+			return nil, err
+		}
+
+		var data interface{}
+		if err := yaml.Unmarshal(content, &data); err != nil {
+			return nil, fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
+		}
+
+		tables, ok := data.(map[interface{}]interface{})
+		if !ok {
+			return nil, fmt.Errorf("testfixtures: could not cast tables: not a map[interface{}]interface{}")
+		}
+
+		for table, records := range tables {
+			tableName, ok := table.(string)
+			if !ok {
+				return nil, fmt.Errorf("testfixtures: could not cast tableName: not a string")
+			}
+
+			result, err := l.buildInterfacesSlice(records)
+			if err != nil {
+				return nil, err
+			}
+
+			var content []byte
+			if content, err = yaml.Marshal(result); err != nil {
+				return nil, fmt.Errorf("testfixtures: could not marshal YAML: %w", err)
+			}
+
+			file := tableName + ".yml"
+			path := filepath.Join(filepath.Dir(f), file)
+			fixtureFiles = append(fixtureFiles, &fixtureFile{
+				path:     path,
+				fileName: file,
+				content:  content,
+			})
+		}
+	}
+
+	return fixtureFiles, nil
+}
+
 func (l *Loader) processFileTemplate(f *fixtureFile) error {
 	if !l.template {
 		return nil
 	}
 
-	t := template.New("").
-		Funcs(l.templateFuncs).
-		Delims(l.templateLeftDelim, l.templateRightDelim).
-		Option(l.templateOptions...)
-	t, err := t.Parse(string(f.content))
+	var err error
+	f.content, err = l.processTemplate(f.content)
 	if err != nil {
 		return fmt.Errorf(`textfixtures: error on parsing template in %s: %w`, f.fileName, err)
 	}
 
-	var buffer bytes.Buffer
-	if err := t.Execute(&buffer, l.templateData); err != nil {
-		return fmt.Errorf(`textfixtures: error on executing template in %s: %w`, f.fileName, err)
+	return nil
+}
+
+func (l *Loader) processTemplate(content []byte) ([]byte, error) {
+	t := template.New("").
+		Funcs(l.templateFuncs).
+		Delims(l.templateLeftDelim, l.templateRightDelim).
+		Option(l.templateOptions...)
+	t, err := t.Parse(string(content))
+	if err != nil {
+		return nil, err
 	}
 
-	f.content = buffer.Bytes()
-	return nil
+	var buffer bytes.Buffer
+	if err := t.Execute(&buffer, l.templateData); err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
 }
