@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"bytes"
 	"database/sql"
+	"embed"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,6 +12,9 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 )
+
+//go:embed testdata
+var fixtures embed.FS
 
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
@@ -232,6 +236,38 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		assertFixturesLoaded(t, l)
 	})
 
+	t.Run("LoadFromFiles-MultiTablesWithFS", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				FS(fixtures),
+				FilesMultiTables(
+					"testdata/fixtures_multi_tables/posts_comments.yml",
+					"testdata/fixtures_multi_tables/tags.yml",
+					"testdata/fixtures_multi_tables/users.yml",
+					"testdata/fixtures_multi_tables/posts_tags.yml",
+					"testdata/fixtures_multi_tables/assets.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
 	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
@@ -261,6 +297,36 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		assertFixturesLoaded(t, l)
 	})
 
+	t.Run("LoadFromDirectoryAndFilesWithFS", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				FS(fixtures),
+				Directory("testdata/fixtures_dirs/fixtures1"),
+				Files(
+					"testdata/fixtures/tags.yml",
+					"testdata/fixtures/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
 	t.Run("LoadFromPaths", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
@@ -271,6 +337,36 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"PostIds": []int{1, 2},
 					"TagIds":  []int{1, 2, 3},
 				}),
+				Paths(
+					"testdata/fixtures_dirs/fixtures1",
+					"testdata/fixtures_dirs/fixtures2/tags.yml",
+					"testdata/fixtures_dirs/fixtures2/users.yml",
+				),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+		assertFixturesLoaded(t, l)
+	})
+
+	t.Run("LoadFromPathsWithFS", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				FS(fixtures),
 				Paths(
 					"testdata/fixtures_dirs/fixtures1",
 					"testdata/fixtures_dirs/fixtures2/tags.yml",
