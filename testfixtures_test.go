@@ -14,7 +14,7 @@ import (
 )
 
 //go:embed testdata
-var fixtures embed.FS
+var fixtures embed.FS //nolint:unused
 
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
