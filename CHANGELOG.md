@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## v3.8.0 - 2022-07-04
 
+- Add ability to load from a custom filesystem
+  ([#134](https://github.com/go-testfixtures/testfixtures/pull/134), [pkg.go.dev/io/fs](https://pkg.go.dev/io/fs)).
 - Upgrade to gopkg.in/yaml.v3, which includes a possible security vulnerability
   ([#132](https://github.com/go-testfixtures/testfixtures/pull/132), [go-yaml/yaml#666](https://github.com/go-yaml/yaml/issues/666)).
 
