@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade to gopkg.in/yaml.v3, which includes a possible security vulnerability
+  ([#132](https://github.com/go-testfixtures/testfixtures/pull/132), [go-yaml/yaml#666](https://github.com/go-yaml/yaml/issues/666)).
+
 ## v3.7.0 - 2022-05-29
 
 - Add support for declaring multiples tables in the same YAML file
