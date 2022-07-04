@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -32,6 +32,8 @@ type Loader struct {
 	templateRightDelim string
 	templateOptions    []string
 	templateData       interface{}
+
+	fs fs.FS
 }
 
 type fixtureFile struct {
@@ -60,6 +62,7 @@ func New(options ...func(*Loader) error) (*Loader, error) {
 		templateLeftDelim:  "{{",
 		templateRightDelim: "}}",
 		templateOptions:    []string{"missingkey=zero"},
+		fs:                 defaultFS{},
 	}
 
 	for _, option := range options {
@@ -83,6 +86,17 @@ func New(options ...func(*Loader) error) (*Loader, error) {
 	}
 
 	return l, nil
+}
+
+// FS sets other fs.FS implementation
+//
+// Example embed.FS
+// By default usage os package implementation
+func FS(fs fs.FS) func(*Loader) error {
+	return func(l *Loader) error {
+		l.fs = fs
+		return nil
+	}
 }
 
 // Database sets an existing sql.DB instant to Loader.
@@ -545,7 +559,7 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 }
 
 func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
-	fileinfos, err := ioutil.ReadDir(dir)
+	fileinfos, err := fs.ReadDir(l.fs, dir)
 	if err != nil {
 		return nil, fmt.Errorf(`testfixtures: could not stat directory "%s": %w`, dir, err)
 	}
@@ -559,7 +573,7 @@ func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
 				path:     path.Join(dir, fileinfo.Name()),
 				fileName: fileinfo.Name(),
 			}
-			fixture.content, err = ioutil.ReadFile(fixture.path)
+			fixture.content, err = fs.ReadFile(l.fs, fixture.path)
 			if err != nil {
 				return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 			}
@@ -583,7 +597,7 @@ func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) 
 			path:     f,
 			fileName: filepath.Base(f),
 		}
-		fixture.content, err = ioutil.ReadFile(fixture.path)
+		fixture.content, err = fs.ReadFile(l.fs, fixture.path)
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 		}
@@ -635,7 +649,7 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 			err     error
 		)
 
-		content, err = ioutil.ReadFile(f)
+		content, err = fs.ReadFile(l.fs, f)
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, f, err)
 		}
