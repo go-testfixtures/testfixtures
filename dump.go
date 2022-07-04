@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"unicode/utf8"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Dumper is resposible for dumping fixtures from the database into a
@@ -116,7 +116,7 @@ func (d *Dumper) dumpTable(table string) error {
 		return err
 	}
 
-	fixtures := make([]yaml.MapSlice, 0, 10)
+	fixtures := make([]interface{}, 0, 10)
 	for rows.Next() {
 		entries := make([]interface{}, len(columns))
 		entryPtrs := make([]interface{}, len(entries))
@@ -127,12 +127,9 @@ func (d *Dumper) dumpTable(table string) error {
 			return err
 		}
 
-		entryMap := make([]yaml.MapItem, len(entries))
+		entryMap := make(map[string]interface{}, len(entries))
 		for i, column := range columns {
-			entryMap[i] = yaml.MapItem{
-				Key:   column,
-				Value: convertValue(entries[i]),
-			}
+			entryMap[column] = convertValue(entries[i])
 		}
 		fixtures = append(fixtures, entryMap)
 	}
