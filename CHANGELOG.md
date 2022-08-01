@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.8.1 - 2022-08-01
+
+- Upgrade `golang.org/x/crypto` dependency that includes a security fix
+  ([#136](https://github.com/go-testfixtures/testfixtures/pull/136)).
+
 ## v3.8.0 - 2022-07-04
 
 - Add ability to load from a custom filesystem
