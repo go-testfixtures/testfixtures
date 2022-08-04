@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Task
-        uses: Arduino/actions/setup-taskfile@master
+        uses: arduino/setup-task@v1
 
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Test
         run: task docker

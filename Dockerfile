@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine
+FROM golang:1.19-alpine
 
 RUN apk update
 RUN apk add alpine-sdk
