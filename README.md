@@ -514,7 +514,7 @@ Use `testfixtures --help` for all flags.
 
 ## Contributing
 
-We recommend you to [install Task](https://taskfile.dev/#/installation) and
+We recommend you to [install Task](https://taskfile.dev/installation/) and
 Docker before contributing to this package, since some stuff is automated
 using these tools.
 
