@@ -27,6 +27,7 @@ func main() {
 		dir                   string
 		files                 []string
 		paths                 []string
+		useDropContraint      bool
 		useAlterContraint     bool
 		skipResetSequences    bool
 		resetSequencesTo      int64
@@ -40,6 +41,7 @@ func main() {
 	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load or to dump to")
 	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load or tables to dump")
 	pflag.StringSliceVarP(&paths, "paths", "p", nil, "a list of fixture paths to load (directory or file)")
+	pflag.BoolVar(&useDropContraint, "drop-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (CockroachDB only)")
 	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
 	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL and MySQL/MariaDB only)")
 	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL and MySQL/MariaDB only, defaults to 10000)")
@@ -119,6 +121,9 @@ func main() {
 	}
 	if len(paths) > 0 {
 		options = append(options, testfixtures.Paths(paths...))
+	}
+	if useDropContraint {
+		options = append(options, testfixtures.UseDropConstraint())
 	}
 	if useAlterContraint {
 		options = append(options, testfixtures.UseAlterConstraint())
