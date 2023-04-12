@@ -711,20 +711,23 @@ func (l *Loader) processContent(table string, records []interface{}) (string, []
 
 	if rangeDetectorExp.MatchString(table) {
 		var ranges = rangeExtractor.FindAllString(table, -1)
-		var intRanges [2]int
-		var err error
-		var err2 error
+		var rangeFrom, rangeTo int
+		var err, err2 error
 
-		intRanges[0], err = strconv.Atoi(ranges[0])
-		intRanges[1], err2 = strconv.Atoi(ranges[1])
+		rangeFrom, err = strconv.Atoi(ranges[0])
+		rangeTo, err2 = strconv.Atoi(ranges[1])
 
-		if err != nil && err2 != nil {
-			fmt.Printf("Error converting to int: %v. %v", ranges[0], err)
-			fmt.Printf("Error converting to int: %v. %v", ranges[1], err2)
-			return table, nil, fmt.Errorf(`Error converting to int: %v. %v`, ranges[0], err)
+		if err != nil {
+			fmt.Printf("Error converting to int: %v. %v", rangeFrom, err)
+			return table, nil, fmt.Errorf(`Error converting to int: %v. %v`, rangeFrom, err)
 		}
 
-		records, err = l.generateRange(records, intRanges[0], intRanges[1])
+		if err2 != nil {
+			fmt.Printf("Error converting to int: %v. %v", rangeTo, err2)
+			return table, nil, fmt.Errorf(`Error converting to int: %v. %v`, rangeTo, err2)
+		}
+
+		records, err = l.generateRange(records, rangeFrom, rangeTo)
 
 		table = rangeDetectorExp.ReplaceAllString(table, "")
 	}
