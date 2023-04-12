@@ -1,0 +1,21 @@
+- id: 1
+  name: "{{fakeCompanyName}}"
+  password: "{{fakePassword}}"
+  manager_title: "{{fakeJobTitle}}"
+  address: "{{fakeAddress}}"
+  latitude: "{{fakeLatitude}}"
+  longitude: "{{fakeLongitude}}"
+  type: {{fakeOneOfStrings "Admin" "User" "Guest"}}
+  ip: "{{fakeIP}}"
+  url: "{{fakeURL}}"
+
+- id: 2
+  name: "{{fakeCompanyName}}"
+  password: "{{fakePassword}}"
+  manager_title: "{{fakeJobTitle}}"
+  address: "{{fakeAddress}}"
+  latitude: "{{fakeLatitude}}"
+  longitude: "{{fakeLongitude}}"
+  type: {{fakeOneOfStrings "Admin" "User" "Guest"}}
+  ip: "{{fakeIP}}"
+  url: "{{fakeURL}}"

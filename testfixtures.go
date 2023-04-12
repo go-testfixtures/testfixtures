@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
@@ -50,9 +51,15 @@ type insertSQL struct {
 
 var (
 	testDatabaseRegexp = regexp.MustCompile("(?i)test")
+	rangeDetectorExp = regexp.MustCompile(`{[0-9]+\.\.[0-9]+}`)
+        rangeExtractor = regexp.MustCompile(`[0-9]+`)
 
 	errDatabaseIsRequired = fmt.Errorf("testfixtures: database is required")
 	errDialectIsRequired  = fmt.Errorf("testfixtures: dialect is required")
+)
+
+const (
+	MAX_GEN_RANGE = 1000
 )
 
 // New instantiates a new Loader instance. The "Database" and "Driver"
@@ -565,6 +572,7 @@ func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
 	}
 
 	files := make([]*fixtureFile, 0, len(fileinfos))
+	l.addFakerFunctions()
 
 	for _, fileinfo := range fileinfos {
 		fileExt := filepath.Ext(fileinfo.Name())
@@ -591,6 +599,7 @@ func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) 
 		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
 		err          error
 	)
+	l.addFakerFunctions()
 
 	for _, f := range fileNames {
 		fixture := &fixtureFile{
@@ -620,6 +629,7 @@ func (l *Loader) fixturesFromPaths(paths ...string) ([]*fixtureFile, error) {
 	}
 
 	var fixtureFiles []*fixtureFile
+	l.addFakerFunctions()
 
 	for _, p := range paths {
 		f, err := os.Stat(p)
@@ -643,6 +653,8 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
 	)
 
+	l.addFakerFunctions()
+
 	for _, f := range fileNames {
 		var (
 			content []byte
@@ -652,11 +664,6 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 		content, err = fs.ReadFile(l.fs, f)
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, f, err)
-		}
-
-		content, err = l.processTemplate(content)
-		if err != nil {
-			return nil, err
 		}
 
 		var data interface{}
@@ -670,17 +677,26 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 		}
 
 		for table, records := range tables {
-			result, err := l.buildInterfacesSlice(records)
+			initResult, err := l.buildInterfacesSlice(records)
 			if err != nil {
 				return nil, err
 			}
+
+			new_table, result, err := l.processContent(table, initResult)
 
 			var content []byte
 			if content, err = yaml.Marshal(result); err != nil {
 				return nil, fmt.Errorf("testfixtures: could not marshal YAML: %w", err)
 			}
 
-			file := fmt.Sprintf("%s.yml", table)
+			content, err = l.processTemplate(content)
+			if err != nil {
+				return nil, err
+			}
+
+			//fmt.Printf("=== Final template:\n  %+v\n", string(content[:]))
+
+			file := fmt.Sprintf("%s.yml", new_table)
 			path := filepath.Join(filepath.Dir(f), file)
 			fixtureFiles = append(fixtureFiles, &fixtureFile{
 				path:     path,
@@ -691,6 +707,63 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 	}
 
 	return fixtureFiles, nil
+}
+
+func (l *Loader) processContent(table string, records []interface{}) (string, []interface{}, error) {
+	//fmt.Printf("=== Processing table %+v\n", table)
+
+	if rangeDetectorExp.MatchString(table) {
+		var ranges = rangeExtractor.FindAllString(table, -1)
+		var intRanges [2]int
+		var err error
+		var err2 error
+
+		intRanges[0], err = strconv.Atoi(ranges[0])
+		intRanges[1], err2 = strconv.Atoi(ranges[1])
+
+		if err != nil && err2 != nil {
+			fmt.Printf("Error converting to int: %v. %v", ranges[0], err)
+			fmt.Printf("Error converting to int: %v. %v", ranges[1], err2)
+			return table, nil, fmt.Errorf(`Error converting to int: %v. %v`, ranges[0], err)
+		}
+
+		records, err = l.generateRange(records, intRanges[0], intRanges[1])
+
+		table = rangeDetectorExp.ReplaceAllString(table, "")
+	}
+
+	return table, records, nil
+}
+
+func (l *Loader) generateRange(records []interface{}, from int, to int) ([]interface{}, error) {
+	if (to - from) > MAX_GEN_RANGE {
+		to = from + MAX_GEN_RANGE
+	}
+	//fmt.Printf("=== Records: %+v \n", records)
+	var new_records []interface{}
+
+	for index := from; index <= to; index++ {
+		for _, list_item := range records {
+			var proc_list_item = make(map[string]interface{})
+			for key, val := range list_item.(map[string]interface{}) {
+				proc_list_item[key] = strings.Replace(val.(string), "<current>", strconv.Itoa(index), 1)
+			}
+			new_records = append(new_records, proc_list_item)
+		}
+	}
+
+	//fmt.Printf("=== New records: %+v \n", new_records)
+	return new_records, nil
+}
+
+func (l *Loader) addFakerFunctions() {
+	if l.templateFuncs != nil && len(l.templateFuncs) > 0 {
+		for key, val := range fakerFuncMap {
+			l.templateFuncs[key] = val
+		}
+	} else {
+		l.templateFuncs = fakerFuncMap
+	}
 }
 
 func (l *Loader) processFileTemplate(f *fixtureFile) error {

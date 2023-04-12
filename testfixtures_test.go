@@ -9,12 +9,15 @@ import (
 	"os"
 	"testing"
 	"time"
+	"strings"
+	"regexp"
 
 	_ "github.com/joho/godotenv/autoload"
 )
 
 //go:embed testdata
 var fixtures embed.FS //nolint:unused
+var testTimestampRegexp = regexp.MustCompile(`[0-9]{4}\-[0-9]{2}\-[0-9]{2}[\sT]{1}[0-9]{2}:[0-9]{2}:[0-9]{2}Z?`)
 
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
@@ -156,6 +159,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -190,6 +194,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -216,11 +221,11 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 					"TagIds":  []int{1, 2, 3},
 				}),
 				FilesMultiTables(
-					"testdata/fixtures_multi_tables/posts_comments.yml",
+					"testdata/fixtures_multi_tables/posts.yml",
 					"testdata/fixtures_multi_tables/tags.yml",
 					"testdata/fixtures_multi_tables/users.yml",
-					"testdata/fixtures_multi_tables/posts_tags.yml",
 					"testdata/fixtures_multi_tables/assets.yml",
+					"testdata/fixtures_multi_tables/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -233,7 +238,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertMultiTableFixturesLoaded(t, l)
 	})
 
 	t.Run("LoadFromFiles-MultiTablesWithFS", func(t *testing.T) {
@@ -248,11 +253,11 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 				}),
 				FS(fixtures),
 				FilesMultiTables(
-					"testdata/fixtures_multi_tables/posts_comments.yml",
+					"testdata/fixtures_multi_tables/posts.yml",
 					"testdata/fixtures_multi_tables/tags.yml",
 					"testdata/fixtures_multi_tables/users.yml",
-					"testdata/fixtures_multi_tables/posts_tags.yml",
 					"testdata/fixtures_multi_tables/assets.yml",
+					"testdata/fixtures_multi_tables/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -265,7 +270,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertMultiTableFixturesLoaded(t, l)
 	})
 
 	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
@@ -282,6 +287,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 				Files(
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -312,6 +318,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 				Files(
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/company.yml",
 				),
 			},
 			additionalOptions...,
@@ -515,6 +522,24 @@ func assertFixturesLoaded(t *testing.T, l *Loader) { //nolint
 	assertCount(t, l, "posts_tags", 6)
 	assertCount(t, l, "users", 2)
 	assertCount(t, l, "assets", 1)
+	assertCount(t, l, "company", 2)
+
+	assertFakeValuesCorrect(t, l)
+}
+
+func assertMultiTableFixturesLoaded(t *testing.T, l *Loader) { //nolint
+	assertCount(t, l, "posts", 10)
+	assertCount(t, l, "comments", 30)
+	assertCount(t, l, "tags", 3)
+	assertCount(t, l, "posts_tags", 8)
+	assertCount(t, l, "users", 2)
+	assertCount(t, l, "assets", 1)
+	assertCount(t, l, "company", 2)
+
+	assertPostsAreCorrect(t, l)
+	assertCommentsAreCorrect(t, l)
+	assertPostTagsAreCorrect(t, l)
+	assertFakeValuesCorrect(t, l)
 }
 
 func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //nolint
@@ -528,6 +553,181 @@ func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //n
 
 	if count != expectedCount {
 		t.Errorf("%s should have %d, but has %d", table, expectedCount, count)
+	}
+}
+
+func assertFakeValuesCorrect(t *testing.T, l *Loader) {
+
+	rows, err := l.db.Query("SELECT * FROM company ORDER BY id")
+        	if err != nil {
+                       t.Errorf("cannot query company table.")
+                }
+                var index = 1
+                defer rows.Close()
+
+        	for rows.Next() {
+        		var id int
+        		var name, password, title, address, ctype, ip, url string
+        		var lat, long float32
+
+        		if err := rows.Scan(&id, &name, &password, &title, &address, &lat, &long, &ctype, &ip, &url); err != nil {
+        			t.Errorf("cannot query company table.")
+        		}
+
+        		if id != index {
+        			t.Errorf("Company ID does not match: ID: %+v, got: %+v.", index, id)
+        		}
+
+        		if len(name) < 3 {
+        			t.Errorf("Company name is empty: %+v.", name)
+        		}
+
+        		if len(password) < 3 {
+				t.Errorf("Password is empty: %+v.", password)
+			}
+
+			if len(address) < 3 {
+				t.Errorf("Address is empty: %+v.", address)
+			}
+
+			if lat > 90.0 || lat < -90.0 {
+				t.Errorf("Latitude is out of range: %+v.", lat)
+			}
+
+			if long > 180.0 || long < -180.0 {
+				t.Errorf("Longitude is out of range: %+v.", long)
+			}
+
+			if ctype != "Admin" && ctype != "User" && ctype != "Guest" {
+				t.Errorf("Company type is invalid: %+v.", ctype)
+			}
+
+			if !strings.Contains(ip, ".") {
+				t.Errorf("Company IP is invalid: %+v.", ip)
+			}
+
+			if !strings.Contains(url, "https://") && !strings.Contains(url, "http://") {
+				t.Errorf("Company URL is invalid: %+v.", url)
+			}
+
+        		index++
+        	}
+}
+
+func assertPostsAreCorrect(t *testing.T, l *Loader) {
+
+	rows, err := l.db.Query("SELECT id, title, content, created_at, updated_at FROM posts ORDER BY id")
+	if err != nil {
+               t.Errorf("cannot query posts table.")
+        }
+        var index = 1
+        defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		var title, content, created, updated string
+
+		if err := rows.Scan(&id, &title, &content, &created, &updated); err != nil {
+			t.Errorf("cannot query posts table.")
+		}
+
+		if id != index {
+			t.Errorf("Post ID does not match: ID: %+v, got: %+v.", index, id)
+		}
+
+		if title != fmt.Sprintf("Post %v", index) {
+			t.Errorf("Post title does not match: ID: %+v, got: %+v.", index, title)
+		}
+
+		if len(content) == 0 {
+			t.Errorf("Post content is empty: %+v.", content)
+		}
+
+		if !testTimestampRegexp.MatchString(created) {
+			t.Errorf("Invalid created_at timestamp: %+v.", created)
+		}
+
+		if !testTimestampRegexp.MatchString(updated) {
+			t.Errorf("Invalid updated_at timestamp: %+v.", created)
+		}
+
+		index++
+	}
+}
+
+func assertCommentsAreCorrect(t *testing.T, l *Loader) {
+
+	rows, err := l.db.Query("SELECT id, post_id, content, author_name, author_email, created_at, updated_at FROM comments ORDER BY id")
+	if err != nil {
+               t.Errorf("Cannot query comments table.")
+        }
+        var index = 1
+        defer rows.Close()
+
+	for rows.Next() {
+		var id, post_id int
+		var content, author, email, created, updated string
+
+		if err := rows.Scan(&id, &post_id, &content, &author, &email, &created, &updated); err != nil {
+			t.Errorf("Cannot query comments table.")
+		}
+
+		if id != index {
+			t.Errorf("Comment ID does not match: ID: %+v, got: %+v.", index, id)
+		}
+
+		if post_id < 1 || post_id > 10 {
+			t.Errorf("Post ID is out of range: %+v.", post_id)
+		}
+
+		if content != fmt.Sprintf("Post comment %v", index) {
+			t.Errorf("Comment content does not match expectations: ID: %+v, got: %+v.", index, content)
+		}
+
+		if len(author) < 5 {
+			t.Errorf("Author name is too short: %+v.", author)
+		}
+
+		if len(email) < 10 || !strings.Contains(email, "@") {
+			t.Errorf("Email does not look right: %+v.", email)
+		}
+
+		if !testTimestampRegexp.MatchString(created) {
+			t.Errorf("Invalid created_at timestamp: %+v.", created)
+		}
+
+		if !testTimestampRegexp.MatchString(updated) {
+			t.Errorf("Invalid updated_at timestamp: %+v.", created)
+		}
+
+		index++
+	}
+}
+
+func assertPostTagsAreCorrect(t *testing.T, l *Loader) {
+	rows, err := l.db.Query("SELECT * FROM posts_tags ORDER BY post_id")
+	if err != nil {
+	       t.Errorf("Cannot query posts_tags table.")
+	}
+	var index = 1
+	defer rows.Close()
+
+	for rows.Next() {
+		var post_id, tag_id int
+
+		if err := rows.Scan(&post_id, &tag_id); err != nil {
+			t.Errorf("Cannot query posts_tags table.")
+		}
+
+		if post_id != index {
+			t.Errorf("Post ID does not match: ID: %+v, got: %+v.", index, post_id)
+		}
+
+		if tag_id < 1 || tag_id > 3 {
+			t.Errorf("Tag ID is out of range: %+v.", tag_id)
+		}
+
+		index++
 	}
 }
 
