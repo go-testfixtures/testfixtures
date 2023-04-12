@@ -694,8 +694,6 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 				return nil, err
 			}
 
-			//fmt.Printf("=== Final template:\n  %+v\n", string(content[:]))
-
 			file := fmt.Sprintf("%s.yml", new_table)
 			path := filepath.Join(filepath.Dir(f), file)
 			fixtureFiles = append(fixtureFiles, &fixtureFile{
@@ -710,7 +708,6 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 }
 
 func (l *Loader) processContent(table string, records []interface{}) (string, []interface{}, error) {
-	//fmt.Printf("=== Processing table %+v\n", table)
 
 	if rangeDetectorExp.MatchString(table) {
 		var ranges = rangeExtractor.FindAllString(table, -1)
@@ -739,7 +736,7 @@ func (l *Loader) generateRange(records []interface{}, from int, to int) ([]inter
 	if (to - from) > MAX_GEN_RANGE {
 		to = from + MAX_GEN_RANGE
 	}
-	//fmt.Printf("=== Records: %+v \n", records)
+
 	var new_records []interface{}
 
 	for index := from; index <= to; index++ {
@@ -752,7 +749,6 @@ func (l *Loader) generateRange(records []interface{}, from int, to int) ([]inter
 		}
 	}
 
-	//fmt.Printf("=== New records: %+v \n", new_records)
 	return new_records, nil
 }
 
