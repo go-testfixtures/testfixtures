@@ -27,6 +27,7 @@ func main() {
 		dir                   string
 		files                 []string
 		paths                 []string
+		multiTableFiles	      []string
 		useDropContraint      bool
 		useAlterContraint     bool
 		skipResetSequences    bool
@@ -41,6 +42,7 @@ func main() {
 	pflag.StringVarP(&dir, "dir", "D", "", "a directory of YAML fixtures to load or to dump to")
 	pflag.StringSliceVarP(&files, "files", "f", nil, "a list of YAML files to load or tables to dump")
 	pflag.StringSliceVarP(&paths, "paths", "p", nil, "a list of fixture paths to load (directory or file)")
+	pflag.StringSliceVarP(&multiTableFiles, "mtfiles", "m", nil, "a list of multi-table YAML files to load")
 	pflag.BoolVar(&useDropContraint, "drop-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (CockroachDB only)")
 	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
 	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL and MySQL/MariaDB only)")
@@ -61,8 +63,8 @@ func main() {
 	if dumpFlag && dir == "" {
 		log.Fatalf("testfixtures: if use dump, --dir (-D) is required")
 	}
-	if !dumpFlag && dir == "" && len(files) == 0 && len(paths) == 0 {
-		log.Fatal("testfixtures: either --dir (-D) or --files (-f) or --paths (-p) need to be given")
+	if !dumpFlag && dir == "" && len(files) == 0 && len(paths) == 0 && len(multiTableFiles) == 0 {
+		log.Fatal("testfixtures: either --dir (-D) or --files (-f) or --paths (-p) or --mtfiles (-m) need to be given")
 		return
 	}
 
@@ -121,6 +123,9 @@ func main() {
 	}
 	if len(paths) > 0 {
 		options = append(options, testfixtures.Paths(paths...))
+	}
+	if len(multiTableFiles) > 0 {
+		options = append(options, testfixtures.FilesMultiTables(multiTableFiles...))
 	}
 	if useDropContraint {
 		options = append(options, testfixtures.UseDropConstraint())
