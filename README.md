@@ -440,6 +440,78 @@ The YAML file could look like this:
 {{end}}
 ```
 
+### Range generation
+
+You can generate a range or fake or repeated data. The following example would generate 100 posts and 1000 comments:
+
+```yaml
+posts{1..100}:
+  - id: <current>
+    title: Post <current>
+    content: "{{fakeParagraph 3}}"
+    created_at: "{{fakeTimestamp}}"
+    updated_at: "{{fakeTimestamp}}"
+
+comments{30..1030}:
+  - id: <current>
+    post_id: "{{fakeIntBetween 1 100}}"
+    content: Post comment <current>
+    author_name: "{{fakePersonName}}"
+    author_email: "{{fakeEmail}}"
+    created_at: "{{fakeTimestamp}}"
+    updated_at: "{{fakeTimestamp}}"
+```
+
+`<curent>` is used to indicate index of each range number. E.g. in the previous example posts will have `id` values
+from 1 to 1000 and `comments` will have `id` values from 30 to 1030.
+
+>**NOTE**: You can use range generation only when using multiple-table templates. E.g. using `-m` option in the CLI.
+
+### Fake data generation
+
+You can use the following fake data generation functions in templates:
+
+- `fakePersonName`
+- `fakeLatitude`
+- `fakeLongitude`
+- `fakeTimestamp` - generates a random time stamp in the format of `YYYY-MM-DD HH:mm:ss`.
+- `fakeDate` - generates a random date in the format of `YYYY-MM-DD`.
+- `fakeAddress`
+- `fakeInt {size}` - generates an integer of `{size}` length.
+- `fakeIntBetween {min} {max}` - generates an integer in the range of `{min}` and `{max}`.
+- `fakeFloat {decimal} {min} {max}` - generates a floating point number in the range of `{min}` and `{max}` and having `{decimals}` digits after comma.
+- `fakeParagraph {sentences}` - generates a paragraph containing `{sentences}` amount of sentences.
+- `fakeSentence {words}` - generates a sentence containing `{words}` amount of words.
+- `fakeWord`
+- `fakePhone`
+- `fakeDay`
+- `fakeMonthName`
+- `fakeYear`
+- `fakeDayOfWeek`
+- `fakeEmail`
+- `fakeURL`
+- `fakeIP` - generates a random IPv4.
+- `fakePassword`
+- `fakeCompanyName`
+- `fakeJobTitle`
+- `fakeOneOfStrings {strings...}` - randomly selects one of the provided words.
+
+Example:
+
+```yaml
+company{1..10}:
+  - id: <current>
+    name: "{{fakeCompanyName}}"
+    password: "{{fakePassword}}"
+    manager_title: "{{fakeJobTitle}}"
+    address: "{{fakeAddress}}"
+    latitude: "{{fakeLatitude}}"
+    longitude: "{{fakeLongitude}}"
+    type: '{{fakeOneOfStrings "Admin" "User" "Guest"}}'
+    ip: "{{fakeIP}}"
+    url: "{{fakeURL}}"
+```
+
 ## Generating fixtures for a existing database
 
 The following code will generate a YAML file for each table of the database
