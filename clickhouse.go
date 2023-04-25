@@ -72,7 +72,9 @@ func (h *clickhouse) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	err = loadFn(tx)
 	if err != nil {
