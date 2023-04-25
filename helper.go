@@ -23,6 +23,7 @@ type helper interface {
 	afterLoad(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
+	cleanTableQuery(string) string
 }
 
 type queryable interface {
@@ -42,6 +43,7 @@ type batchSplitter interface { //nolint
 }
 
 var (
+	_ helper = &clickhouse{}
 	_ helper = &mySQL{}
 	_ helper = &postgreSQL{}
 	_ helper = &sqlite{}
@@ -68,4 +70,8 @@ func (baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 
 func (baseHelper) afterLoad(_ queryable) error {
 	return nil
+}
+
+func (baseHelper) cleanTableQuery(tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s", tableName)
 }
