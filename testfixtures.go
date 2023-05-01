@@ -110,7 +110,7 @@ func Database(db *sql.DB) func(*Loader) error {
 // Dialect informs Loader about which database dialect you're using.
 //
 // Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
-// "sqlite" and "sqlserver".
+// "sqlite", "sqlserver", "clickhouse".
 func Dialect(dialect string) func(*Loader) error {
 	return func(l *Loader) error {
 		h, err := helperForDialect(dialect)
@@ -132,6 +132,8 @@ func helperForDialect(dialect string) (helper, error) {
 		return &sqlite{}, nil
 	case "mssql", "sqlserver":
 		return &sqlserver{}, nil
+	case "clickhouse":
+		return &clickhouse{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
@@ -348,6 +350,24 @@ func TemplateData(data interface{}) func(*Loader) error {
 	}
 }
 
+// ClickhouseUseDeleteFrom If true, then "DELETE FROM …" syntax will be used
+// to clean data from Clickhouse.
+// Default syntax is "TRUNCATE TABLE …"
+//
+// Only valid for Clickhouse. Returns an error otherwise.
+func ClickhouseUseDeleteFrom() func(*Loader) error {
+	return func(l *Loader) error {
+		chHelper, ok := l.helper.(*clickhouse)
+		if !ok {
+			return fmt.Errorf("testfixtures: ClickhouseUseDeleteFrom is only valid for Clickhouse databases")
+		}
+		chHelper.cleanTableFn = func(tableName string) string {
+			return fmt.Sprintf("DELETE FROM %s", tableName)
+		}
+		return nil
+	}
+}
+
 // EnsureTestDatabase returns an error if the database name does not contains
 // "test".
 func (l *Loader) EnsureTestDatabase() error {
@@ -362,9 +382,10 @@ func (l *Loader) EnsureTestDatabase() error {
 }
 
 // Load wipes and after load all fixtures in the database.
-//     if err := fixtures.Load(); err != nil {
-//             ...
-//     }
+//
+//	if err := fixtures.Load(); err != nil {
+//	        ...
+//	}
 func (l *Loader) Load() error {
 	if !l.skipTestDatabaseCheck {
 		if err := l.EnsureTestDatabase(); err != nil {
@@ -499,7 +520,8 @@ func (f *fixtureFile) fileNameWithoutExtension() string {
 }
 
 func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
-	if _, err := tx.Exec(fmt.Sprintf("DELETE FROM %s", h.quoteKeyword(f.fileNameWithoutExtension()))); err != nil {
+	deleteQuery := h.cleanTableQuery(h.quoteKeyword(f.fileNameWithoutExtension()))
+	if _, err := tx.Exec(deleteQuery); err != nil {
 		return fmt.Errorf(`testfixtures: could not clean table "%s": %w`, f.fileNameWithoutExtension(), err)
 	}
 	return nil

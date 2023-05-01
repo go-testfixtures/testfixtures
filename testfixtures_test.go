@@ -75,6 +75,9 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	}
 
 	for _, b := range batches {
+		if len(b) == 0 {
+			continue
+		}
 		if _, err = db.Exec(string(b)); err != nil {
 			t.Errorf("cannot load schema: %v", err)
 			return
