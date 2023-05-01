@@ -23,6 +23,7 @@ type Loader struct {
 	helper        helper
 	fixturesFiles []*fixtureFile
 
+	skipCleanup           bool
 	skipTestDatabaseCheck bool
 	location              *time.Location
 
@@ -218,6 +219,16 @@ func DangerousSkipTestDatabaseCheck() func(*Loader) error {
 	}
 }
 
+// DangerousSkipCleanupFixtureTables will make Loader not wipe data from fixture tables.
+// This may lead to dirty data in the test database.
+// Use with caution!
+func DangerousSkipCleanupFixtureTables() func(*Loader) error {
+	return func(l *Loader) error {
+		l.skipCleanup = true
+		return nil
+	}
+}
+
 // Directory informs Loader to load YAML files from a given directory.
 func Directory(dir string) func(*Loader) error {
 	return func(l *Loader) error {
@@ -406,13 +417,15 @@ func (l *Loader) Load() error {
 
 		// Delete existing table data for specified fixtures before populating the data. This helps avoid
 		// DELETE CASCADE constraints when using the `UseAlterConstraint()` option.
-		for _, file := range l.fixturesFiles {
-			modified := modifiedTables[file.fileNameWithoutExtension()]
-			if !modified {
-				continue
-			}
-			if err := file.delete(tx, l.helper); err != nil {
-				return err
+		if !l.skipCleanup {
+			for _, file := range l.fixturesFiles {
+				modified := modifiedTables[file.fileNameWithoutExtension()]
+				if !modified {
+					continue
+				}
+				if err := file.delete(tx, l.helper); err != nil {
+					return err
+				}
 			}
 		}
 
