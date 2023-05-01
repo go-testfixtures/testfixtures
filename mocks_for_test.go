@@ -8,7 +8,7 @@ type MockHelper struct {
 	dbName string
 }
 
-func (*MockHelper) init(db *sql.DB) error {
+func (*MockHelper) init(*sql.DB) error {
 	return nil
 }
 func (*MockHelper) disableReferentialIntegrity(*sql.DB, loadFunction) error {
@@ -34,6 +34,10 @@ func (*MockHelper) whileInsertOnTable(*sql.Tx, string, func() error) error {
 }
 func (h *MockHelper) databaseName(queryable) (string, error) {
 	return h.dbName, nil
+}
+
+func (h *MockHelper) cleanTableQuery(string) string {
+	return ""
 }
 
 // NewMockHelper returns MockHelper
