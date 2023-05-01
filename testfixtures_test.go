@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -53,7 +52,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		return
 	}
 
-	schema, err := ioutil.ReadFile(schemaFilePath)
+	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {
 		t.Errorf("cannot read schema file: %v", err)
 		return
@@ -447,7 +446,7 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	})
 
 	t.Run("GenerateAndLoad", func(t *testing.T) {
-		dir, err := ioutil.TempDir(os.TempDir(), "testfixtures_test")
+		dir, err := os.MkdirTemp(os.TempDir(), "testfixtures_test")
 		if err != nil {
 			t.Errorf("cannot create temp dir: %v", err)
 			return
