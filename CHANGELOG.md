@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.9.0 - 2023-05-01
+
+- Added support do ClickHouse
+  ([#51](https://github.com/go-testfixtures/testfixtures/issues/51), [#162](https://github.com/go-testfixtures/testfixtures/pull/162) by @titusjaka, [#115](https://github.com/go-testfixtures/testfixtures/pull/115) by @shumorkiniv, [#81](https://github.com/go-testfixtures/testfixtures/pull/81) by @kangoo13).
+- Add option to disable database cleanup
+  ([#161](https://github.com/go-testfixtures/testfixtures/pull/161)).
+- Start releasing binaries for Mac M1
+  ([#149](https://github.com/go-testfixtures/testfixtures/issues/149), [#150](https://github.com/go-testfixtures/testfixtures/pull/150)).
+- Upgraded to Go v1.20
+  ([#165](https://github.com/go-testfixtures/testfixtures/pull/165)).
+- Upgraded several dependencies.
+
 ## v3.8.1 - 2022-08-01
 
 - Upgrade `golang.org/x/crypto` dependency that includes a security fix
