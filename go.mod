@@ -1,7 +1,7 @@
 module github.com/go-testfixtures/testfixtures/v3
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.9.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.9.3
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jackc/pgx/v4 v4.18.1
