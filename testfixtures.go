@@ -684,6 +684,10 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 
 			new_table, result, err := l.processContent(table, initResult)
 
+			if err != nil {
+				return nil, err
+			}
+
 			var content []byte
 			if content, err = yaml.Marshal(result); err != nil {
 				return nil, fmt.Errorf("testfixtures: could not marshal YAML: %w", err)
@@ -727,7 +731,7 @@ func (l *Loader) processContent(table string, records []interface{}) (string, []
 			return table, nil, fmt.Errorf(`Error converting to int: %v. %v`, rangeTo, err2)
 		}
 
-		records, err = l.generateRange(records, rangeFrom, rangeTo)
+		records = l.generateRange(records, rangeFrom, rangeTo)
 
 		table = rangeDetectorExp.ReplaceAllString(table, "")
 	}
@@ -735,7 +739,7 @@ func (l *Loader) processContent(table string, records []interface{}) (string, []
 	return table, records, nil
 }
 
-func (l *Loader) generateRange(records []interface{}, from int, to int) ([]interface{}, error) {
+func (l *Loader) generateRange(records []interface{}, from int, to int) []interface{} {
 	if (to - from) > MAX_GEN_RANGE {
 		to = from + MAX_GEN_RANGE
 	}
@@ -752,7 +756,7 @@ func (l *Loader) generateRange(records []interface{}, from int, to int) ([]inter
 		}
 	}
 
-	return new_records, nil
+	return new_records
 }
 
 func (l *Loader) addFakerFunctions() {

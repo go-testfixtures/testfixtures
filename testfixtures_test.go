@@ -17,7 +17,7 @@ import (
 
 //go:embed testdata
 var fixtures embed.FS //nolint:unused
-var testTimestampRegexp = regexp.MustCompile(`[0-9]{4}\-[0-9]{2}\-[0-9]{2}[\sT]{1}[0-9]{2}:[0-9]{2}:[0-9]{2}Z?`)
+var testTimestampRegexp = regexp.MustCompile(`[0-9]{4}\-[0-9]{2}\-[0-9]{2}[\sT]{1}[0-9]{2}:[0-9]{2}:[0-9]{2}Z?`) //nolint:unused
 
 func TestFixtureFile(t *testing.T) {
 	f := &fixtureFile{fileName: "posts.yml"}
@@ -556,7 +556,7 @@ func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //n
 	}
 }
 
-func assertFakeValuesCorrect(t *testing.T, l *Loader) {
+func assertFakeValuesCorrect(t *testing.T, l *Loader) { //nolint
 
 	rows, err := l.db.Query("SELECT * FROM company ORDER BY id")
         	if err != nil {
@@ -614,7 +614,7 @@ func assertFakeValuesCorrect(t *testing.T, l *Loader) {
         	}
 }
 
-func assertPostsAreCorrect(t *testing.T, l *Loader) {
+func assertPostsAreCorrect(t *testing.T, l *Loader) { //nolint
 
 	rows, err := l.db.Query("SELECT id, title, content, created_at, updated_at FROM posts ORDER BY id")
 	if err != nil {
@@ -655,7 +655,7 @@ func assertPostsAreCorrect(t *testing.T, l *Loader) {
 	}
 }
 
-func assertCommentsAreCorrect(t *testing.T, l *Loader) {
+func assertCommentsAreCorrect(t *testing.T, l *Loader) { //nolint
 
 	rows, err := l.db.Query("SELECT id, post_id, content, author_name, author_email, created_at, updated_at FROM comments ORDER BY id")
 	if err != nil {
@@ -704,7 +704,7 @@ func assertCommentsAreCorrect(t *testing.T, l *Loader) {
 	}
 }
 
-func assertPostTagsAreCorrect(t *testing.T, l *Loader) {
+func assertPostTagsAreCorrect(t *testing.T, l *Loader) { //nolint
 	rows, err := l.db.Query("SELECT * FROM posts_tags ORDER BY post_id")
 	if err != nil {
 	       t.Errorf("Cannot query posts_tags table.")
