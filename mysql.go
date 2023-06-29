@@ -9,6 +9,7 @@ type mySQL struct {
 	baseHelper
 
 	skipResetSequences bool
+	skipDisableForeignKeyChecks bool
 	resetSequencesTo   int64
 
 	tables         []string
@@ -86,12 +87,18 @@ func (h *mySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (er
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if _, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0"); err != nil {
-		return err
+	if !h.skipDisableForeignKeyChecks {
+		if _, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0"); err != nil {
+			return err
+		}
 	}
 
 	err = loadFn(tx)
-	_, err2 := tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
+
+	if !h.skipDisableForeignKeyChecks {
+		_, err2 := tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
+	}
+
 	if err != nil {
 		return err
 	}
