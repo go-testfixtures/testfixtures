@@ -99,13 +99,7 @@ func (d *Dumper) Dump() error {
 func (d *Dumper) dumpTable(table string) error {
 	query := fmt.Sprintf("SELECT * FROM %s", d.helper.quoteKeyword(table))
 
-	stmt, err := d.db.Prepare(query)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query()
+	rows, err := d.db.Query(query)
 	if err != nil {
 		return err
 	}
