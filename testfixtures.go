@@ -698,7 +698,7 @@ func (l *Loader) paramSQL(index int) string {
 	case paramTypeDollar:
 		return fmt.Sprintf("$%d", index)
 	case paramTypeAtSign:
-		fmt.Sprintf("@p%d", index
+		return fmt.Sprintf("@p%d", index)
 	default:
 		return "?"
 	}
