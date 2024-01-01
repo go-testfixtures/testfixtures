@@ -79,7 +79,7 @@ func (*sqlserver) tableNames(q queryable) ([]string, error) {
 func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
 	sql := fmt.Sprintf(`
 		SELECT COUNT(*)
-		FROM SYS.IDENTITY_COLUMNS
+		FROM sys.identity_columns
 		WHERE OBJECT_ID = OBJECT_ID('%s')
 	`, tableName)
 	var count int
