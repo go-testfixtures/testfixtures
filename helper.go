@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -24,6 +25,7 @@ type helper interface {
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 	cleanTableQuery(string) string
+	buildInsertSQL(q queryable, tableName string, columns, values []string) (string, error)
 }
 
 type queryable interface {
@@ -74,4 +76,13 @@ func (baseHelper) afterLoad(_ queryable) error {
 
 func (baseHelper) cleanTableQuery(tableName string) string {
 	return fmt.Sprintf("DELETE FROM %s", tableName)
+}
+
+func (h baseHelper) buildInsertSQL(_ queryable, tableName string, columns, values []string) (string, error) {
+	return fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES (%s)",
+		h.quoteKeyword(tableName),
+		strings.Join(columns, ", "),
+		strings.Join(values, ", "),
+	), nil
 }

@@ -584,11 +584,10 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 		i++
 	}
 
-	sqlStr = fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES (%s)",
-		l.helper.quoteKeyword(f.fileNameWithoutExtension()),
-		strings.Join(sqlColumns, ", "),
-		strings.Join(sqlValues, ", "),
+	sqlStr, err = l.helper.buildInsertSQL(
+		l.db,
+		f.fileNameWithoutExtension(),
+		sqlColumns, sqlValues,
 	)
 	return
 }
