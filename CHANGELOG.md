@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v3.10.0 - 2024-02-17
 
 - Fix usage with Microsoft SQL Server when the database is configured with a
   case sensitive setting ([#182](https://github.com/go-testfixtures/testfixtures/pull/182) by @wxiaoguang).
