@@ -56,7 +56,7 @@ func (*sqlserver) databaseName(q queryable) (string, error) {
 }
 
 func (*sqlserver) tableNames(q queryable) ([]string, error) {
-	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM information_schema.tables WHERE table_name <> 'spt_values' AND table_type = 'BASE TABLE'")
+	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_name <> 'spt_values' AND table_type = 'BASE TABLE'")
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (*sqlserver) tableNames(q queryable) ([]string, error) {
 func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
 	sql := fmt.Sprintf(`
 		SELECT COUNT(*)
-		FROM SYS.IDENTITY_COLUMNS
+		FROM sys.identity_columns
 		WHERE OBJECT_ID = OBJECT_ID('%s')
 	`, tableName)
 	var count int
