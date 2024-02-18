@@ -4,6 +4,9 @@
 
 - Fix usage with Microsoft SQL Server when the database is configured with a
   case sensitive setting ([#182](https://github.com/go-testfixtures/testfixtures/pull/182) by @wxiaoguang).
+- Updated some dependencies.
+- Updated database systems versions on the Docker setup used by CI
+  ([#187](https://github.com/go-testfixtures/testfixtures/pull/187)).
 
 ## v3.9.0 - 2023-05-01
 
