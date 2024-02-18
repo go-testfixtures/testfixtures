@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix usage with Microsoft SQL Server when the database is configured with a
+  case sensitive setting ([#182](https://github.com/go-testfixtures/testfixtures/pull/182) by @wxiaoguang).
+
 ## v3.9.0 - 2023-05-01
 
 - Added support do ClickHouse
