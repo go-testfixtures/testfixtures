@@ -437,7 +437,7 @@ func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool
 		tableName = parts[1]
 	}
 	query := fmt.Sprintf(`
-		SELECT count(*) AS count
+		SELECT COUNT(*) AS count
 		FROM information_schema.columns
 		WHERE table_name = '%s' AND is_identity = 'YES'
 	`, tableName)
@@ -452,7 +452,7 @@ func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool
 
 func (h *postgreSQL) getMajorVersion(q queryable) (int, error) {
 	var version string
-	err := q.QueryRow("SELECT version()").Scan(&version)
+	err := q.QueryRow("SELECT VERSION()").Scan(&version)
 	if err != nil {
 		return 0, err
 	}
@@ -471,5 +471,5 @@ func (*postgreSQL) parseMajorVersion(version string) (int, error) {
 		return majorVersion, nil
 	}
 
-	return 0, fmt.Errorf("could not parse major version from: %s", version)
+	return 0, fmt.Errorf("testfixtures: could not parse major version from: %s", version)
 }
