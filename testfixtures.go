@@ -586,7 +586,7 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 
 	sqlStr, err = l.helper.buildInsertSQL(
 		l.db,
-		f.fileNameWithoutExtension(),
+		l.helper.quoteKeyword(f.fileNameWithoutExtension()),
 		sqlColumns, sqlValues,
 	)
 	return

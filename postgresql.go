@@ -407,7 +407,7 @@ func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, valu
 		if ok {
 			return fmt.Sprintf(
 				"INSERT INTO %s (%s) OVERRIDING SYSTEM VALUE VALUES (%s)",
-				h.quoteKeyword(tableName),
+				tableName,
 				strings.Join(columns, ", "),
 				strings.Join(values, ", "),
 			), nil
@@ -416,7 +416,7 @@ func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, valu
 
 	return fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s)",
-		h.quoteKeyword(tableName),
+		tableName,
 		strings.Join(columns, ", "),
 		strings.Join(values, ", "),
 	), nil
@@ -432,10 +432,11 @@ func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool
 	}
 
 	parts := strings.Split(tableName, ".")
-	tableName = parts[0]
+	tableName = parts[0][1 : len(parts[0])-1]
 	if len(parts) > 1 {
-		tableName = parts[1]
+		tableName = parts[1][1 : len(parts[1])-1]
 	}
+
 	query := fmt.Sprintf(`
 		SELECT COUNT(*) AS count
 		FROM information_schema.columns

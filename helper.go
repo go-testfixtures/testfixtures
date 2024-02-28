@@ -81,7 +81,7 @@ func (baseHelper) cleanTableQuery(tableName string) string {
 func (h baseHelper) buildInsertSQL(_ queryable, tableName string, columns, values []string) (string, error) {
 	return fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s)",
-		h.quoteKeyword(tableName),
+		tableName,
 		strings.Join(columns, ", "),
 		strings.Join(values, ", "),
 	), nil
