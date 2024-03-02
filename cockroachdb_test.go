@@ -1,3 +1,4 @@
+//go:build cockroachdb
 // +build cockroachdb
 
 package testfixtures
@@ -16,7 +17,7 @@ func TestCockroachDB(t *testing.T) {
 			t,
 			dialect,
 			os.Getenv("CRDB_CONN_STRING"),
-			"testdata/schema/postgresql.sql",
+			"testdata/schema/cockroachdb.sql",
 			DangerousSkipTestDatabaseCheck(),
 			UseDropConstraint(),
 		)
