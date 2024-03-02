@@ -3,7 +3,10 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 )
 
 type postgreSQL struct {
@@ -19,6 +22,10 @@ type postgreSQL struct {
 	nonDeferrableConstraints []pgConstraint
 	constraints              []pgConstraint
 	tablesChecksum           map[string]string
+
+	version                      int
+	tablesHasIdentityColumnMutex sync.Mutex
+	tablesHasIdentityColumn      map[string]bool
 }
 
 type pgConstraint struct {
@@ -49,6 +56,13 @@ func (h *postgreSQL) init(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+
+	h.version, err = h.getMajorVersion(db)
+	if err != nil {
+		return err
+	}
+
+	h.tablesHasIdentityColumn = make(map[string]bool)
 
 	return nil
 }
@@ -382,4 +396,81 @@ func (*postgreSQL) quoteKeyword(s string) string {
 		parts[i] = fmt.Sprintf(`"%s"`, p)
 	}
 	return strings.Join(parts, ".")
+}
+
+func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, values []string) (string, error) {
+	if h.version >= 10 {
+		ok, err := h.tableHasIdentityColumn(q, tableName)
+		if err != nil {
+			return "", err
+		}
+		if ok {
+			return fmt.Sprintf(
+				"INSERT INTO %s (%s) OVERRIDING SYSTEM VALUE VALUES (%s)",
+				tableName,
+				strings.Join(columns, ", "),
+				strings.Join(values, ", "),
+			), nil
+		}
+	}
+
+	return fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES (%s)",
+		tableName,
+		strings.Join(columns, ", "),
+		strings.Join(values, ", "),
+	), nil
+}
+
+func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
+	defer h.tablesHasIdentityColumnMutex.Unlock()
+	h.tablesHasIdentityColumnMutex.Lock()
+
+	hasIdentityColumn, exists := h.tablesHasIdentityColumn[tableName]
+	if exists {
+		return hasIdentityColumn, nil
+	}
+
+	parts := strings.Split(tableName, ".")
+	tableName = parts[0][1 : len(parts[0])-1]
+	if len(parts) > 1 {
+		tableName = parts[1][1 : len(parts[1])-1]
+	}
+
+	query := fmt.Sprintf(`
+		SELECT COUNT(*) AS count
+		FROM information_schema.columns
+		WHERE table_name = '%s' AND is_identity = 'YES'
+	`, tableName)
+	var count int
+	if err := q.QueryRow(query).Scan(&count); err != nil {
+		return false, err
+	}
+
+	h.tablesHasIdentityColumn[tableName] = count > 0
+	return h.tablesHasIdentityColumn[tableName], nil
+}
+
+func (h *postgreSQL) getMajorVersion(q queryable) (int, error) {
+	var version string
+	err := q.QueryRow("SELECT VERSION()").Scan(&version)
+	if err != nil {
+		return 0, err
+	}
+
+	return h.parseMajorVersion(version)
+}
+
+func (*postgreSQL) parseMajorVersion(version string) (int, error) {
+	re := regexp.MustCompile(`\d+`)
+	versionNumbers := re.FindAllString(version, -1)
+	if len(versionNumbers) > 0 {
+		majorVersion, err := strconv.Atoi(versionNumbers[0])
+		if err != nil {
+			return 0, err
+		}
+		return majorVersion, nil
+	}
+
+	return 0, fmt.Errorf("testfixtures: could not parse major version from: %s", version)
 }
