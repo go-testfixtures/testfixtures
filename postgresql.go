@@ -414,12 +414,7 @@ func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, valu
 		}
 	}
 
-	return fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES (%s)",
-		tableName,
-		strings.Join(columns, ", "),
-		strings.Join(values, ", "),
-	), nil
+	return h.baseHelper.buildInsertSQL(q, tableName, columns, values)
 }
 
 func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
@@ -437,13 +432,14 @@ func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool
 		tableName = parts[1][1 : len(parts[1])-1]
 	}
 
-	query := fmt.Sprintf(`
+	query := `
 		SELECT COUNT(*) AS count
 		FROM information_schema.columns
-		WHERE table_name = '%s' AND is_identity = 'YES'
-	`, tableName)
+		WHERE table_name = $1
+		  AND is_identity = 'YES'
+	`
 	var count int
-	if err := q.QueryRow(query).Scan(&count); err != nil {
+	if err := q.QueryRow(query, tableName).Scan(&count); err != nil {
 		return false, err
 	}
 
