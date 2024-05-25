@@ -12,26 +12,21 @@ services:
     environment:
       PGPASSWORD: postgres
       PG_CONN_STRING: host=postgresql user=postgres dbname=testfixtures_test port=5432 sslmode=disable
-
       MYSQL_CONN_STRING: root:mariadb@tcp(mariadb)/testfixtures_test?multiStatements=true
-
       SQLITE_CONN_STRING: testfixtures_test.sqlite3
-
       SQLSERVER_CONN_STRING: server=sqlserver;database=master;user id=sa;password=SQL@1server;encrypt=disable
-
       CRDB_CONN_STRING: host=cockroachdb user=root dbname=defaultdb port=26257 sslmode=disable
-
       CLICKHOUSE_CONN_STRING: clickhouse://clickhouse:clickhouse@clickhouse:9000/testfixtures_test?debug=false
 
   postgresql:
-    image: postgres:16.2-alpine
+    image: postgres:16.3-alpine
     environment:
       POSTGRES_DB: testfixtures_test
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
 
   mariadb:
-    image: mariadb:11.2
+    image: mariadb:11.3
     environment:
       MARIADB_DATABASE: testfixtures_test
       MARIADB_ROOT_PASSWORD: mariadb
