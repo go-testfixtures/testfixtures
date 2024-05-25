@@ -40,6 +40,10 @@ func (h *MockHelper) cleanTableQuery(string) string {
 	return ""
 }
 
+func (h *MockHelper) buildInsertSQL(queryable, string, []string, []string) (string, error) {
+	return "", nil
+}
+
 // NewMockHelper returns MockHelper
 func NewMockHelper(dbName string) *MockHelper {
 	return &MockHelper{dbName: dbName}
