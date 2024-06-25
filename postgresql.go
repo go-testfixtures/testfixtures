@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type postgreSQL struct {
@@ -35,30 +37,33 @@ type pgConstraint struct {
 }
 
 func (h *postgreSQL) init(db *sql.DB) error {
-	var err error
-
-	h.tables, err = h.tableNames(db)
-	if err != nil {
+	var grp errgroup.Group
+	grp.Go(func() error {
+		var err error
+		h.tables, err = h.tableNames(db)
 		return err
-	}
-
-	h.sequences, err = h.getSequences(db)
-	if err != nil {
+	})
+	grp.Go(func() error {
+		var err error
+		h.sequences, err = h.getSequences(db)
 		return err
-	}
-
-	h.nonDeferrableConstraints, err = h.getNonDeferrableConstraints(db)
-	if err != nil {
+	})
+	grp.Go(func() error {
+		var err error
+		h.nonDeferrableConstraints, err = h.getNonDeferrableConstraints(db)
 		return err
-	}
-
-	h.constraints, err = h.getConstraints(db)
-	if err != nil {
+	})
+	grp.Go(func() error {
+		var err error
+		h.constraints, err = h.getConstraints(db)
 		return err
-	}
-
-	h.version, err = h.getMajorVersion(db)
-	if err != nil {
+	})
+	grp.Go(func() error {
+		var err error
+		h.version, err = h.getMajorVersion(db)
+		return err
+	})
+	if err := grp.Wait(); err != nil {
 		return err
 	}
 
