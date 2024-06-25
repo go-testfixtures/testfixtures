@@ -4,6 +4,8 @@ RUN apk update
 RUN apk add alpine-sdk
 
 WORKDIR /testfixtures
-COPY . .
 
+COPY go.mod go.sum ./
 RUN go mod download
+
+COPY . .
