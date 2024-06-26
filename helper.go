@@ -21,7 +21,7 @@ type helper interface {
 	databaseName(queryable) (string, error)
 	tableNames(queryable) ([]string, error)
 	isTableModified(queryable, string) (bool, error)
-	afterLoad(queryable) error
+	computeTablesChecksum(queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 	cleanTableQuery(string) string
@@ -70,7 +70,7 @@ func (baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
 	return true, nil
 }
 
-func (baseHelper) afterLoad(_ queryable) error {
+func (baseHelper) computeTablesChecksum(_ queryable) error {
 	return nil
 }
 

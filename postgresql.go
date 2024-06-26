@@ -359,7 +359,7 @@ func (h *postgreSQL) isTableModified(q queryable, tableName string) (bool, error
 	return oldChecksum == "" || checksum != oldChecksum, nil
 }
 
-func (h *postgreSQL) afterLoad(q queryable) error {
+func (h *postgreSQL) computeTablesChecksum(q queryable) error {
 	if h.tablesChecksum != nil {
 		return nil
 	}

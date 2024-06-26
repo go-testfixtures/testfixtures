@@ -127,7 +127,7 @@ func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
 	return oldChecksum == 0 || checksum != oldChecksum, nil
 }
 
-func (h *mySQL) afterLoad(q queryable) error {
+func (h *mySQL) computeTablesChecksum(q queryable) error {
 	if h.tablesChecksum != nil {
 		return nil
 	}

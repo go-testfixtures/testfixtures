@@ -288,6 +288,22 @@ testfixtures.New(
 )
 ```
 
+## Disable checksum computation
+
+Checksums of each table in a database are computed at the end of each `Load()`,
+so subsequent calls to `Load()` do not reload the same data again, if nothing
+has changed in between.
+
+The drawback is that it can be slow for database with many tables. Also, it does not
+make sense to compute checksum, if you run `Load()` only once.
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.SkipTableChecksumComputation(),
+)
+```
+
 ## Sequences
 
 For PostgreSQL and MySQL/MariaDB, this package also resets all
