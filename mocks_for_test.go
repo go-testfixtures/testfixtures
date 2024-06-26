@@ -23,7 +23,7 @@ func (*MockHelper) tableNames(queryable) ([]string, error) {
 func (*MockHelper) isTableModified(queryable, string) (bool, error) {
 	return false, nil
 }
-func (*MockHelper) afterLoad(queryable) error {
+func (*MockHelper) computeTablesChecksum(queryable) error {
 	return nil
 }
 func (*MockHelper) quoteKeyword(string) string {

@@ -23,9 +23,10 @@ type Loader struct {
 	helper        helper
 	fixturesFiles []*fixtureFile
 
-	skipCleanup           bool
-	skipTestDatabaseCheck bool
-	location              *time.Location
+	skipCleanup             bool
+	skipChecksumComputation bool
+	skipTestDatabaseCheck   bool
+	location                *time.Location
 
 	template           bool
 	templateFuncs      template.FuncMap
@@ -225,6 +226,16 @@ func DangerousSkipTestDatabaseCheck() func(*Loader) error {
 func DangerousSkipCleanupFixtureTables() func(*Loader) error {
 	return func(l *Loader) error {
 		l.skipCleanup = true
+		return nil
+	}
+}
+
+// SkipTableChecksumComputation will make Loader not compute table checksum at the end of the Loader.Load.
+// This may improve performance. It may also slow down subsequent calls to Loader.Load, because checksums are used
+// to not reload unchanged tables.
+func SkipTableChecksumComputation() func(*Loader) error {
+	return func(l *Loader) error {
+		l.skipChecksumComputation = true
 		return nil
 	}
 }
@@ -457,7 +468,12 @@ func (l *Loader) Load() error {
 	if err != nil {
 		return err
 	}
-	return l.helper.afterLoad(l.db)
+	if !l.skipChecksumComputation {
+		if err := l.helper.computeTablesChecksum(l.db); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // InsertError will be returned if any error happens on database while
