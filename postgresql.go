@@ -349,14 +349,16 @@ func (h *postgreSQL) resetSequences(db *sql.DB) error {
 }
 
 func (h *postgreSQL) isTableModified(q queryable, tableName string) (bool, error) {
-	checksum, err := h.getChecksum(q, tableName)
-	if err != nil {
-		return false, err
+	oldChecksum, found := h.tablesChecksum[tableName]
+	if !found {
+		return true, nil
 	}
 
-	oldChecksum := h.tablesChecksum[tableName]
-
-	return oldChecksum == "" || checksum != oldChecksum, nil
+	checksum, err := h.getChecksum(q, tableName)
+	if err != nil {
+		return true, err
+	}
+	return checksum != oldChecksum, nil
 }
 
 func (h *postgreSQL) afterLoad(q queryable) error {
