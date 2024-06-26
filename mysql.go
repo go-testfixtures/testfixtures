@@ -117,14 +117,16 @@ func (h *mySQL) resetSequences(db *sql.DB) error {
 }
 
 func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
+	oldChecksum, found := h.tablesChecksum[tableName]
+	if !found {
+		return true, nil
+	}
+
 	checksum, err := h.getChecksum(q, tableName)
 	if err != nil {
 		return true, err
 	}
-
-	oldChecksum := h.tablesChecksum[tableName]
-
-	return oldChecksum == 0 || checksum != oldChecksum, nil
+	return checksum != oldChecksum, nil
 }
 
 func (h *mySQL) afterLoad(q queryable) error {
