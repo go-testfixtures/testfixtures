@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 type mySQL struct {
@@ -103,17 +104,21 @@ func (h *mySQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (er
 }
 
 func (h *mySQL) resetSequences(db *sql.DB) error {
+	if len(h.tables) == 0 {
+		return nil
+	}
+
 	resetSequencesTo := h.resetSequencesTo
 	if resetSequencesTo == 0 {
 		resetSequencesTo = 10000
 	}
 
+	b := strings.Builder{}
 	for _, t := range h.tables {
-		if _, err := db.Exec(fmt.Sprintf("ALTER TABLE %s AUTO_INCREMENT = %d", h.quoteKeyword(t), resetSequencesTo)); err != nil {
-			return err
-		}
+		b.WriteString(fmt.Sprintf("ALTER TABLE %s AUTO_INCREMENT = %d;", h.quoteKeyword(t), resetSequencesTo))
 	}
-	return nil
+	_, err := db.Exec(b.String())
+	return err
 }
 
 func (h *mySQL) isTableModified(q queryable, tableName string) (bool, error) {
