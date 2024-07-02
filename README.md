@@ -454,6 +454,15 @@ testfixtures.New(
 )
 ```
 
+### Spanner with GoogleSQL Dialect
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.Dialect("googlesql"),
+)
+```
+
 ## Templating
 
 Testfixtures supports templating, but it's disabled by default. Most people
