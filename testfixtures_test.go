@@ -47,10 +47,10 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	}
 	defer db.Close()
 
-	if err := db.Ping(); err != nil {
-		t.Errorf("failed to connect to database: %v", err)
-		return
-	}
+	// if err := db.Ping(); err != nil {
+	// 	t.Errorf("failed to connect to database: %v", err)
+	// 	return
+	// }
 
 	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {

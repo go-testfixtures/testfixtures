@@ -136,8 +136,8 @@ func helperForDialect(dialect string) (helper, error) {
 		return &sqlserver{}, nil
 	case "clickhouse":
 		return &clickhouse{}, nil
-	case "googlesql":
-		return nil, nil // TODO: return the impl
+	case "spanner":
+		return &googleSQL{}, nil // TODO: return the impl
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
