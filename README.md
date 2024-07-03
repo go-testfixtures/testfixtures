@@ -459,7 +459,7 @@ testfixtures.New(
 ```go
 testfixtures.New(
         ...
-        testfixtures.Dialect("googlesql"),
+        testfixtures.Dialect("spanner"),
 )
 ```
 
