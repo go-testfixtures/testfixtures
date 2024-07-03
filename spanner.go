@@ -8,7 +8,7 @@ import (
 	_ "github.com/googleapis/go-sql-spanner"
 )
 
-type googleSQL struct {
+type spanner struct {
 	baseHelper
 
 	cleanTableFn func(string) string
@@ -21,7 +21,7 @@ type spannerConstraint struct {
 	definition     string
 }
 
-func (h *googleSQL) init(_ *sql.DB) error {
+func (h *spanner) init(_ *sql.DB) error {
 	if h.cleanTableFn == nil {
 		h.cleanTableFn = func(tableName string) string {
 			return fmt.Sprintf("DELETE FROM %s WHERE true;", tableName)
@@ -31,19 +31,19 @@ func (h *googleSQL) init(_ *sql.DB) error {
 	return nil
 }
 
-func (*googleSQL) paramType() int {
+func (*spanner) paramType() int {
 	return paramTypeAtSign
 }
 
-func (*googleSQL) quoteKeyword(str string) string {
+func (*spanner) quoteKeyword(str string) string {
 	return fmt.Sprintf(`%s`, str)
 }
 
-func (*googleSQL) databaseName(q queryable) (string, error) {
+func (*spanner) databaseName(q queryable) (string, error) {
 	return "testdb", nil
 }
 
-func (h *googleSQL) tableNames(q queryable) ([]string, error) {
+func (h *spanner) tableNames(q queryable) ([]string, error) {
 	query := `
 		SELECT table_name
 		FROM information_schema.tables
@@ -72,7 +72,7 @@ func (h *googleSQL) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (h *googleSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
+func (h *spanner) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -91,11 +91,11 @@ func (h *googleSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 
 // splitter is a batchSplitter interface implementation. We need it for
 // spanner because spanner doesn't support multi-statements.
-func (*googleSQL) splitter() []byte {
+func (*spanner) splitter() []byte {
 	return []byte(";\n")
 }
 
-func (h *googleSQL) cleanTableQuery(tableName string) string {
+func (h *spanner) cleanTableQuery(tableName string) string {
 	if h.cleanTableFn == nil {
 		return h.baseHelper.cleanTableQuery(tableName)
 	}
@@ -103,7 +103,7 @@ func (h *googleSQL) cleanTableQuery(tableName string) string {
 	return h.cleanTableFn(tableName)
 }
 
-func (h *googleSQL) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (err error) {
+func (h *spanner) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (err error) {
 	defer func() {
 		// Re-create constraints again after load
 		var b strings.Builder
