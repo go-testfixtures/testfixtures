@@ -44,7 +44,7 @@ func (*spanner) paramType() int {
 }
 
 func (*spanner) quoteKeyword(str string) string {
-	return fmt.Sprintf(`%s`, str)
+	return str
 }
 
 func (*spanner) databaseName(q queryable) (string, error) {

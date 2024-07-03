@@ -137,7 +137,7 @@ func helperForDialect(dialect string) (helper, error) {
 	case "clickhouse":
 		return &clickhouse{}, nil
 	case "spanner":
-		return &spanner{}, nil // TODO: return the impl
+		return &spanner{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
