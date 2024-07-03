@@ -32,7 +32,9 @@ CREATE TABLE tags (
 CREATE TABLE posts_tags (
 	post_id     INT64,
 	tag_id      INT64,
-	created_at  TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP())
+	created_at  TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+  CONSTRAINT FK_posts_tags_post_id FOREIGN KEY (post_id) REFERENCES posts (id),
+  CONSTRAINT FK_posts_tags_tag_id FOREIGN KEY (tag_id) REFERENCES tags (id)
 ) PRIMARY KEY (post_id, tag_id);
 
 CREATE SEQUENCE comments_sequence OPTIONS (
@@ -46,7 +48,8 @@ CREATE TABLE comments (
 	author_email  STRING(MAX),
 	content       STRING(MAX),
 	created_at    TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
-	updated_at    TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP())
+	updated_at    TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+  CONSTRAINT FK_comments_post_id FOREIGN KEY (post_id) REFERENCES posts (id)
 ) PRIMARY KEY (id);
 
 CREATE SEQUENCE votes_sequence OPTIONS (
@@ -57,7 +60,8 @@ CREATE TABLE votes (
 	id          INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE(SEQUENCE votes_sequence)),
 	comment_id  INT64,
 	created_at  TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
-	updated_at  TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP())
+	updated_at  TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+  CONSTRAINT FK_votes_comment_id FOREIGN KEY (comment_id) REFERENCES comments (id)
 ) PRIMARY KEY (id);
 
 CREATE SEQUENCE users_sequence OPTIONS (

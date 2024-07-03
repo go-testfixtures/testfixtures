@@ -3,7 +3,6 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	_ "github.com/googleapis/go-sql-spanner"
 )
@@ -16,16 +15,25 @@ type spanner struct {
 }
 
 type spannerConstraint struct {
-	tableName      string
-	constraintName string
-	definition     string
+	constraintName   string
+	referencingTable string
+	foreignKeyColumn string
+	referenceTable   string
+	referenceColumn  string
 }
 
-func (h *spanner) init(_ *sql.DB) error {
+func (h *spanner) init(db *sql.DB) error {
+	var err error
+
 	if h.cleanTableFn == nil {
 		h.cleanTableFn = func(tableName string) string {
 			return fmt.Sprintf("DELETE FROM %s WHERE true;", tableName)
 		}
+	}
+
+	h.constraints, err = h.getConstraints(db)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -45,9 +53,9 @@ func (*spanner) databaseName(q queryable) (string, error) {
 
 func (h *spanner) tableNames(q queryable) ([]string, error) {
 	query := `
-		SELECT table_name
-		FROM information_schema.tables
-		WHERE table_schema = '';
+		SELECT TABLE_NAME
+		FROM INFORMATION_SCHEMA.TABLES
+		WHERE TABLE_SCHEMA = '';
 	`
 
 	rows, err := q.Query(query)
@@ -73,20 +81,7 @@ func (h *spanner) tableNames(q queryable) ([]string, error) {
 }
 
 func (h *spanner) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
-	err = loadFn(tx)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return h.dropAndRecreateConstraints(db, loadFn)
 }
 
 // splitter is a batchSplitter interface implementation. We need it for
@@ -103,33 +98,71 @@ func (h *spanner) cleanTableQuery(tableName string) string {
 	return h.cleanTableFn(tableName)
 }
 
+func (h *spanner) getConstraints(q queryable) ([]spannerConstraint, error) {
+	var constraints []spannerConstraint
+
+	const sql = `
+		SELECT tc.CONSTRAINT_NAME, key.TABLE_NAME, key.COLUMN_NAME, ref.TABLE_NAME, ref.COLUMN_NAME
+		FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE key
+			JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc ON key.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+			JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ref ON ref.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+		WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY';
+		`
+	rows, err := q.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var constraint spannerConstraint
+		if err = rows.Scan(
+			&constraint.constraintName,
+			&constraint.referencingTable,
+			&constraint.foreignKeyColumn,
+			&constraint.referenceTable,
+			&constraint.referenceColumn,
+		); err != nil {
+			return nil, err
+		}
+
+		constraints = append(constraints, constraint)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return constraints, nil
+}
+
 func (h *spanner) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (err error) {
 	defer func() {
 		// Re-create constraints again after load
-		var b strings.Builder
 		for _, constraint := range h.constraints {
-			b.WriteString(fmt.Sprintf(
-				"ALTER TABLE %s ADD CONSTRAINT %s %s;",
-				h.quoteKeyword(constraint.tableName),
-				h.quoteKeyword(constraint.constraintName),
-				constraint.definition,
-			))
-		}
-		if _, err2 := db.Exec(b.String()); err2 != nil && err == nil {
-			err = err2
+			cmd := fmt.Sprintf(
+				`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s)`,
+				constraint.referencingTable,
+				constraint.constraintName,
+				constraint.foreignKeyColumn,
+				constraint.referenceTable,
+				constraint.referenceColumn,
+			)
+
+			if _, err2 := db.Exec(cmd); err2 != nil && err == nil {
+				err = err2
+			}
 		}
 	}()
 
-	var b strings.Builder
 	for _, constraint := range h.constraints {
-		b.WriteString(fmt.Sprintf(
-			"ALTER TABLE %s DROP CONSTRAINT %s;",
-			h.quoteKeyword(constraint.tableName),
-			h.quoteKeyword(constraint.constraintName),
-		))
-	}
-	if _, err := db.Exec(b.String()); err != nil {
-		return err
+		cmd := fmt.Sprintf(
+			`ALTER TABLE %s DROP CONSTRAINT %s`,
+			constraint.referencingTable,
+			constraint.constraintName,
+		)
+		if _, err := db.Exec(cmd); err != nil {
+			return err
+		}
 	}
 
 	tx, err := db.Begin()
