@@ -1,5 +1,18 @@
 # Changelog
 
+# Unreleased
+
+- Reset sequences in a single exec to improve performance
+  ([#208](https://github.com/go-testfixtures/testfixtures/pull/208) by @slsyy)
+- Skip checksum calculation when not needed to improve performance
+  ([#207](https://github.com/go-testfixtures/testfixtures/pull/207) by @slsyy).
+- Add `SkipTableChecksumComputation` option
+  ([#203](https://github.com/go-testfixtures/testfixtures/issues/203), [#206](https://github.com/go-testfixtures/testfixtures/pull/206) by @slsyy)
+- PostgreSQL: Run some queries concurrently to improve performance
+  ([#205](https://github.com/go-testfixtures/testfixtures/pull/205) by @slsyy).
+- Optimize Docker image a bit
+  ([#204](https://github.com/go-testfixtures/testfixtures/pull/204) by @slsyy).
+
 ## v3.11.0 - 2024-05-25
 
 - Add `OVERRIDING SYSTEM VALUE` for `INSERT` statements on PostgreSQL
