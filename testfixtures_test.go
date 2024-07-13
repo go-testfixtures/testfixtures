@@ -115,6 +115,38 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		assertFixturesLoaded(t, l)
 	})
 
+	t.Run("LoadFromDirectory with SkipTableChecksumComputation", func(t *testing.T) {
+		options := append(
+			[]func(*Loader) error{
+				Database(db),
+				Dialect(dialect),
+				Template(),
+				TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				Directory("testdata/fixtures"),
+				SkipTableChecksumComputation(),
+			},
+			additionalOptions...,
+		)
+		l, err := New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+
+		// Call load again to test against a database with existing data.
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+
+		assertFixturesLoaded(t, l)
+	})
+
 	t.Run("LoadFromDirectory-Multiple", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
