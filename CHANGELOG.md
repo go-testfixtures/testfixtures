@@ -1,6 +1,6 @@
 # Changelog
 
-# Unreleased
+## v3.12.0 - 2024-07-13
 
 - Reset sequences in a single exec to improve performance
   ([#208](https://github.com/go-testfixtures/testfixtures/pull/208) by @slsyy)
