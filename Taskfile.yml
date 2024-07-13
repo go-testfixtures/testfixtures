@@ -59,7 +59,7 @@ tasks:
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:
-      - goreleaser --snapshot --rm-dist
+      - goreleaser --snapshot --clean
 
   docker:
     cmds:
