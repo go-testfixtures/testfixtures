@@ -339,18 +339,22 @@ func (h *postgreSQL) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction
 }
 
 func (h *postgreSQL) resetSequences(db *sql.DB) error {
+	if len(h.sequences) == 0 {
+		return nil
+	}
+
 	resetSequencesTo := h.resetSequencesTo
 	if resetSequencesTo == 0 {
 		resetSequencesTo = 10000
 	}
 
+	b := strings.Builder{}
 	for _, sequence := range h.sequences {
-		_, err := db.Exec(fmt.Sprintf("SELECT SETVAL('%s', %d)", sequence, resetSequencesTo))
-		if err != nil {
-			return err
-		}
+		b.WriteString(fmt.Sprintf("SELECT SETVAL('%s', %d);", sequence, resetSequencesTo))
 	}
-	return nil
+
+	_, err := db.Exec(b.String())
+	return err
 }
 
 func (h *postgreSQL) isTableModified(q queryable, tableName string) (bool, error) {
