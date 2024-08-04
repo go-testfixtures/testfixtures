@@ -1,7 +1,7 @@
 module github.com/go-testfixtures/testfixtures/v3
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.26.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.27.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/jackc/pgx/v4 v4.18.3
@@ -37,9 +37,9 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
-	golang.org/x/crypto v0.20.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 )
 
 go 1.21
