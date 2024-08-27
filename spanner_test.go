@@ -18,13 +18,9 @@ import (
 func TestSpanner(t *testing.T) {
 	prepareSpannerDB(t)
 
-	testLoader(
-		t,
-		"spanner",
-		os.Getenv("SPANNER_CONN_STRING"),
-		"testdata/schema/spanner.sql",
-		DangerousSkipTestDatabaseCheck(),
-	)
+	db := openDB(t, "spanner", os.Getenv("SPANNER_CONN_STRING"))
+	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/spanner.sql", []byte(";\n"))
+	testLoader(t, db, "spanner", DangerousSkipTestDatabaseCheck())
 }
 
 func prepareSpannerDB(t *testing.T) {

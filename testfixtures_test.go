@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"embed"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -26,64 +27,70 @@ func TestFixtureFile(t *testing.T) {
 func TestRequiredOptions(t *testing.T) {
 	t.Run("DatabaseIsRequired", func(t *testing.T) {
 		_, err := New()
-		if err != errDatabaseIsRequired {
+		if !errors.Is(err, errDatabaseIsRequired) {
 			t.Error("should return an error if database if not given")
 		}
 	})
 
 	t.Run("DialectIsRequired", func(t *testing.T) {
 		_, err := New(Database(&sql.DB{}))
-		if err != errDialectIsRequired {
+		if !errors.Is(err, errDialectIsRequired) {
 			t.Error("should return an error if dialect if not given")
 		}
 	})
 }
 
-func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additionalOptions ...func(*Loader) error) { //nolint
+func openDB(t *testing.T, dialect, connStr string) *sql.DB { //nolint:unused
+	t.Helper()
 	db, err := sql.Open(dialect, connStr)
 	if err != nil {
 		t.Errorf("failed to open database: %v", err)
-		return
 	}
-	defer db.Close()
+	t.Cleanup(func() {
+		_ = db.Close()
+	})
 
 	if err := db.Ping(); err != nil {
 		t.Errorf("failed to connect to database: %v", err)
-		return
 	}
+	return db
+}
 
+func loadSchemaInOneQuery(t *testing.T, db *sql.DB, schemaFilePath string) { //nolint:unused
+	t.Helper()
 	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {
 		t.Errorf("cannot read schema file: %v", err)
 		return
 	}
-	helper, err := helperForDialect(dialect)
+	loadSchemaInBatches(t, db, [][]byte{schema})
+}
+
+func loadSchemaInBatchesBySplitter(t *testing.T, db *sql.DB, schemaFilePath string, splitter []byte) { //nolint:unused
+	t.Helper()
+	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {
-		t.Errorf("cannot get helper: %v", err)
+		t.Errorf("cannot read schema file: %v", err)
 		return
 	}
-	if err := helper.init(db); err != nil {
-		t.Errorf("cannot init helper: %v", err)
-		return
-	}
+	batches := bytes.Split(schema, splitter)
+	loadSchemaInBatches(t, db, batches)
+}
 
-	var batches [][]byte
-	if h, ok := helper.(batchSplitter); ok {
-		batches = append(batches, bytes.Split(schema, h.splitter())...)
-	} else {
-		batches = append(batches, schema)
-	}
-
+func loadSchemaInBatches(t *testing.T, db *sql.DB, batches [][]byte) { //nolint:unused
+	t.Helper()
 	for _, b := range batches {
 		if len(b) == 0 {
 			continue
 		}
-		if _, err = db.Exec(string(b)); err != nil {
+		if _, err := db.Exec(string(b)); err != nil {
 			t.Errorf("cannot load schema: %v", err)
 			return
 		}
 	}
+}
 
+func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...func(*Loader) error) { //nolint:unused
 	t.Run("LoadFromDirectory", func(t *testing.T) {
 		options := append(
 			[]func(*Loader) error{
@@ -524,18 +531,18 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		// sequence issues.
 
 		var sql string
-		switch helper.paramType() {
-		case paramTypeDollar:
+		switch dialect {
+		case "postgres", "pgx", "clickhouse":
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES ($1, $2, $3, $4)"
-		case paramTypeQuestion:
+		case "mysql", "sqlite3", "mssql":
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (?, ?, ?, ?)"
-		case paramTypeAtSign:
+		case "sqlserver", "spanner":
 			sql = "INSERT INTO posts (title, content, created_at, updated_at) VALUES (@p1, @p2, @p3, @p4)"
 		default:
-			panic("unrecognized param type")
+			t.Fatalf("undefined param type for %s dialect, modify switch statement", dialect)
 		}
 
-		_, err = db.Exec(sql, "Post title", "Post content", time.Now(), time.Now())
+		_, err := db.Exec(sql, "Post title", "Post content", time.Now(), time.Now())
 		if err != nil {
 			t.Errorf("cannot insert post: %v", err)
 		}
@@ -553,7 +560,7 @@ func assertFixturesLoaded(t *testing.T, l *Loader) { //nolint
 
 func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //nolint
 	count := 0
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", l.helper.quoteKeyword(table))
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
 
 	row := l.db.QueryRow(sql)
 	if err := row.Scan(&count); err != nil {
