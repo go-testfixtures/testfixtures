@@ -1,7 +1,6 @@
 package testfixtures
 
 import (
-	"bytes"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -52,11 +51,6 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 		return
 	}
 
-	schema, err := os.ReadFile(schemaFilePath)
-	if err != nil {
-		t.Errorf("cannot read schema file: %v", err)
-		return
-	}
 	helper, err := helperForDialect(dialect)
 	if err != nil {
 		t.Errorf("cannot get helper: %v", err)
@@ -65,23 +59,6 @@ func testLoader(t *testing.T, dialect, connStr, schemaFilePath string, additiona
 	if err := helper.init(db); err != nil {
 		t.Errorf("cannot init helper: %v", err)
 		return
-	}
-
-	var batches [][]byte
-	if h, ok := helper.(batchSplitter); ok {
-		batches = append(batches, bytes.Split(schema, h.splitter())...)
-	} else {
-		batches = append(batches, schema)
-	}
-
-	for _, b := range batches {
-		if len(b) == 0 {
-			continue
-		}
-		if _, err = db.Exec(string(b)); err != nil {
-			t.Errorf("cannot load schema: %v", err)
-			return
-		}
 	}
 
 	t.Run("LoadFromDirectory", func(t *testing.T) {
