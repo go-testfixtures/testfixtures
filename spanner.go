@@ -2,6 +2,7 @@ package testfixtures
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/googleapis/go-sql-spanner"
@@ -23,14 +24,13 @@ type spannerConstraint struct {
 }
 
 func (h *spanner) init(db *sql.DB) error {
-	var err error
-
 	if h.cleanTableFn == nil {
 		h.cleanTableFn = func(tableName string) string {
 			return fmt.Sprintf("DELETE FROM %s WHERE true;", tableName)
 		}
 	}
 
+	var err error
 	h.constraints, err = h.getConstraints(db)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (*spanner) quoteKeyword(str string) string {
 }
 
 func (*spanner) databaseName(q queryable) (string, error) {
-	return "testdb", nil
+	return "", errors.New("could not determine database name. Please skip the test database check")
 }
 
 func (h *spanner) tableNames(q queryable) ([]string, error) {

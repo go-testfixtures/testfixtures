@@ -23,22 +23,22 @@ func TestSpanner(t *testing.T) {
 		"spanner",
 		os.Getenv("SPANNER_CONN_STRING"),
 		"testdata/schema/spanner.sql",
+		DangerousSkipTestDatabaseCheck(),
 	)
 }
 
 func prepareSpannerDB(t *testing.T) {
 	t.Helper()
 
-	var err error
-	if err = os.Setenv("SPANNER_EMULATOR_HOST", "spanner:9010"); err != nil {
+	if err := os.Setenv("SPANNER_EMULATOR_HOST", "spanner:9010"); err != nil {
 		t.Fatalf("failed to set SPANNER_EMULATOR_HOST: %v", err)
 	}
 
 	projectId, instanceId, databaseId := "test-project", "test-instance", "testdb"
-	if err = createInstance(projectId, instanceId); err != nil {
+	if err := createInstance(projectId, instanceId); err != nil {
 		t.Fatalf("failed to create instance on emulator: %v", err)
 	}
-	if err = createSampleDB(projectId, instanceId, databaseId); err != nil {
+	if err := createSampleDB(projectId, instanceId, databaseId); err != nil {
 		t.Fatalf("failed to create database on emulator: %v", err)
 	}
 }
