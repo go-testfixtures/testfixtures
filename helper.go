@@ -46,6 +46,7 @@ type batchSplitter interface { //nolint
 
 var (
 	_ helper = &clickhouse{}
+	_ helper = &spanner{}
 	_ helper = &mySQL{}
 	_ helper = &postgreSQL{}
 	_ helper = &sqlite{}

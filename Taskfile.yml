@@ -52,6 +52,12 @@ tasks:
       - task: test-db
         vars: {DATABASE: clickhouse}
 
+  test:spanner:
+    desc: Test Spanner with GoogleSQL dialect
+    cmds:
+      - task: test-db
+        vars: {DATABASE: spanner}
+
   test-db:
     cmds:
       - go test -v -tags {{.DATABASE}}
@@ -73,4 +79,4 @@ tasks:
   docker:test:
     cmds:
       - docker compose down -v --remove-orphans
-      - docker compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse'
+      - docker compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner'

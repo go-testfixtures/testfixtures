@@ -9,6 +9,7 @@ services:
       - sqlserver
       - cockroachdb
       - clickhouse
+      - spanner
     environment:
       PGPASSWORD: postgres
       PG_CONN_STRING: host=postgresql user=postgres dbname=testfixtures_test port=5432 sslmode=disable
@@ -17,6 +18,8 @@ services:
       SQLSERVER_CONN_STRING: server=sqlserver;database=master;user id=sa;password=SQL@1server;encrypt=disable
       CRDB_CONN_STRING: host=cockroachdb user=root dbname=defaultdb port=26257 sslmode=disable
       CLICKHOUSE_CONN_STRING: clickhouse://clickhouse:clickhouse@clickhouse:9000/testfixtures_test?debug=false
+      SPANNER_CONN_STRING: projects/test-project/instances/test-instance/databases/testdb
+      SPANNER_EMULATOR_HOST: spanner:9010
 
   postgresql:
     image: postgres:16.3-alpine
@@ -50,3 +53,9 @@ services:
       CLICKHOUSE_DB: testfixtures_test
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: clickhouse
+
+  spanner:
+    image: gcr.io/cloud-spanner-emulator/emulator
+    ports:
+      - "19010:9010"
+      - "19020:9020"

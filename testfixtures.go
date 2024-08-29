@@ -112,7 +112,7 @@ func Database(db *sql.DB) func(*Loader) error {
 // Dialect informs Loader about which database dialect you're using.
 //
 // Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
-// "sqlite", "sqlserver", "clickhouse".
+// "sqlite", "sqlserver", "clickhouse", "spanner".
 func Dialect(dialect string) func(*Loader) error {
 	return func(l *Loader) error {
 		h, err := helperForDialect(dialect)
@@ -136,6 +136,8 @@ func helperForDialect(dialect string) (helper, error) {
 		return &sqlserver{}, nil
 	case "clickhouse":
 		return &clickhouse{}, nil
+	case "spanner":
+		return &spanner{}, nil
 	default:
 		return nil, fmt.Errorf(`testfixtures: unrecognized dialect "%s"`, dialect)
 	}
@@ -689,9 +691,7 @@ func (l *Loader) fixturesFromPaths(paths ...string) ([]*fixtureFile, error) {
 }
 
 func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFile, error) {
-	var (
-		fixtureFiles = make([]*fixtureFile, 0, len(fileNames))
-	)
+	fixtureFiles := make([]*fixtureFile, 0, len(fileNames))
 
 	for _, f := range fileNames {
 		var (

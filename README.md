@@ -454,6 +454,18 @@ testfixtures.New(
 )
 ```
 
+### Spanner with GoogleSQL Dialect
+
+It's impossible to get Spanner database name to determine whether it's a test database or not. You need to make sure that you're actually using test database and use `testfixtures.DangerousSkipTestDatabaseCheck()` to skip the check.
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.Dialect("spanner"),
+        testfixtures.DangerousSkipTestDatabaseCheck(),
+)
+```
+
 ## Templating
 
 Testfixtures supports templating, but it's disabled by default. Most people
