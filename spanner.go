@@ -84,12 +84,6 @@ func (h *spanner) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction) (
 	return h.dropAndRecreateConstraints(db, loadFn)
 }
 
-// splitter is a batchSplitter interface implementation. We need it for
-// spanner because spanner doesn't support multi-statements.
-func (*spanner) splitter() []byte {
-	return []byte(";\n")
-}
-
 func (h *spanner) cleanTableQuery(tableName string) string {
 	if h.cleanTableFn == nil {
 		return h.baseHelper.cleanTableQuery(tableName)

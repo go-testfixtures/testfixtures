@@ -1,5 +1,4 @@
 //go:build cockroachdb
-// +build cockroachdb
 
 package testfixtures
 
@@ -13,11 +12,12 @@ import (
 
 func TestCockroachDB(t *testing.T) {
 	for _, dialect := range []string{"postgres", "pgx"} {
+		db := openDB(t, dialect, os.Getenv("CRDB_CONN_STRING"))
+		loadSchemaInOneQuery(t, db, "testdata/schema/cockroachdb.sql")
 		testLoader(
 			t,
+			db,
 			dialect,
-			os.Getenv("CRDB_CONN_STRING"),
-			"testdata/schema/cockroachdb.sql",
 			DangerousSkipTestDatabaseCheck(),
 			UseDropConstraint(),
 		)

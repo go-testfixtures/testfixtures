@@ -1,4 +1,4 @@
-// +build sqlite
+//go:build sqlite
 
 package testfixtures
 
@@ -10,10 +10,7 @@ import (
 )
 
 func TestSQLite(t *testing.T) {
-	testLoader(
-		t,
-		"sqlite3",
-		os.Getenv("SQLITE_CONN_STRING"),
-		"testdata/schema/sqlite.sql",
-	)
+	db := openDB(t, "sqlite3", os.Getenv("SQLITE_CONN_STRING"))
+	loadSchemaInOneQuery(t, db, "testdata/schema/sqlite.sql")
+	testLoader(t, db, "sqlite3")
 }
