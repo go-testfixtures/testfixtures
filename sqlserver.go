@@ -143,11 +143,3 @@ func (h *sqlserver) disableReferentialIntegrity(db *sql.DB, loadFn loadFunction)
 
 	return tx.Commit()
 }
-
-// splitter is a batchSplitter interface implementation. We need it for
-// SQL Server because commands like a `CREATE SCHEMA...` and a `CREATE TABLE...`
-// could not be executed in the same batch.
-// See https://docs.microsoft.com/en-us/previous-versions/sql/sql-server-2008-r2/ms175502(v=sql.105)#rules-for-using-batches
-func (*sqlserver) splitter() []byte {
-	return []byte("GO\n")
-}

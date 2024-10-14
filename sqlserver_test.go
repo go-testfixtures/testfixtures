@@ -1,4 +1,4 @@
-// +build sqlserver
+//go:build sqlserver
 
 package testfixtures
 
@@ -10,21 +10,21 @@ import (
 )
 
 func TestSQLServer(t *testing.T) {
-	testLoader(
-		t,
-		"sqlserver",
-		os.Getenv("SQLSERVER_CONN_STRING"),
-		"testdata/schema/sqlserver.sql",
-		DangerousSkipTestDatabaseCheck(),
-	)
+	testSQLServer(t, "sqlserver")
 }
 
 func TestDeprecatedMssql(t *testing.T) {
+	testSQLServer(t, "mssql")
+}
+
+func testSQLServer(t *testing.T, dialect string) {
+	t.Helper()
+	db := openDB(t, dialect, os.Getenv("SQLSERVER_CONN_STRING"))
+	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/sqlserver.sql", []byte("GO\n"))
 	testLoader(
 		t,
-		"mssql",
-		os.Getenv("SQLSERVER_CONN_STRING"),
-		"testdata/schema/sqlserver.sql",
+		db,
+		dialect,
 		DangerousSkipTestDatabaseCheck(),
 	)
 }

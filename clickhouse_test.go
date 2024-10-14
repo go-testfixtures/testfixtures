@@ -1,5 +1,4 @@
 //go:build clickhouse
-// +build clickhouse
 
 package testfixtures
 
@@ -11,10 +10,7 @@ import (
 )
 
 func TestClickhouse(t *testing.T) {
-	testLoader(
-		t,
-		"clickhouse",
-		os.Getenv("CLICKHOUSE_CONN_STRING"),
-		"testdata/schema/clickhouse.sql",
-	)
+	db := openDB(t, "clickhouse", os.Getenv("CLICKHOUSE_CONN_STRING"))
+	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/clickhouse.sql", []byte(";\n"))
+	testLoader(t, db, "clickhouse")
 }
