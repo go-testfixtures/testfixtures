@@ -3,8 +3,6 @@ package testfixtures
 import (
 	"database/sql"
 	"fmt"
-
-	_ "github.com/ClickHouse/clickhouse-go/v2"
 )
 
 type clickhouse struct {
