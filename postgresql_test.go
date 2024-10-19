@@ -1,4 +1,4 @@
-// +build postgresql
+//go:build postgresql
 
 package testfixtures
 
@@ -11,36 +11,28 @@ import (
 )
 
 func TestPostgreSQL(t *testing.T) {
-	for _, dialect := range []string{"postgres", "pgx"} {
-		testLoader(
-			t,
-			dialect,
-			os.Getenv("PG_CONN_STRING"),
-			"testdata/schema/postgresql.sql",
-		)
-	}
+	testPostgreSQL(t)
 }
 
 func TestPostgreSQLWithAlterConstraint(t *testing.T) {
-	for _, dialect := range []string{"postgres", "pgx"} {
-		testLoader(
-			t,
-			dialect,
-			os.Getenv("PG_CONN_STRING"),
-			"testdata/schema/postgresql.sql",
-			UseAlterConstraint(),
-		)
-	}
+	testPostgreSQL(t, UseAlterConstraint())
 }
 
 func TestPostgreSQLWithDropConstraint(t *testing.T) {
+	testPostgreSQL(t, UseDropConstraint())
+}
+
+func testPostgreSQL(t *testing.T, additionalOptions ...func(*Loader) error) {
+	t.Helper()
 	for _, dialect := range []string{"postgres", "pgx"} {
+		db := openDB(t, dialect, os.Getenv("PG_CONN_STRING"))
+		loadSchemaInOneQuery(t, db, "testdata/schema/postgresql.sql")
 		testLoader(
 			t,
+			db,
 			dialect,
-			os.Getenv("PG_CONN_STRING"),
-			"testdata/schema/postgresql.sql",
-			UseDropConstraint(),
+			additionalOptions...,
 		)
 	}
+
 }

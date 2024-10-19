@@ -1,4 +1,4 @@
-// +build mysql
+//go:build mysql
 
 package testfixtures
 
@@ -10,10 +10,7 @@ import (
 )
 
 func TestMySQL(t *testing.T) {
-	testLoader(
-		t,
-		"mysql",
-		os.Getenv("MYSQL_CONN_STRING"),
-		"testdata/schema/mysql.sql",
-	)
+	db := openDB(t, "mysql", os.Getenv("MYSQL_CONN_STRING"))
+	loadSchemaInOneQuery(t, db, "testdata/schema/mysql.sql")
+	testLoader(t, db, "mysql")
 }
