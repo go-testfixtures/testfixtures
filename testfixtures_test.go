@@ -119,7 +119,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 			t.Errorf("cannot load fixtures: %v", err)
 		}
 
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromDirectory with SkipTableChecksumComputation", func(t *testing.T) {
@@ -151,7 +151,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 			t.Errorf("cannot load fixtures: %v", err)
 		}
 
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromDirectory-Multiple", func(t *testing.T) {
@@ -177,7 +177,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromFiles", func(t *testing.T) {
@@ -209,7 +209,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromFiles-Multiple", func(t *testing.T) {
@@ -243,7 +243,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromFiles-MultiTables", func(t *testing.T) {
@@ -274,7 +274,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromFiles-MultiTablesWithFS", func(t *testing.T) {
@@ -306,7 +306,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
@@ -335,7 +335,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromDirectoryAndFilesWithFS", func(t *testing.T) {
@@ -365,7 +365,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromPaths", func(t *testing.T) {
@@ -394,7 +394,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromPathsWithFS", func(t *testing.T) {
@@ -424,7 +424,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromPaths-OnlyFiles", func(t *testing.T) {
@@ -456,7 +456,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("LoadFromPaths-OnlyDirs", func(t *testing.T) {
@@ -484,7 +484,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 		if err := l.Load(); err != nil {
 			t.Errorf("cannot load fixtures: %v", err)
 		}
-		assertFixturesLoaded(t, l)
+		assertFixturesLoaded(t, db)
 	})
 
 	t.Run("GenerateAndLoad", func(t *testing.T) {
@@ -549,20 +549,20 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 }
 
-func assertFixturesLoaded(t *testing.T, l *Loader) { //nolint
-	assertCount(t, l, "posts", 2)
-	assertCount(t, l, "comments", 4)
-	assertCount(t, l, "tags", 3)
-	assertCount(t, l, "posts_tags", 6)
-	assertCount(t, l, "users", 2)
-	assertCount(t, l, "assets", 1)
+func assertFixturesLoaded(t *testing.T, db *sql.DB) { //nolint
+	assertCount(t, db, "posts", 2)
+	assertCount(t, db, "comments", 4)
+	assertCount(t, db, "tags", 3)
+	assertCount(t, db, "posts_tags", 6)
+	assertCount(t, db, "users", 2)
+	assertCount(t, db, "assets", 1)
 }
 
-func assertCount(t *testing.T, l *Loader, table string, expectedCount int) { //nolint
+func assertCount(t *testing.T, db *sql.DB, table string, expectedCount int) { //nolint
 	count := 0
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
 
-	row := l.db.QueryRow(sql)
+	row := db.QueryRow(sql)
 	if err := row.Scan(&count); err != nil {
 		t.Errorf("cannot query table: %v", err)
 	}
