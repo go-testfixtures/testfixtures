@@ -1,6 +1,6 @@
 //go:build clickhouse
 
-package testfixtures
+package dbtests
 
 import (
 	"os"
