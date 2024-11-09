@@ -1,7 +1,7 @@
 module github.com/go-testfixtures/testfixtures/v3
 
 require (
-	cloud.google.com/go/spanner v1.71.0
+	cloud.google.com/go/spanner v1.72.0
 	github.com/ClickHouse/clickhouse-go/v2 v2.30.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.8.1
