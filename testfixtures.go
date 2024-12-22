@@ -194,6 +194,23 @@ func SkipResetSequences() func(*Loader) error {
 	}
 }
 
+// AllowMultipleStatementsInOneQuery is a performance tweak for running some setup statements in one query for better performance.
+//
+// Your database and connection must be configured to support it: https://github.com/go-sql-driver/mysql?tab=readme-ov-file#multistatements
+//
+// Only valid for MySQL as it is not enabled by default.
+func AllowMultipleStatementsInOneQuery() func(*Loader) error {
+	return func(l *Loader) error {
+		switch helper := l.helper.(type) {
+		case *mySQL:
+			helper.allowMultipleStatementsInOneQuery = true
+		default:
+			return fmt.Errorf("testfixtures: AllowMultipleStatementsInOneQuery is valid for MySQL database")
+		}
+		return nil
+	}
+}
+
 // ResetSequencesTo sets the value the sequences will be reset to.
 //
 // Defaults to 10000.

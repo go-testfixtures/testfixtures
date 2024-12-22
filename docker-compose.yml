@@ -13,7 +13,7 @@ services:
     environment:
       PGPASSWORD: postgres
       PG_CONN_STRING: host=postgresql user=postgres dbname=testfixtures_test port=5432 sslmode=disable
-      MYSQL_CONN_STRING: root:mariadb@tcp(mariadb)/testfixtures_test?multiStatements=true
+      MYSQL_CONN_STRING: root:mariadb@tcp(mariadb)/testfixtures_test
       SQLITE_CONN_STRING: testfixtures_test.sqlite3
       SQLSERVER_CONN_STRING: server=sqlserver;database=master;user id=sa;password=SQL@1server;encrypt=disable
       CRDB_CONN_STRING: host=cockroachdb user=root dbname=defaultdb port=26257 sslmode=disable
