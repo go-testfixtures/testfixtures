@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.14.0 - 2024-12-22
+
+- feat(mysql): make multistatements parameter optional ([#249](https://github.com/go-testfixtures/testfixtures/pull/249) by @slsyy)
+- test: remove private api usage in assertFixturesLoaded ([#239](https://github.com/go-testfixtures/testfixtures/pull/239) by @slsyy)
+- Updated dependencies.
+
 ## v3.13.0 - 2024-10-25
 
 - Add GCP Spanner support ([#211](https://github.com/go-testfixtures/testfixtures/pull/211) by @kikihakiem)
