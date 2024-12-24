@@ -13,6 +13,8 @@ import (
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	instance "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"cloud.google.com/go/spanner/admin/instance/apiv1/instancepb"
+
+	_ "github.com/googleapis/go-sql-spanner"
 )
 
 func TestSpanner(t *testing.T) {

@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-
-	_ "github.com/googleapis/go-sql-spanner"
 )
 
 type spanner struct {
