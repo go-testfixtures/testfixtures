@@ -1,12 +1,13 @@
 //go:build sqlserver
 
-package testfixtures
+package dbtests
 
 import (
 	"os"
 	"testing"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/go-testfixtures/testfixtures/v3"
 )
 
 func TestSQLServer(t *testing.T) {
@@ -25,6 +26,6 @@ func testSQLServer(t *testing.T, dialect string) {
 		t,
 		db,
 		dialect,
-		DangerousSkipTestDatabaseCheck(),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
 	)
 }

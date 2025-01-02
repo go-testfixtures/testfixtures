@@ -79,4 +79,4 @@ tasks:
   docker:test:
     cmds:
       - docker compose down -v --remove-orphans
-      - docker compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner'
+      - docker compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner' ./...

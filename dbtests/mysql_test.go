@@ -1,12 +1,13 @@
 //go:build mysql
 
-package testfixtures
+package dbtests
 
 import (
 	"os"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-testfixtures/testfixtures/v3"
 )
 
 func TestMySQL(t *testing.T) {
@@ -18,5 +19,5 @@ func TestMySQL(t *testing.T) {
 func TestMySQLWithMultipleStatementsSupport(t *testing.T) {
 	db := openDB(t, "mysql", os.Getenv("MYSQL_CONN_STRING")+"?multiStatements=true")
 	loadSchemaInOneQuery(t, db, "testdata/schema/mysql.sql")
-	testLoader(t, db, "mysql", AllowMultipleStatementsInOneQuery())
+	testLoader(t, db, "mysql", testfixtures.AllowMultipleStatementsInOneQuery())
 }

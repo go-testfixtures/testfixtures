@@ -1,6 +1,6 @@
 //go:build sqlite
 
-package testfixtures
+package dbtests
 
 import (
 	"os"

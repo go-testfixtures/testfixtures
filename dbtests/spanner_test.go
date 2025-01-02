@@ -1,7 +1,7 @@
 //go:build spanner
 // +build spanner
 
-package testfixtures
+package dbtests
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	instance "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"cloud.google.com/go/spanner/admin/instance/apiv1/instancepb"
-
+	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/googleapis/go-sql-spanner"
 )
 
@@ -22,7 +22,7 @@ func TestSpanner(t *testing.T) {
 
 	db := openDB(t, "spanner", os.Getenv("SPANNER_CONN_STRING"))
 	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/spanner.sql", []byte(";\n"))
-	testLoader(t, db, "spanner", DangerousSkipTestDatabaseCheck())
+	testLoader(t, db, "spanner", testfixtures.DangerousSkipTestDatabaseCheck())
 }
 
 func prepareSpannerDB(t *testing.T) {

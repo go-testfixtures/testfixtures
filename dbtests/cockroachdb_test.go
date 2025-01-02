@@ -1,11 +1,12 @@
 //go:build cockroachdb
 
-package testfixtures
+package dbtests
 
 import (
 	"os"
 	"testing"
 
+	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/lib/pq"
 )
@@ -18,8 +19,8 @@ func TestCockroachDB(t *testing.T) {
 			t,
 			db,
 			dialect,
-			DangerousSkipTestDatabaseCheck(),
-			UseDropConstraint(),
+			testfixtures.DangerousSkipTestDatabaseCheck(),
+			testfixtures.UseDropConstraint(),
 		)
 	}
 }
