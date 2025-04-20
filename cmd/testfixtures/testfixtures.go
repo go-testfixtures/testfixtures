@@ -77,7 +77,13 @@ func main() {
 		log.Fatalf("testfixtures: could not connect to database: %v", err)
 		return
 	}
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Fatalf("testfixtures: could not close connection to database: %v", err)
+			return
+		}
+	}()
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("testfixtures: could not ping database: %v", err)

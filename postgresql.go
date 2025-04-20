@@ -98,7 +98,9 @@ func (h *postgreSQL) tableNames(q queryable) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var table string
@@ -126,7 +128,9 @@ func (h *postgreSQL) getSequences(q queryable) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var sequences []string
 	for rows.Next() {
@@ -157,7 +161,9 @@ func (*postgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var constraint pgConstraint
@@ -188,7 +194,9 @@ func (h *postgreSQL) getConstraints(q queryable) ([]pgConstraint, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var constraint pgConstraint
