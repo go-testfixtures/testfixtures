@@ -104,7 +104,9 @@ func (h *spanner) getConstraints(q queryable) ([]spannerConstraint, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	for rows.Next() {
 		var constraint spannerConstraint
