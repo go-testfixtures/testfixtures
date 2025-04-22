@@ -10,7 +10,7 @@ tasks:
   lint:
     desc: Runs golangci-lint
     cmds:
-      - golangci-lint run
+      - go list -f '{{"{{.Dir}}"}}' -m | xargs -I@ sh -c 'cd @ && pwd && golangci-lint run'
 
   test-cli:
     cmds:
@@ -60,7 +60,7 @@ tasks:
 
   test-db:
     cmds:
-      - go test -v -tags {{.DATABASE}}
+      -  go test work -v -tags {{.DATABASE}} ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
@@ -79,4 +79,5 @@ tasks:
   docker:test:
     cmds:
       - docker compose down -v --remove-orphans
-      - docker compose run testfixtures go test -v -tags 'postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner' ./...
+      #- docker compose run testfixtures sh -c 'go list -f {{"{{.Dir}}"}} -m  | xargs -I@ sh -c "cd @ && pwd && go test -v -tags \"postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner\" ./..."'
+      - docker compose run testfixtures sh -c 'go test -v -tags "postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner" work ./...'
