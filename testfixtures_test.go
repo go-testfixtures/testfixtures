@@ -37,6 +37,7 @@ func TestQuoteKeyword(t *testing.T) {
 		expected string
 	}{
 		{&postgreSQL{}, `posts_tags`, `"posts_tags"`},
+		{&postgreSQL{}, `"posts.tags"`, `"posts.tags"`},
 		{&postgreSQL{}, `test_schema.posts_tags`, `"test_schema"."posts_tags"`},
 		{&sqlserver{}, `posts_tags`, `[posts_tags]`},
 		{&sqlserver{}, `test_schema.posts_tags`, `[test_schema].[posts_tags]`},
