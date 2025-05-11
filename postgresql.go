@@ -410,7 +410,7 @@ func (h *postgreSQL) getChecksum(q queryable, tableName string) (string, error) 
 }
 
 func (*postgreSQL) quoteKeyword(s string) string {
-	isQuotedColumn := s[0] == '"' && s[len(s)-1] == '"'
+	isQuotedColumn := strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`)
 	if isQuotedColumn {
 		return s
 	}
