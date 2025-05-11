@@ -410,6 +410,11 @@ func (h *postgreSQL) getChecksum(q queryable, tableName string) (string, error) 
 }
 
 func (*postgreSQL) quoteKeyword(s string) string {
+	isQuotedColumn := strings.HasPrefix(s, `"`) && strings.HasSuffix(s, `"`)
+	if isQuotedColumn {
+		return s
+	}
+
 	parts := strings.Split(s, ".")
 	for i, p := range parts {
 		parts[i] = fmt.Sprintf(`"%s"`, p)
