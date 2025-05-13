@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS transactions;
 
 CREATE SEQUENCE posts_sequence OPTIONS (
   sequence_kind="bit_reversed_positive"
@@ -80,4 +82,26 @@ CREATE SEQUENCE assets_sequence OPTIONS (
 CREATE TABLE assets (
 	id    INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE(SEQUENCE assets_sequence)),
 	data  BYTES(MAX)
+) PRIMARY KEY (id);
+
+CREATE TABLE accounts (
+	id INT64,
+	user_id INT64,
+	currency STRING(3),
+	balance INT64,
+	created_at TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+	updated_at TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+	CONSTRAINT FK_accounts_users_id FOREIGN KEY (user_id) REFERENCES users (id)
+) PRIMARY KEY (user_id, currency);
+
+CREATE TABLE transactions (
+	id INT64,
+	account_id INT64,
+	user_id INT64,
+	currency STRING(3),
+	amount INT64,
+	created_at TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+	updated_at TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
+	CONSTRAINT FK_transactions_account_user_id FOREIGN KEY (user_id) REFERENCES users (id),
+	CONSTRAINT FK_transactions_account_user_id_currency FOREIGN KEY (user_id, currency) REFERENCES accounts (user_id, currency)
 ) PRIMARY KEY (id);

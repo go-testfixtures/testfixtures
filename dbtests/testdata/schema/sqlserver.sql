@@ -3,13 +3,16 @@ IF OBJECT_ID('non_default_schema.empty_table_without_fixtures', 'U') IS NOT NULL
 IF EXISTS(SELECT 1 FROM sys.schemas WHERE name = 'non_default_schema')
 	DROP SCHEMA non_default_schema;
 
+
+IF OBJECT_ID('transactions', 'U') IS NOT NULL DROP TABLE transactions;
+IF OBJECT_ID('accounts', 'U') IS NOT NULL DROP TABLE accounts;
 IF OBJECT_ID('votes', 'U') IS NOT NULL DROP TABLE votes;
 IF OBJECT_ID('comments', 'U') IS NOT NULL DROP TABLE comments;
 IF OBJECT_ID('posts_tags', 'U') IS NOT NULL DROP TABLE posts_tags;
 IF OBJECT_ID('posts', 'U') IS NOT NULL DROP TABLE posts;
 IF OBJECT_ID('tags', 'U') IS NOT NULL DROP TABLE tags;
-IF OBJECT_ID('users', 'U') IS NOT NULL DROP TABLE users;
 IF OBJECT_ID('assets', 'U') IS NOT NULL DROP TABLE assets;
+IF OBJECT_ID('users', 'U') IS NOT NULL DROP TABLE users;
 
 CREATE TABLE posts (
 	id INT IDENTITY PRIMARY KEY
@@ -70,4 +73,26 @@ CREATE TABLE users (
 CREATE TABLE assets (
 	id INT IDENTITY PRIMARY KEY NOT NULL
 	,data VARBINARY(MAX) NOT NULL
+);
+
+CREATE TABLE accounts (
+	id INT IDENTITY PRIMARY KEY NOT NULL
+	,user_id INT NOT NULL
+	,currency VARCHAR(3) NOT NULL
+	,balance INT NOT NULL
+	,created_at DATETIME NOT NULL
+	,updated_at DATETIME NOT NULL
+	,FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE transactions (
+	id INT IDENTITY PRIMARY KEY NOT NULL
+	,account_id INT NOT NULL
+	,user_id INT NOT NULL
+	,currency VARCHAR(3) NOT NULL
+	,amount INT NOT NULL
+	,created_at DATETIME NOT NULL
+	,updated_at DATETIME NOT NULL
+	,FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
+	,FOREIGN KEY (user_id) REFERENCES users (id)
 );

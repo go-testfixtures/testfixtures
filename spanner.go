@@ -4,21 +4,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 type spanner struct {
 	baseHelper
 
 	cleanTableFn func(string) string
-	constraints  []spannerConstraint
-}
-
-type spannerConstraint struct {
-	constraintName   string
-	referencingTable string
-	foreignKeyColumn string
-	referenceTable   string
-	referenceColumn  string
+	constraints  map[string][]shared.SpannerConstraint
 }
 
 func (h *spanner) init(db *sql.DB) error {
@@ -29,7 +24,7 @@ func (h *spanner) init(db *sql.DB) error {
 	}
 
 	var err error
-	h.constraints, err = h.getConstraints(db)
+	h.constraints, err = shared.GetConstraints(db)
 	if err != nil {
 		return err
 	}
@@ -45,11 +40,11 @@ func (*spanner) quoteKeyword(str string) string {
 	return str
 }
 
-func (*spanner) databaseName(q queryable) (string, error) {
+func (*spanner) databaseName(q shared.Queryable) (string, error) {
 	return "", errors.New("could not determine database name. Please skip the test database check")
 }
 
-func (h *spanner) tableNames(q queryable) ([]string, error) {
+func (h *spanner) tableNames(q shared.Queryable) ([]string, error) {
 	query := `
 		SELECT TABLE_NAME
 		FROM INFORMATION_SCHEMA.TABLES
@@ -90,56 +85,34 @@ func (h *spanner) cleanTableQuery(tableName string) string {
 	return h.cleanTableFn(tableName)
 }
 
-func (h *spanner) getConstraints(q queryable) ([]spannerConstraint, error) {
-	var constraints []spannerConstraint
-
-	const sql = `
-		SELECT tc.CONSTRAINT_NAME, key.TABLE_NAME, key.COLUMN_NAME, ref.TABLE_NAME, ref.COLUMN_NAME
-		FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE key
-			JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc ON key.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
-			JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ref ON ref.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
-		WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY';
-		`
-	rows, err := q.Query(sql)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = rows.Close()
-	}()
-
-	for rows.Next() {
-		var constraint spannerConstraint
-		if err = rows.Scan(
-			&constraint.constraintName,
-			&constraint.referencingTable,
-			&constraint.foreignKeyColumn,
-			&constraint.referenceTable,
-			&constraint.referenceColumn,
-		); err != nil {
-			return nil, err
-		}
-
-		constraints = append(constraints, constraint)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return constraints, nil
-}
-
 func (h *spanner) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (err error) {
 	defer func() {
 		// Re-create constraints again after load
-		for _, constraint := range h.constraints {
+		for key := range h.constraints {
+			var lengthConstraints = len(h.constraints[key])
+			var orderedConstraints = make([]shared.SpannerConstraint, lengthConstraints)
+
+			for _, constraint := range h.constraints[key] {
+				orderedConstraints[constraint.Position-1] = constraint
+			}
+
+			var columnName = orderedConstraints[0].ColumnName
+			for i := 1; i < lengthConstraints; i++ {
+				columnName = strings.Join([]string{columnName, orderedConstraints[i].ColumnName}, ", ")
+			}
+
+			var referencedColumn = orderedConstraints[0].ReferencedColumn
+			for i := 1; i < lengthConstraints; i++ {
+				referencedColumn = strings.Join([]string{referencedColumn, orderedConstraints[i].ReferencedColumn}, ", ")
+			}
+
 			cmd := fmt.Sprintf(
 				`ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s)`,
-				constraint.referencingTable,
-				constraint.constraintName,
-				constraint.foreignKeyColumn,
-				constraint.referenceTable,
-				constraint.referenceColumn,
+				orderedConstraints[0].TableName,
+				orderedConstraints[0].ConstraintName,
+				columnName,
+				orderedConstraints[0].ReferencedTable,
+				referencedColumn,
 			)
 
 			if _, err2 := db.Exec(cmd); err2 != nil && err == nil {
@@ -148,13 +121,15 @@ func (h *spanner) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (e
 		}
 	}()
 
-	for _, constraint := range h.constraints {
+	for key := range h.constraints {
+		constraints := h.constraints[key]
 		cmd := fmt.Sprintf(
 			`ALTER TABLE %s DROP CONSTRAINT %s`,
-			constraint.referencingTable,
-			constraint.constraintName,
+			constraints[0].TableName,
+			constraints[0].ConstraintName,
 		)
 		if _, err := db.Exec(cmd); err != nil {
+			fmt.Println("error dropping constraint", err)
 			return err
 		}
 	}

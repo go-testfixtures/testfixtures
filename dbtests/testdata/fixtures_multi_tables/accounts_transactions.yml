@@ -1,0 +1,47 @@
+accounts:
+- user_id: 1
+  id: 1
+  currency: "USD"
+  balance: 100000
+  created_at: "2024-01-01 00:00:00"
+  updated_at: "2024-01-01 00:00:00"
+
+- user_id: 1
+  id: 2
+  currency: "EUR" 
+  balance: 50000
+  created_at: "2024-01-01 00:00:00"
+  updated_at: "2024-01-01 00:00:00"
+
+transactions:
+- id: 1
+  account_id: 1
+  user_id: 1
+  currency: "USD"
+  amount: 5000
+  created_at: "2024-01-01 10:00:00"
+  updated_at: "2024-01-01 10:00:00"
+
+- id: 2
+  account_id: 1
+  user_id: 1
+  currency: "USD"
+  amount: 2500
+  created_at: "2024-01-01 14:30:00"
+  updated_at: "2024-01-01 14:30:00"
+
+- id: 3
+  account_id: 1
+  user_id: 1
+  currency: "USD"
+  amount: 7500
+  created_at: "2024-01-02 09:15:00"
+  updated_at: "2024-01-02 09:15:00"
+
+- id: 4
+  account_id: 1
+  user_id: 1
+  currency: "USD"
+  amount: 10000
+  created_at: "2024-01-03 16:45:00"
+  updated_at: "2024-01-03 16:45:00"
