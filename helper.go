@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 const (
@@ -18,20 +20,14 @@ type helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
-	databaseName(queryable) (string, error)
-	tableNames(queryable) ([]string, error)
-	isTableModified(queryable, string) (bool, error)
-	computeTablesChecksum(queryable) error
+	databaseName(shared.Queryable) (string, error)
+	tableNames(shared.Queryable) ([]string, error)
+	isTableModified(shared.Queryable, string) (bool, error)
+	computeTablesChecksum(shared.Queryable) error
 	quoteKeyword(string) string
 	whileInsertOnTable(*sql.Tx, string, func() error) error
 	cleanTableQuery(string) string
-	buildInsertSQL(q queryable, tableName string, columns, values []string) (string, error)
-}
-
-type queryable interface {
-	Exec(string, ...interface{}) (sql.Result, error)
-	Query(string, ...interface{}) (*sql.Rows, error)
-	QueryRow(string, ...interface{}) *sql.Row
+	buildInsertSQL(q shared.Queryable, tableName string, columns, values []string) (string, error)
 }
 
 var (
@@ -57,11 +53,11 @@ func (baseHelper) whileInsertOnTable(_ *sql.Tx, _ string, fn func() error) error
 	return fn()
 }
 
-func (baseHelper) isTableModified(_ queryable, _ string) (bool, error) {
+func (baseHelper) isTableModified(_ shared.Queryable, _ string) (bool, error) {
 	return true, nil
 }
 
-func (baseHelper) computeTablesChecksum(_ queryable) error {
+func (baseHelper) computeTablesChecksum(_ shared.Queryable) error {
 	return nil
 }
 
@@ -69,7 +65,7 @@ func (baseHelper) cleanTableQuery(tableName string) string {
 	return fmt.Sprintf("DELETE FROM %s", tableName)
 }
 
-func (h baseHelper) buildInsertSQL(_ queryable, tableName string, columns, values []string) (string, error) {
+func (h baseHelper) buildInsertSQL(_ shared.Queryable, tableName string, columns, values []string) (string, error) {
 	return fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s)",
 		tableName,

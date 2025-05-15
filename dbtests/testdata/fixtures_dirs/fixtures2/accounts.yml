@@ -1,0 +1,13 @@
+- user_id: 1
+  id: 1
+  currency: "USD"
+  balance: 100000
+  created_at: "2024-01-01 00:00:00"
+  updated_at: "2024-01-01 00:00:00"
+
+- user_id: 1
+  id: 2
+  currency: "EUR" 
+  balance: 50000
+  created_at: "2024-01-01 00:00:00"
+  updated_at: "2024-01-01 00:00:00"

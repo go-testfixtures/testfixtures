@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 type sqlserver struct {
@@ -49,13 +51,13 @@ func (*sqlserver) quoteKeyword(s string) string {
 	return strings.Join(parts, ".")
 }
 
-func (*sqlserver) databaseName(q queryable) (string, error) {
+func (*sqlserver) databaseName(q shared.Queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DB_NAME()").Scan(&dbName)
 	return dbName, err
 }
 
-func (*sqlserver) tableNames(q queryable) ([]string, error) {
+func (*sqlserver) tableNames(q shared.Queryable) ([]string, error) {
 	rows, err := q.Query("SELECT table_schema + '.' + table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_name <> 'spt_values' AND table_type = 'BASE TABLE'")
 	if err != nil {
 		return nil, err
@@ -78,7 +80,7 @@ func (*sqlserver) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (h *sqlserver) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
+func (h *sqlserver) tableHasIdentityColumn(q shared.Queryable, tableName string) (bool, error) {
 	sql := fmt.Sprintf(`
 		SELECT COUNT(*)
 		FROM sys.identity_columns

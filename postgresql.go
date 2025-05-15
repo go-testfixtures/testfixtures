@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -76,13 +77,13 @@ func (*postgreSQL) paramType() int {
 	return paramTypeDollar
 }
 
-func (*postgreSQL) databaseName(q queryable) (string, error) {
+func (*postgreSQL) databaseName(q shared.Queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT current_database()").Scan(&dbName)
 	return dbName, err
 }
 
-func (h *postgreSQL) tableNames(q queryable) ([]string, error) {
+func (h *postgreSQL) tableNames(q shared.Queryable) ([]string, error) {
 	var tables []string
 
 	const sql = `
@@ -115,7 +116,7 @@ func (h *postgreSQL) tableNames(q queryable) ([]string, error) {
 	return tables, nil
 }
 
-func (h *postgreSQL) getSequences(q queryable) ([]string, error) {
+func (h *postgreSQL) getSequences(q shared.Queryable) ([]string, error) {
 	const sql = `
 		SELECT pg_namespace.nspname || '.' || pg_class.relname AS sequence_name
 		FROM pg_class
@@ -146,7 +147,7 @@ func (h *postgreSQL) getSequences(q queryable) ([]string, error) {
 	return sequences, nil
 }
 
-func (*postgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, error) {
+func (*postgreSQL) getNonDeferrableConstraints(q shared.Queryable) ([]pgConstraint, error) {
 	var constraints []pgConstraint
 
 	const sql = `
@@ -178,7 +179,7 @@ func (*postgreSQL) getNonDeferrableConstraints(q queryable) ([]pgConstraint, err
 	return constraints, nil
 }
 
-func (h *postgreSQL) getConstraints(q queryable) ([]pgConstraint, error) {
+func (h *postgreSQL) getConstraints(q shared.Queryable) ([]pgConstraint, error) {
 	var constraints []pgConstraint
 
 	const sql = `
@@ -365,7 +366,7 @@ func (h *postgreSQL) resetSequences(db *sql.DB) error {
 	return err
 }
 
-func (h *postgreSQL) isTableModified(q queryable, tableName string) (bool, error) {
+func (h *postgreSQL) isTableModified(q shared.Queryable, tableName string) (bool, error) {
 	oldChecksum, found := h.tablesChecksum[tableName]
 	if !found {
 		return true, nil
@@ -378,7 +379,7 @@ func (h *postgreSQL) isTableModified(q queryable, tableName string) (bool, error
 	return checksum != oldChecksum, nil
 }
 
-func (h *postgreSQL) computeTablesChecksum(q queryable) error {
+func (h *postgreSQL) computeTablesChecksum(q shared.Queryable) error {
 	if h.tablesChecksum != nil {
 		return nil
 	}
@@ -394,7 +395,7 @@ func (h *postgreSQL) computeTablesChecksum(q queryable) error {
 	return nil
 }
 
-func (h *postgreSQL) getChecksum(q queryable, tableName string) (string, error) {
+func (h *postgreSQL) getChecksum(q shared.Queryable, tableName string) (string, error) {
 	sqlStr := fmt.Sprintf(`
 			SELECT md5(CAST((json_agg(t.*)) AS TEXT))
 			FROM %s AS t
@@ -422,7 +423,7 @@ func (*postgreSQL) quoteKeyword(s string) string {
 	return strings.Join(parts, ".")
 }
 
-func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, values []string) (string, error) {
+func (h *postgreSQL) buildInsertSQL(q shared.Queryable, tableName string, columns, values []string) (string, error) {
 	if h.version >= 10 {
 		ok, err := h.tableHasIdentityColumn(q, tableName)
 		if err != nil {
@@ -441,7 +442,7 @@ func (h *postgreSQL) buildInsertSQL(q queryable, tableName string, columns, valu
 	return h.baseHelper.buildInsertSQL(q, tableName, columns, values)
 }
 
-func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool, error) {
+func (h *postgreSQL) tableHasIdentityColumn(q shared.Queryable, tableName string) (bool, error) {
 	defer h.tablesHasIdentityColumnMutex.Unlock()
 	h.tablesHasIdentityColumnMutex.Lock()
 
@@ -471,7 +472,7 @@ func (h *postgreSQL) tableHasIdentityColumn(q queryable, tableName string) (bool
 	return h.tablesHasIdentityColumn[tableName], nil
 }
 
-func (h *postgreSQL) getMajorVersion(q queryable) (int, error) {
+func (h *postgreSQL) getMajorVersion(q shared.Queryable) (int, error) {
 	var version string
 	err := q.QueryRow("SELECT VERSION()").Scan(&version)
 	if err != nil {

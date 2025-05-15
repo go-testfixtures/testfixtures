@@ -1,5 +1,7 @@
 PRAGMA foreign_keys = ON;
 
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS accounts;
 DROP TABLE IF EXISTS votes;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS posts_tags;
@@ -58,4 +60,26 @@ CREATE TABLE users (
 CREATE TABLE assets (
 	id INT PRIMARY KEY
 	,data BINARY NOT NULL
+);
+
+CREATE TABLE accounts (
+	id INT PRIMARY KEY
+	,user_id INT NOT NULL
+	,currency VARCHAR(3) NOT NULL
+	,balance INT NOT NULL
+	,created_at TIMESTAMP NOT NULL
+	,updated_at TIMESTAMP NOT NULL
+	,FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE transactions (
+	id INT PRIMARY KEY
+	,account_id INT NOT NULL
+	,user_id INT NOT NULL
+	,currency VARCHAR(3) NOT NULL
+	,amount INT NOT NULL
+	,created_at TIMESTAMP NOT NULL
+	,updated_at TIMESTAMP NOT NULL
+	,FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE
+	,FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );

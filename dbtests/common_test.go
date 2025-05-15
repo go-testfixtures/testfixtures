@@ -173,6 +173,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -207,6 +209,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -238,6 +242,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures_multi_tables/users.yml",
 					"testdata/fixtures_multi_tables/posts_tags.yml",
 					"testdata/fixtures_multi_tables/assets.yml",
+					"testdata/fixtures_multi_tables/accounts_transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -270,6 +275,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures_multi_tables/users.yml",
 					"testdata/fixtures_multi_tables/posts_tags.yml",
 					"testdata/fixtures_multi_tables/assets.yml",
+					"testdata/fixtures_multi_tables/accounts_transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -299,6 +305,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 				testfixtures.Files(
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -329,6 +337,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 				testfixtures.Files(
 					"testdata/fixtures/tags.yml",
 					"testdata/fixtures/users.yml",
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -358,6 +368,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures_dirs/fixtures1",
 					"testdata/fixtures_dirs/fixtures2/tags.yml",
 					"testdata/fixtures_dirs/fixtures2/users.yml",
+					"testdata/fixtures_dirs/fixtures2/accounts.yml",
+					"testdata/fixtures_dirs/fixtures2/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -388,6 +400,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures_dirs/fixtures1",
 					"testdata/fixtures_dirs/fixtures2/tags.yml",
 					"testdata/fixtures_dirs/fixtures2/users.yml",
+					"testdata/fixtures_dirs/fixtures2/accounts.yml",
+					"testdata/fixtures_dirs/fixtures2/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -420,6 +434,8 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 					"testdata/fixtures/posts_tags.yml",
 					"testdata/fixtures/users.yml",
 					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
 				),
 			},
 			additionalOptions...,
@@ -532,6 +548,8 @@ func assertFixturesLoaded(t *testing.T, db *sql.DB) { //nolint
 	assertCount(t, db, "posts_tags", 6)
 	assertCount(t, db, "users", 2)
 	assertCount(t, db, "assets", 1)
+	assertCount(t, db, "accounts", 2)
+	assertCount(t, db, "transactions", 4)
 }
 
 func assertCount(t *testing.T, db *sql.DB, table string, expectedCount int) { //nolint

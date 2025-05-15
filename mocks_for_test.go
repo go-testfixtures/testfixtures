@@ -2,6 +2,8 @@ package testfixtures
 
 import (
 	"database/sql"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 type MockHelper struct {
@@ -17,13 +19,13 @@ func (*MockHelper) disableReferentialIntegrity(*sql.DB, loadFunction) error {
 func (*MockHelper) paramType() int {
 	return 0
 }
-func (*MockHelper) tableNames(queryable) ([]string, error) {
+func (*MockHelper) tableNames(shared.Queryable) ([]string, error) {
 	return nil, nil
 }
-func (*MockHelper) isTableModified(queryable, string) (bool, error) {
+func (*MockHelper) isTableModified(shared.Queryable, string) (bool, error) {
 	return false, nil
 }
-func (*MockHelper) computeTablesChecksum(queryable) error {
+func (*MockHelper) computeTablesChecksum(shared.Queryable) error {
 	return nil
 }
 func (*MockHelper) quoteKeyword(string) string {
@@ -32,7 +34,7 @@ func (*MockHelper) quoteKeyword(string) string {
 func (*MockHelper) whileInsertOnTable(*sql.Tx, string, func() error) error {
 	return nil
 }
-func (h *MockHelper) databaseName(queryable) (string, error) {
+func (h *MockHelper) databaseName(shared.Queryable) (string, error) {
 	return h.dbName, nil
 }
 
@@ -40,7 +42,7 @@ func (h *MockHelper) cleanTableQuery(string) string {
 	return ""
 }
 
-func (h *MockHelper) buildInsertSQL(queryable, string, []string, []string) (string, error) {
+func (h *MockHelper) buildInsertSQL(shared.Queryable, string, []string, []string) (string, error) {
 	return "", nil
 }
 

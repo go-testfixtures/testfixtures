@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS assets;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS transactions;
 
 CREATE TABLE posts (
 	id         UInt64,
@@ -52,4 +54,23 @@ CREATE TABLE users (
 CREATE TABLE assets (
 	id   UInt64,
 	data String
+) ENGINE = MergeTree ORDER BY id;
+
+CREATE TABLE accounts (
+	id         UInt64,
+	user_id    UInt64,
+	currency   String,
+	balance    Int64,
+	created_at DateTime DEFAULT '2000-01-01 00:00:00',
+	updated_at DateTime DEFAULT '2000-01-01 00:00:00'
+) ENGINE = MergeTree ORDER BY id;
+
+CREATE TABLE transactions (
+	id         UInt64,
+	account_id UInt64,
+	user_id    UInt64,
+	currency   String,
+	amount     Int64,
+	created_at DateTime DEFAULT '2000-01-01 00:00:00',
+	updated_at DateTime DEFAULT '2000-01-01 00:00:00'
 ) ENGINE = MergeTree ORDER BY id;
