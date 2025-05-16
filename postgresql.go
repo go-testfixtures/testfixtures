@@ -441,6 +441,18 @@ func (h *postgreSQL) buildInsertSQL(q shared.Queryable, tableName string, column
 
 func (h *postgreSQL) tableHasIdentityColumn(tableName string) bool {
 	tableName = strings.Trim(tableName, `"`)
+	if h.tablesHasIdentityColumn[tableName] {
+		return true
+	}
+
+	// We might get database.table notation table names, this works around that.
+	parts := strings.Split(tableName, ".")
+	tableName = parts[0]
+	if len(parts) > 1 {
+		tableName = parts[1]
+	}
+
+	tableName = strings.Trim(tableName, `"`)
 	return h.tablesHasIdentityColumn[tableName]
 }
 
