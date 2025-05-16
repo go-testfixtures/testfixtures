@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/go-testfixtures/testfixtures/v3/shared"
 	"golang.org/x/sync/errgroup"
@@ -26,9 +25,8 @@ type postgreSQL struct {
 	constraints              []pgConstraint
 	tablesChecksum           map[string]string
 
-	version                      int
-	tablesHasIdentityColumnMutex sync.Mutex
-	tablesHasIdentityColumn      map[string]bool
+	version                 int
+	tablesHasIdentityColumn map[string]bool
 }
 
 type pgConstraint struct {
@@ -64,11 +62,14 @@ func (h *postgreSQL) init(db *sql.DB) error {
 		h.version, err = h.getMajorVersion(db)
 		return err
 	})
+	grp.Go(func() error {
+		var err error
+		h.tablesHasIdentityColumn, err = h.buildTableHasIdentityColumn(db)
+		return err
+	})
 	if err := grp.Wait(); err != nil {
 		return err
 	}
-
-	h.tablesHasIdentityColumn = make(map[string]bool)
 
 	return nil
 }
@@ -425,11 +426,7 @@ func (*postgreSQL) quoteKeyword(s string) string {
 
 func (h *postgreSQL) buildInsertSQL(q shared.Queryable, tableName string, columns, values []string) (string, error) {
 	if h.version >= 10 {
-		ok, err := h.tableHasIdentityColumn(q, tableName)
-		if err != nil {
-			return "", err
-		}
-		if ok {
+		if h.tableHasIdentityColumn(tableName) {
 			return fmt.Sprintf(
 				"INSERT INTO %s (%s) OVERRIDING SYSTEM VALUE VALUES (%s)",
 				tableName,
@@ -442,34 +439,53 @@ func (h *postgreSQL) buildInsertSQL(q shared.Queryable, tableName string, column
 	return h.baseHelper.buildInsertSQL(q, tableName, columns, values)
 }
 
-func (h *postgreSQL) tableHasIdentityColumn(q shared.Queryable, tableName string) (bool, error) {
-	defer h.tablesHasIdentityColumnMutex.Unlock()
-	h.tablesHasIdentityColumnMutex.Lock()
-
-	hasIdentityColumn, exists := h.tablesHasIdentityColumn[tableName]
-	if exists {
-		return hasIdentityColumn, nil
+func (h *postgreSQL) tableHasIdentityColumn(tableName string) bool {
+	tableName = strings.Trim(tableName, `"`)
+	if h.tablesHasIdentityColumn[tableName] {
+		return true
 	}
 
+	// We might get database.table notation table names, this works around that.
 	parts := strings.Split(tableName, ".")
-	tableName = parts[0][1 : len(parts[0])-1]
+	tableName = parts[0]
 	if len(parts) > 1 {
-		tableName = parts[1][1 : len(parts[1])-1]
+		tableName = parts[1]
 	}
 
-	query := `
-		SELECT COUNT(*) AS count
-		FROM information_schema.columns
-		WHERE table_name = $1
-		  AND is_identity = 'YES'
-	`
-	var count int
-	if err := q.QueryRow(query, tableName).Scan(&count); err != nil {
-		return false, err
+	tableName = strings.Trim(tableName, `"`)
+	return h.tablesHasIdentityColumn[tableName]
+}
+
+func (h *postgreSQL) buildTableHasIdentityColumn(q shared.Queryable) (map[string]bool, error) {
+	const query = `SELECT table_name, COUNT(*) AS count
+    FROM information_schema.columns
+    WHERE
+      table_schema NOT IN ('pg_catalog', 'information_schema', 'crdb_internal') AND
+      table_schema NOT LIKE 'pg_toast%' AND
+      table_schema NOT LIKE '\_timescaledb%' AND
+      is_identity = 'YES'
+    GROUP BY table_name;`
+
+	rows, err := q.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	tablesHasIdentityColumn := make(map[string]bool)
+	for rows.Next() {
+		var count int
+		var tableName string
+		if err = rows.Scan(&tableName, &count); err != nil {
+			return nil, err
+		}
+
+		tablesHasIdentityColumn[tableName] = count > 0
 	}
 
-	h.tablesHasIdentityColumn[tableName] = count > 0
-	return h.tablesHasIdentityColumn[tableName], nil
+	return tablesHasIdentityColumn, rows.Err()
 }
 
 func (h *postgreSQL) getMajorVersion(q shared.Queryable) (int, error) {
