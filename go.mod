@@ -9,6 +9,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.34.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.9.2
+	github.com/goccy/go-yaml v1.17.1
 	github.com/googleapis/go-sql-spanner v1.13.0
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/joho/godotenv v1.5.1
@@ -16,7 +17,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/spf13/pflag v1.0.6
 	golang.org/x/sync v0.13.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -84,4 +84,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e // indirect
 	google.golang.org/grpc v1.71.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

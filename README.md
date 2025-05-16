@@ -477,6 +477,8 @@ testfixtures.New(
 )
 ```
 
+ **Important:** Spanner's interleaved tables require specific insertion order to satisfy parent-child dependencies. For this reason, the `Directory()` and `Paths()` methods are not supported with Spanner as they load files alphabetically, which can violate interleaved table constraints. You must use `Files()` or `FilesMultiTables()` instead, ensuring parent tables are listed before their interleaved child tables in the file order, or that they are listed in the right order in a file that contains records for more than one table as supported by `FilesMultiTables()`.
+
 ## Templating
 
 Testfixtures supports templating, but it's disabled by default. Most people

@@ -92,7 +92,7 @@ func (h *postgreSQL) tableNames(q shared.Queryable) ([]string, error) {
 		FROM pg_class
 		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		WHERE pg_class.relkind = 'r'
-		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal')
+		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal', 'pg_extension')
 		  AND pg_namespace.nspname NOT LIKE 'pg_toast%'
 		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%';
 	`

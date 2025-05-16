@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"unicode/utf8"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // Dumper is resposible for dumping fixtures from the database into a

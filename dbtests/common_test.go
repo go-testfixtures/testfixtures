@@ -68,6 +68,9 @@ func loadSchemaInBatches(t *testing.T, db *sql.DB, batches [][]byte) { //nolint:
 
 func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...func(*testfixtures.Loader) error) { //nolint:unused
 	t.Run("LoadFromDirectory", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -99,6 +102,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromDirectory with SkipTableChecksumComputation", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -131,6 +137,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromDirectory-Multiple", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -292,6 +301,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromDirectoryAndFiles", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -323,6 +335,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromDirectoryAndFilesWithFS", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -355,6 +370,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromPaths", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -386,6 +404,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromPathsWithFS", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -418,6 +439,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromPaths-OnlyFiles", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -452,6 +476,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("LoadFromPaths-OnlyDirs", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		options := append(
 			[]func(*testfixtures.Loader) error{
 				testfixtures.Database(db),
@@ -480,6 +507,9 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 
 	t.Run("GenerateAndLoad", func(t *testing.T) {
+		if dialect == "spanner" {
+			t.Skip("Spanner does not support loading fixtures from a directory")
+		}
 		dir, err := os.MkdirTemp(os.TempDir(), "testfixtures_test")
 		if err != nil {
 			t.Errorf("cannot create temp dir: %v", err)
