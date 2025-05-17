@@ -14,6 +14,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 	"gopkg.in/yaml.v3"
 )
 
@@ -262,6 +263,10 @@ func SkipTableChecksumComputation() func(*Loader) error {
 // Directory informs Loader to load YAML files from a given directory.
 func Directory(dir string) func(*Loader) error {
 	return func(l *Loader) error {
+		_, ok := l.helper.(*spanner)
+		if ok {
+			return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Directory")
+		}
 		fixtures, err := l.fixturesFromDir(dir)
 		if err != nil {
 			return err
@@ -286,6 +291,10 @@ func Files(files ...string) func(*Loader) error {
 // Paths inform Loader to load a given set of YAML files and directories.
 func Paths(paths ...string) func(*Loader) error {
 	return func(l *Loader) error {
+		_, ok := l.helper.(*spanner)
+		if ok {
+			return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Paths")
+		}
 		fixtures, err := l.fixturesFromPaths(paths...)
 		if err != nil {
 			return err
@@ -731,12 +740,16 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 			return nil, fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
 		}
 
-		tables, ok := data.(map[string]interface{})
+		tablesMap, ok := data.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("testfixtures: could not cast tables: not a map[string]interface{}")
+			return nil, fmt.Errorf("testfixtures: could not cast data: not a map[string]interface{}")
 		}
 
-		for table, records := range tables {
+		tables, _ := extractOrderedTablesFromYaml(content)
+
+		for i := range len(tables) {
+			table := tables[i]
+			records := tablesMap[table]
 			result, err := l.buildInterfacesSlice(records)
 			if err != nil {
 				return nil, err
@@ -790,4 +803,15 @@ func (l *Loader) processTemplate(content []byte) ([]byte, error) {
 	}
 
 	return buffer.Bytes(), nil
+}
+
+func extractOrderedTablesFromYaml(yaml []byte) ([]string, error) {
+	regex := regexp.MustCompile(`(?m)^([a-zA-Z0-9_-]+):`)
+	matches := regex.FindAllStringSubmatch(string(yaml), -1)
+
+	orderedTables := make([]string, 0, len(matches))
+	for _, match := range matches {
+		orderedTables = append(orderedTables, match[1])
+	}
+	return orderedTables, nil
 }

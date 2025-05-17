@@ -3,6 +3,7 @@ package testfixtures
 import (
 	"database/sql"
 	"errors"
+	"reflect"
 	"testing"
 )
 
@@ -78,5 +79,33 @@ func TestEnsureTestDatabase(t *testing.T) {
 		if err == nil && !it.isTestDatabase {
 			t.Errorf("EnsureTestDatabase() should return error for name = %s", it.name)
 		}
+	}
+}
+
+func TestExtractOrderedTablesFromYaml(t *testing.T) {
+	yamlData := []byte(`
+accounts:
+	- SomeField: SomeValue
+	- SomeField: SomeValue
+
+transactions:
+	- SomeField: SomeValue
+	- SomeField: SomeValue
+
+users:
+	- SomeField: SomeValue
+	- SomeField: SomeValue`)
+
+	orderedTables, err := extractOrderedTablesFromYaml(yamlData)
+	if err != nil {
+		t.Errorf("Error extracting ordered tables from yaml: %s", err)
+	}
+
+	if len(orderedTables) != 3 {
+		t.Errorf("Expected 3 tables, got %d", len(orderedTables))
+	}
+
+	if !reflect.DeepEqual(orderedTables, []string{"accounts", "transactions", "users"}) {
+		t.Errorf("Expected 'accounts', 'transactions', 'users' to be the tables, got %v", orderedTables)
 	}
 }
