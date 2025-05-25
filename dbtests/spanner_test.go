@@ -38,7 +38,17 @@ func TestSpanner(t *testing.T) {
 					"PostIds": []int{1, 2},
 					"TagIds":  []int{1, 2, 3},
 				}),
-				testfixtures.Directory("testdata/fixtures"),
+				testfixtures.Files(
+					"testdata/fixtures/accounts.yml",
+					"testdata/fixtures/transactions.yml",
+					"testdata/fixtures/assets.yml",
+					"testdata/fixtures/users.yml",
+					"testdata/fixtures/posts.yml",
+					"testdata/fixtures/comments.yml",
+					"testdata/fixtures/tags.yml",
+					"testdata/fixtures/posts_tags.yml",
+					"testdata/fixtures/votes.yml",
+				),
 				testfixtures.SkipTableChecksumComputation(),
 			},
 			additionalOptions...,
@@ -65,6 +75,96 @@ func TestSpanner(t *testing.T) {
 		}
 
 		assertFixturesLoaded(t, db)
+	})
+
+	t.Run("SpannerMultiTablesWithInterleavedTables", func(t *testing.T) {
+		options := append(
+			[]func(*testfixtures.Loader) error{
+				testfixtures.Database(db),
+				testfixtures.Dialect(dialect),
+				testfixtures.Template(),
+				testfixtures.TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				testfixtures.FilesMultiTables(
+					"testdata/fixtures_multi_tables/users.yml",
+					"testdata/fixtures_multi_tables/posts_comments.yml",
+					"testdata/fixtures_multi_tables/posts_tags.yml",
+					"testdata/fixtures_multi_tables/tags.yml",
+					"testdata/fixtures_multi_tables/accounts_transactions.yml", // Transactions is interleaved in Accounts
+					"testdata/fixtures_multi_tables/assets.yml",
+				),
+				testfixtures.SkipTableChecksumComputation(),
+			},
+			additionalOptions...,
+		)
+		l, err := testfixtures.New(options...)
+		if err != nil {
+			t.Errorf("failed to create Loader: %v", err)
+			return
+		}
+
+		constraintsBefore, _ := shared.GetConstraints(db)
+
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+
+		constraintsAfter, _ := shared.GetConstraints(db)
+
+		assertSpannerConstraints(t, constraintsBefore, constraintsAfter)
+
+		// Call load again to test against a database with existing data.
+		if err := l.Load(); err != nil {
+			t.Errorf("cannot load fixtures: %v", err)
+		}
+
+		assertFixturesLoaded(t, db)
+	})
+
+	t.Run("DirectoryNotSupported", func(t *testing.T) {
+		options := append(
+			[]func(*testfixtures.Loader) error{
+				testfixtures.Database(db),
+				testfixtures.Dialect(dialect),
+				testfixtures.Template(),
+				testfixtures.TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				testfixtures.Directory("testdata/fixtures_dirs/fixtures1"),
+				testfixtures.SkipTableChecksumComputation(),
+			},
+			additionalOptions...,
+		)
+		_, err := testfixtures.New(options...)
+
+		if err.Error() != fmt.Sprintf(shared.ErrorMessage_NotSupportedLoadingMethod, "Directory") {
+			t.Errorf("error should be %s:", fmt.Sprintf(shared.ErrorMessage_NotSupportedLoadingMethod, "Directory"))
+		}
+	})
+
+	t.Run("PathsNotSupported", func(t *testing.T) {
+		options := append(
+			[]func(*testfixtures.Loader) error{
+				testfixtures.Database(db),
+				testfixtures.Dialect(dialect),
+				testfixtures.Template(),
+				testfixtures.TemplateData(map[string]interface{}{
+					"PostIds": []int{1, 2},
+					"TagIds":  []int{1, 2, 3},
+				}),
+				testfixtures.Paths("testdata/fixtures_dirs/fixtures1"),
+				testfixtures.SkipTableChecksumComputation(),
+			},
+			additionalOptions...,
+		)
+		_, err := testfixtures.New(options...)
+
+		if err.Error() != fmt.Sprintf(shared.ErrorMessage_NotSupportedLoadingMethod, "Paths") {
+			t.Errorf("error should be: %s", fmt.Sprintf(shared.ErrorMessage_NotSupportedLoadingMethod, "Paths"))
+		}
 	})
 }
 

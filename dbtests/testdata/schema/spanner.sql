@@ -104,4 +104,4 @@ CREATE TABLE transactions (
 	updated_at TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP()),
 	CONSTRAINT FK_transactions_account_user_id FOREIGN KEY (user_id) REFERENCES users (id),
 	CONSTRAINT FK_transactions_account_user_id_currency FOREIGN KEY (user_id, currency) REFERENCES accounts (user_id, currency)
-) PRIMARY KEY (id);
+) PRIMARY KEY (user_id, currency, id), INTERLEAVE IN PARENT accounts ON DELETE CASCADE;
