@@ -111,9 +111,9 @@ func Database(db *sql.DB) func(*Loader) error {
 	}
 }
 
-type Options func(loader *Loader) error
+type DialectOptions func(loader *Loader) error
 
-func WithPlaceHolder(placeholder string) Options {
+func WithPlaceHolder(placeholder string) DialectOptions {
 	return func(l *Loader) error {
 		var param int
 		switch placeholder {
@@ -124,7 +124,7 @@ func WithPlaceHolder(placeholder string) Options {
 		case "@":
 			param = paramTypeAtSign
 		default:
-			return fmt.Errorf("testfixtures: invalid placeholder")
+			return fmt.Errorf("testfixtures: invalid placeholder provided: %s", placeholder)
 		}
 
 		l.helper.setParamType(param)
@@ -136,7 +136,7 @@ func WithPlaceHolder(placeholder string) Options {
 //
 // Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
 // "sqlite", "sqlserver", "clickhouse", "spanner".
-func Dialect(dialect string, opts ...Options) func(*Loader) error {
+func Dialect(dialect string, opts ...DialectOptions) func(*Loader) error {
 	return func(l *Loader) error {
 		h, err := helperForDialect(dialect)
 		if err != nil {
