@@ -33,7 +33,10 @@ func (h *clickhouse) WithPlaceholder(p int) *clickhouse {
 	return h
 }
 
-func (*clickhouse) paramType() int {
+func (h *clickhouse) paramType() int {
+	if h.placeholderType > 0 {
+		return h.placeholderType
+	}
 	return paramTypeDollar
 }
 
