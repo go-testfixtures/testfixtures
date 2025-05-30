@@ -15,6 +15,8 @@ type sqlserver struct {
 	tables         []string
 }
 
+func (*sqlserver) setParamType(_ int) {}
+
 func (h *sqlserver) init(db *sql.DB) error {
 	var err error
 

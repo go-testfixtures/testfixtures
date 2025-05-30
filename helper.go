@@ -20,6 +20,7 @@ type helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
+	setParamType(int)
 	databaseName(shared.Queryable) (string, error)
 	tableNames(shared.Queryable) ([]string, error)
 	isTableModified(shared.Queryable, string) (bool, error)

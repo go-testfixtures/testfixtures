@@ -10,7 +10,12 @@ import (
 type clickhouse struct {
 	baseHelper
 
-	cleanTableFn func(string) string
+	cleanTableFn    func(string) string
+	placeholderType int
+}
+
+func (h *clickhouse) setParamType(i int) {
+	h.placeholderType = i
 }
 
 func (h *clickhouse) init(_ *sql.DB) error {
@@ -21,6 +26,11 @@ func (h *clickhouse) init(_ *sql.DB) error {
 	}
 
 	return nil
+}
+
+func (h *clickhouse) WithPlaceholder(p int) *clickhouse {
+	h.placeholderType = p
+	return h
 }
 
 func (*clickhouse) paramType() int {
