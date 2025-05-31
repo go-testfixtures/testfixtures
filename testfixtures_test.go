@@ -28,6 +28,16 @@ func TestRequiredOptions(t *testing.T) {
 			t.Error("should return an error if dialect if not given")
 		}
 	})
+	t.Run("DialectWithPlaceholder", func(t *testing.T) {
+		const placeholder = "?"
+		loader, err := New(Database(&sql.DB{}), Dialect("clickhouse", WithPlaceHolder(placeholder)))
+		if err != nil {
+			t.Error("should return nil error")
+		}
+		if paramType := loader.helper.paramType(); paramType != paramTypeQuestion {
+			t.Errorf("incorrect param type returned: %d", paramType)
+		}
+	})
 }
 
 func TestQuoteKeyword(t *testing.T) {
