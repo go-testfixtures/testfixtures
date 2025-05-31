@@ -28,11 +28,6 @@ func (h *clickhouse) init(_ *sql.DB) error {
 	return nil
 }
 
-func (h *clickhouse) WithPlaceholder(p int) *clickhouse {
-	h.placeholderType = p
-	return h
-}
-
 func (h *clickhouse) paramType() int {
 	if h.placeholderType > 0 {
 		return h.placeholderType
