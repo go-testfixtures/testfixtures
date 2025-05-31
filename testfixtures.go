@@ -111,10 +111,10 @@ func Database(db *sql.DB) func(*Loader) error {
 	}
 }
 
-type DialectOptions func(h *Loader) error
+type DialectOptions func(h helper) error
 
 func WithPlaceHolder(placeholder string) DialectOptions {
-	return func(l *Loader) error {
+	return func(l helper) error {
 		var param int
 		switch placeholder {
 		case "?":
@@ -127,7 +127,7 @@ func WithPlaceHolder(placeholder string) DialectOptions {
 			return fmt.Errorf("testfixtures: invalid placeholder provided: %s", placeholder)
 		}
 
-		l.helper.setParamType(param)
+		l.setParamType(param)
 		return nil
 	}
 }
@@ -142,12 +142,12 @@ func Dialect(dialect string, opts ...DialectOptions) func(*Loader) error {
 		if err != nil {
 			return err
 		}
-		l.helper = h
 		for _, opt := range opts {
-			if err = opt(l); err != nil {
+			if err = opt(h); err != nil {
 				return err
 			}
 		}
+		l.helper = h
 
 		return nil
 	}
