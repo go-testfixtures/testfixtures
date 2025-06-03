@@ -19,7 +19,7 @@ func (*MockHelper) disableReferentialIntegrity(*sql.DB, loadFunction) error {
 func (*MockHelper) paramType() int {
 	return 0
 }
-func (*MockHelper) setParamType(_ int) {}
+func (*MockHelper) setCustomParamType(_ int) {}
 func (*MockHelper) tableNames(shared.Queryable) ([]string, error) {
 	return nil, nil
 }

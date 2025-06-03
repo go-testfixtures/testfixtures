@@ -11,7 +11,6 @@ type sqlite struct {
 	baseHelper
 }
 
-func (*sqlite) setParamType(int) {}
 func (*sqlite) paramType() int {
 	return paramTypeQuestion
 }

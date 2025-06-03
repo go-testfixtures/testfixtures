@@ -30,7 +30,7 @@ func TestRequiredOptions(t *testing.T) {
 	})
 	t.Run("DialectWithPlaceholder", func(t *testing.T) {
 		const placeholder = "?"
-		loader, err := New(Database(&sql.DB{}), Dialect("clickhouse", WithPlaceHolder(placeholder)))
+		loader, err := New(Database(&sql.DB{}), Dialect("clickhouse", WithCustomPlaceholder(placeholder)))
 		if err != nil {
 			t.Error("should return nil error")
 		}

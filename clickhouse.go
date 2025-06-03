@@ -10,12 +10,7 @@ import (
 type clickhouse struct {
 	baseHelper
 
-	cleanTableFn    func(string) string
-	placeholderType int
-}
-
-func (h *clickhouse) setParamType(i int) {
-	h.placeholderType = i
+	cleanTableFn func(string) string
 }
 
 func (h *clickhouse) init(_ *sql.DB) error {
@@ -29,12 +24,12 @@ func (h *clickhouse) init(_ *sql.DB) error {
 }
 
 func (h *clickhouse) paramType() int {
-	if h.placeholderType > 0 {
-		return h.placeholderType
+	if h.baseHelper.paramType > 0 {
+		return h.baseHelper.paramType
 	}
-	return paramTypeDollar
+	return h.getDefaultParamType()
 }
-
+func (clickhouse) getDefaultParamType() int { return paramTypeDollar }
 func (*clickhouse) databaseName(q shared.Queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)

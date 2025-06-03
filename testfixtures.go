@@ -113,6 +113,7 @@ func Database(db *sql.DB) func(*Loader) error {
 
 type DialectOptions func(h helper) error
 
+// WithCustomPlaceholder - allow to provide custom placeholder in queries
 func WithCustomPlaceholder(placeholder string) DialectOptions {
 	return func(l helper) error {
 		var param int
@@ -127,7 +128,7 @@ func WithCustomPlaceholder(placeholder string) DialectOptions {
 			return fmt.Errorf("testfixtures: invalid placeholder provided: %s", placeholder)
 		}
 
-		l.setParamType(param)
+		l.setCustomParamType(param)
 		return nil
 	}
 }

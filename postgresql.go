@@ -30,8 +30,6 @@ type postgreSQL struct {
 	tablesHasIdentityColumn map[string]bool
 }
 
-func (*postgreSQL) setParamType(_ int) {}
-
 type pgConstraint struct {
 	tableName      string
 	constraintName string

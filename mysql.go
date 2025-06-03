@@ -19,8 +19,6 @@ type mySQL struct {
 	tablesChecksum map[string]int64
 }
 
-func (h *mySQL) setParamType(_ int) {}
-
 func (h *mySQL) init(db *sql.DB) error {
 	var err error
 	h.tables, err = h.tableNames(db)
