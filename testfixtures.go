@@ -113,7 +113,7 @@ func Database(db *sql.DB) func(*Loader) error {
 
 type DialectOptions func(h helper) error
 
-func WithPlaceHolder(placeholder string) DialectOptions {
+func WithCustomPlaceholder(placeholder string) DialectOptions {
 	return func(l helper) error {
 		var param int
 		switch placeholder {
