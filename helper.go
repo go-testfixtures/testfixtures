@@ -44,7 +44,7 @@ type baseHelper struct {
 	paramType int
 }
 
-func (b baseHelper) setCustomParamType(paramType int) { b.paramType = paramType }
+func (b *baseHelper) setCustomParamType(paramType int) { b.paramType = paramType }
 func (baseHelper) init(_ *sql.DB) error {
 	return nil
 }
