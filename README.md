@@ -2,11 +2,13 @@
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/go-testfixtures/testfixtures/v3?tab=doc)](https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc)
 
-> ***Warning***: this package will wipe the database data before loading the
+> [!WARNING]
+> This package will wipe the database data before loading the
 fixtures! It is supposed to be used on a test database. Please, double check
 if you are running it against the correct database.
 
-> **TIP**: There are options not described in this README page. It's
+> [!NOTE]
+> There are options not described in this README page. It's
 > recommended that you also check [the documentation][doc].
 
 Writing tests is hard, even more when you have to deal with an SQL database.
