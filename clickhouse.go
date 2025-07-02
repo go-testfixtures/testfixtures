@@ -23,10 +23,13 @@ func (h *clickhouse) init(_ *sql.DB) error {
 	return nil
 }
 
-func (*clickhouse) paramType() int {
-	return paramTypeDollar
+func (h *clickhouse) paramType() int {
+	if h.baseHelper.paramType > 0 {
+		return h.baseHelper.paramType
+	}
+	return h.getDefaultParamType()
 }
-
+func (clickhouse) getDefaultParamType() int { return paramTypeDollar }
 func (*clickhouse) databaseName(q shared.Queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)
