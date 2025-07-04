@@ -14,8 +14,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/go-testfixtures/testfixtures/v3/shared"
 	"github.com/goccy/go-yaml"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 // Loader is the responsible to loading fixtures.
@@ -110,17 +111,45 @@ func Database(db *sql.DB) func(*Loader) error {
 	}
 }
 
+type DialectOptions func(h helper) error
+
+// WithCustomPlaceholder - allow to provide custom placeholder in queries
+func WithCustomPlaceholder(placeholder string) DialectOptions {
+	return func(l helper) error {
+		var param int
+		switch placeholder {
+		case "?":
+			param = paramTypeQuestion
+		case "$":
+			param = paramTypeDollar
+		case "@":
+			param = paramTypeAtSign
+		default:
+			return fmt.Errorf("testfixtures: invalid placeholder provided: %s", placeholder)
+		}
+
+		l.setCustomParamType(param)
+		return nil
+	}
+}
+
 // Dialect informs Loader about which database dialect you're using.
 //
 // Possible options are "postgresql", "timescaledb", "mysql", "mariadb",
 // "sqlite", "sqlserver", "clickhouse", "spanner".
-func Dialect(dialect string) func(*Loader) error {
+func Dialect(dialect string, opts ...DialectOptions) func(*Loader) error {
 	return func(l *Loader) error {
 		h, err := helperForDialect(dialect)
 		if err != nil {
 			return err
 		}
+		for _, opt := range opts {
+			if err = opt(h); err != nil {
+				return err
+			}
+		}
 		l.helper = h
+
 		return nil
 	}
 }
@@ -797,4 +826,3 @@ func (l *Loader) processTemplate(content []byte) ([]byte, error) {
 
 	return buffer.Bytes(), nil
 }
-
