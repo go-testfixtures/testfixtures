@@ -20,6 +20,8 @@ type helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
 	paramType() int
+	getDefaultParamType() int
+	setCustomParamType(int)
 	databaseName(shared.Queryable) (string, error)
 	tableNames(shared.Queryable) ([]string, error)
 	isTableModified(shared.Queryable, string) (bool, error)
@@ -39,8 +41,26 @@ var (
 	_ helper = &sqlserver{}
 )
 
-type baseHelper struct{}
+type baseHelper struct {
+	customParamType int
+}
 
+func (b *baseHelper) setCustomParamType(paramType int) {
+	b.customParamType = paramType
+}
+
+func (b *baseHelper) paramType() int {
+	if b.customParamType > 0 {
+		return b.customParamType
+	}
+	return b.getDefaultParamType()
+}
+
+func (b *baseHelper) getDefaultParamType() int {
+	return paramTypeQuestion
+}
+
+// shared methods
 func (baseHelper) init(_ *sql.DB) error {
 	return nil
 }

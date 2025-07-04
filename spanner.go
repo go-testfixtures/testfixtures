@@ -35,7 +35,6 @@ func (h *spanner) init(db *sql.DB) error {
 func (*spanner) paramType() int {
 	return paramTypeAtSign
 }
-
 func (*spanner) quoteKeyword(str string) string {
 	return str
 }

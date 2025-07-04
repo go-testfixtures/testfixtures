@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-testfixtures/testfixtures/v3/shared"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
 type postgreSQL struct {
