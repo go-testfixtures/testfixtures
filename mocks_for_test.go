@@ -20,6 +20,9 @@ func (*MockHelper) paramType() int {
 	return 0
 }
 func (*MockHelper) setCustomParamType(_ int) {}
+func (*MockHelper) getDefaultParamType() int {
+	return 0
+}
 func (*MockHelper) tableNames(shared.Queryable) ([]string, error) {
 	return nil, nil
 }
