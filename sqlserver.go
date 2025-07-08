@@ -11,7 +11,7 @@ import (
 type sqlserver struct {
 	baseHelper
 
-	paramTypeCache int
+	paramTypeCache ParamType
 	tables         []string
 }
 
@@ -26,9 +26,9 @@ func (h *sqlserver) init(db *sql.DB) error {
 	// this is a small hack to detect the allowed param style.
 	var v int
 	if err := db.QueryRow("SELECT ?", 1).Scan(&v); err == nil && v == 1 {
-		h.paramTypeCache = paramTypeQuestion
+		h.paramTypeCache = ParamTypeQuestion
 	} else {
-		h.paramTypeCache = paramTypeAtSign
+		h.paramTypeCache = ParamTypeAtSign
 	}
 
 	h.tables, err = h.tableNames(db)
@@ -39,7 +39,7 @@ func (h *sqlserver) init(db *sql.DB) error {
 	return nil
 }
 
-func (h *sqlserver) paramType() int {
+func (h *sqlserver) paramType() ParamType {
 	return h.paramTypeCache
 }
 

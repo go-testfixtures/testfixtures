@@ -32,10 +32,9 @@ func (h *spanner) init(db *sql.DB) error {
 	return nil
 }
 
-func (*spanner) paramType() int {
-	return paramTypeAtSign
+func (*spanner) paramType() ParamType {
+	return ParamTypeAtSign
 }
-
 func (*spanner) quoteKeyword(str string) string {
 	return str
 }

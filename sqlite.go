@@ -11,8 +11,8 @@ type sqlite struct {
 	baseHelper
 }
 
-func (*sqlite) paramType() int {
-	return paramTypeQuestion
+func (*sqlite) paramType() ParamType {
+	return ParamTypeQuestion
 }
 
 func (*sqlite) databaseName(q shared.Queryable) (string, error) {

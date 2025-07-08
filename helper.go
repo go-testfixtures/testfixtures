@@ -8,10 +8,25 @@ import (
 	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
 
+type ParamType string
+
+func (p ParamType) String() string {
+	return string(p)
+}
+
+func (p ParamType) Valid() error {
+	switch p {
+	case ParamTypeDollar, ParamTypeQuestion, ParamTypeAtSign:
+		return nil
+	default:
+		return fmt.Errorf("testfixtures: param type %s is not supported", p)
+	}
+}
+
 const (
-	paramTypeDollar = iota + 1
-	paramTypeQuestion
-	paramTypeAtSign
+	ParamTypeDollar   ParamType = "$"
+	ParamTypeQuestion ParamType = "?"
+	ParamTypeAtSign   ParamType = "@"
 )
 
 type loadFunction func(tx *sql.Tx) error
@@ -19,7 +34,9 @@ type loadFunction func(tx *sql.Tx) error
 type helper interface {
 	init(*sql.DB) error
 	disableReferentialIntegrity(*sql.DB, loadFunction) error
-	paramType() int
+	paramType() ParamType
+	getDefaultParamType() ParamType
+	setCustomParamType(ParamType)
 	databaseName(shared.Queryable) (string, error)
 	tableNames(shared.Queryable) ([]string, error)
 	isTableModified(shared.Queryable, string) (bool, error)
@@ -39,8 +56,26 @@ var (
 	_ helper = &sqlserver{}
 )
 
-type baseHelper struct{}
+type baseHelper struct {
+	customParamType ParamType
+}
 
+func (b *baseHelper) setCustomParamType(paramType ParamType) {
+	b.customParamType = paramType
+}
+
+func (b *baseHelper) paramType() ParamType {
+	if b.customParamType != "" {
+		return b.customParamType
+	}
+	return b.getDefaultParamType()
+}
+
+func (b *baseHelper) getDefaultParamType() ParamType {
+	return ParamTypeDollar
+}
+
+// shared methods
 func (baseHelper) init(_ *sql.DB) error {
 	return nil
 }
