@@ -114,21 +114,13 @@ func Database(db *sql.DB) func(*Loader) error {
 type DialectOptions func(h helper) error
 
 // WithCustomPlaceholder - allow to provide custom placeholder in queries
-func WithCustomPlaceholder(placeholder string) DialectOptions {
+func WithCustomPlaceholder(placeholder ParamType) DialectOptions {
 	return func(l helper) error {
-		var param ParamType
-		switch placeholder {
-		case "?":
-			param = ParamTypeQuestion
-		case "$":
-			param = ParamTypeDollar
-		case "@":
-			param = ParamTypeAtSign
-		default:
-			return fmt.Errorf("testfixtures: invalid placeholder provided: %s", placeholder)
+		if err := placeholder.Valid(); err != nil {
+			return err
 		}
 
-		l.setCustomParamType(param)
+		l.setCustomParamType(placeholder)
 		return nil
 	}
 }
@@ -645,10 +637,12 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 		}
 
 		switch l.helper.paramType() {
-		case ParamTypeDollar, ParamTypeAtSign:
+		case ParamTypeDollar:
 			sqlValues = append(sqlValues, fmt.Sprintf("%s%d", l.helper.paramType(), i))
 		case ParamTypeQuestion:
 			sqlValues = append(sqlValues, l.helper.paramType().String())
+		case ParamTypeAtSign:
+			sqlValues = append(sqlValues, fmt.Sprintf("p%s%d", l.helper.paramType(), i))
 		}
 
 		values = append(values, value)

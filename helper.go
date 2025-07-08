@@ -14,6 +14,15 @@ func (p ParamType) String() string {
 	return string(p)
 }
 
+func (p ParamType) Valid() error {
+	switch p {
+	case ParamTypeDollar, ParamTypeQuestion, ParamTypeAtSign:
+		return nil
+	default:
+		return fmt.Errorf("testfixtures: param type %s is not supported", p)
+	}
+}
+
 const (
 	ParamTypeDollar   ParamType = "$"
 	ParamTypeQuestion ParamType = "?"
