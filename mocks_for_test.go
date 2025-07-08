@@ -16,12 +16,12 @@ func (*MockHelper) init(*sql.DB) error {
 func (*MockHelper) disableReferentialIntegrity(*sql.DB, loadFunction) error {
 	return nil
 }
-func (*MockHelper) paramType() int {
-	return 0
+func (*MockHelper) paramType() ParamType {
+	return ""
 }
-func (*MockHelper) setCustomParamType(_ int) {}
-func (*MockHelper) getDefaultParamType() int {
-	return 0
+func (*MockHelper) setCustomParamType(_ ParamType) {}
+func (*MockHelper) getDefaultParamType() ParamType {
+	return ""
 }
 func (*MockHelper) tableNames(shared.Queryable) ([]string, error) {
 	return nil, nil

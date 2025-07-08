@@ -75,8 +75,8 @@ func (h *postgreSQL) init(db *sql.DB) error {
 	return nil
 }
 
-func (*postgreSQL) paramType() int {
-	return paramTypeDollar
+func (*postgreSQL) paramType() ParamType {
+	return ParamTypeDollar
 }
 
 func (*postgreSQL) databaseName(q shared.Queryable) (string, error) {

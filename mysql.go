@@ -29,8 +29,8 @@ func (h *mySQL) init(db *sql.DB) error {
 	return nil
 }
 
-func (*mySQL) paramType() int {
-	return paramTypeQuestion
+func (*mySQL) paramType() ParamType {
+	return ParamTypeQuestion
 }
 
 func (*mySQL) quoteKeyword(str string) string {

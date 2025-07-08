@@ -34,8 +34,8 @@ func TestRequiredOptions(t *testing.T) {
 		if err != nil {
 			t.Error("should return nil error")
 		}
-		if paramType := loader.helper.paramType(); paramType != paramTypeQuestion {
-			t.Errorf("incorrect param type returned: %d", paramType)
+		if paramType := loader.helper.paramType(); paramType != ParamTypeQuestion {
+			t.Errorf("incorrect param type returned: %s", paramType)
 		}
 	})
 }
