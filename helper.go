@@ -1,6 +1,7 @@
 package testfixtures
 
 import (
+	"cmp"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -65,10 +66,7 @@ func (b *baseHelper) setCustomParamType(paramType ParamType) {
 }
 
 func (b *baseHelper) paramType() ParamType {
-	if b.customParamType != "" {
-		return b.customParamType
-	}
-	return b.getDefaultParamType()
+	return cmp.Or(b.customParamType, b.getDefaultParamType())
 }
 
 func (b *baseHelper) getDefaultParamType() ParamType {
