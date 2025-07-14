@@ -72,7 +72,7 @@ CREATE SEQUENCE users_sequence OPTIONS (
 
 CREATE TABLE users (
 	id          INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE(SEQUENCE users_sequence)),
-	attributes  STRING(MAX)
+	attributes  JSON
 ) PRIMARY KEY (id);
 
 CREATE SEQUENCE assets_sequence OPTIONS (
