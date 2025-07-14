@@ -7,13 +7,15 @@ import (
 	"strings"
 
 	"github.com/go-testfixtures/testfixtures/v3/shared"
+	"golang.org/x/sync/errgroup"
 )
 
 type spanner struct {
 	baseHelper
 
-	cleanTableFn func(string) string
-	constraints  map[string][]shared.SpannerConstraint
+	cleanTableFn          func(string) string
+	constraints           map[string][]shared.SpannerConstraint
+	tablesWithJSONColumns map[string]map[string]bool
 }
 
 func (h *spanner) init(db *sql.DB) error {
@@ -23,9 +25,18 @@ func (h *spanner) init(db *sql.DB) error {
 		}
 	}
 
-	var err error
-	h.constraints, err = shared.GetConstraints(db)
-	if err != nil {
+	var grp errgroup.Group
+	grp.Go(func() error {
+		var err error
+		h.constraints, err = shared.GetConstraints(db)
+		return err
+	})
+	grp.Go(func() error {
+		var err error
+		h.tablesWithJSONColumns, err = h.buildTableJSONColumns(db)
+		return err
+	})
+	if err := grp.Wait(); err != nil {
 		return err
 	}
 
@@ -145,4 +156,55 @@ func (h *spanner) dropAndRecreateConstraints(db *sql.DB, loadFn loadFunction) (e
 	}
 
 	return tx.Commit()
+}
+
+func (h *spanner) buildTableJSONColumns(q shared.Queryable) (map[string]map[string]bool, error) {
+	const query = `
+		SELECT table_name, column_name, spanner_type
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE table_schema = ''
+		  AND spanner_type = 'JSON'
+	`
+
+	rows, err := q.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	tablesWithJSONColumns := make(map[string]map[string]bool)
+	for rows.Next() {
+		var tableName, columnName, spannerType string
+		if err = rows.Scan(&tableName, &columnName, &spannerType); err != nil {
+			return nil, err
+		}
+
+		if tablesWithJSONColumns[tableName] == nil {
+			tablesWithJSONColumns[tableName] = make(map[string]bool)
+		}
+		tablesWithJSONColumns[tableName][columnName] = true
+	}
+
+	return tablesWithJSONColumns, rows.Err()
+}
+
+func (h *spanner) buildInsertSQL(q shared.Queryable, tableName string, columns, values []string) (string, error) {
+	if jsonColumns, tableExists := h.tablesWithJSONColumns[tableName]; tableExists {
+		for i, column := range columns {
+			if jsonColumns[column] {
+				values[i] = fmt.Sprintf("PARSE_JSON(%s)", values[i])
+			}
+		}
+
+		return fmt.Sprintf(
+			"INSERT INTO %s (%s) VALUES (%s)",
+			tableName,
+			strings.Join(columns, ", "),
+			strings.Join(values, ", "),
+		), nil
+	}
+
+	return h.baseHelper.buildInsertSQL(q, tableName, columns, values)
 }
