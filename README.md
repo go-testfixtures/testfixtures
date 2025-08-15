@@ -92,11 +92,19 @@ databases.
     post: "..."
 ```
 
-Binary columns can be represented as hexadecimal strings (should start with `0x`):
+Binary columns can be represented as hexadecimal strings (should start with `0x` and will be automatically converted to `[]byte`):
 
 ```yaml
 - id: 1
   binary_column: 0x1234567890abcdef
+```
+
+String values matching date/time formats (e.g., "2025-08-15", "20250815", "15/08/2025") will be automatically converted to `time.Time`. Use `RAW=` prefix to prevent conversion:
+
+```yaml
+- id: 1
+  created_at: 2025-08-15        # Will be converted to time.Time
+  updated_at: RAW=20250815      # Will remain as string
 ```
 
 If you need to write raw SQL, probably to call a function, prefix the value
