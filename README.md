@@ -99,7 +99,7 @@ Binary columns can be represented as hexadecimal strings (should start with `0x`
   binary_column: 0x1234567890abcdef
 ```
 
-String values matching date/time formats (e.g., "2025-08-15", "20250815", "15/08/2025") will be automatically converted to `time.Time`. Use `RAW=` prefix to prevent conversion:
+String values matching date/time formats (e.g., "2025-08-15", "20250815", "15/08/2025") will be automatically converted to `time.Time`. [See supported formats in time.go](https://github.com/go-testfixtures/testfixtures/blob/master/time.go#L8C1-L27C2). Use `RAW=` prefix to prevent conversion:
 
 ```yaml
 - id: 1
