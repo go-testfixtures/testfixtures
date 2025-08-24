@@ -8,6 +8,10 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: gomod
     directory: /dbtests
@@ -16,6 +20,10 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+    groups:
+      all:
+        patterns:
+          - "*"
 
   - package-ecosystem: gomod
     directory: /cmd/testfixtures
@@ -24,3 +32,7 @@ updates:
       day: saturday
       time: '08:00'
       timezone: America/Sao_Paulo
+    groups:
+      all:
+        patterns:
+          - "*"
