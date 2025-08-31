@@ -1,9 +1,6 @@
-//go:build sqlserver
-
 package dbtests
 
 import (
-	"os"
 	"testing"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -11,16 +8,21 @@ import (
 )
 
 func TestSQLServer(t *testing.T) {
-	testSQLServer(t, "sqlserver")
+	t.Parallel()
+	connStr := createSQLServerContainer(t)
+
+	t.Run("SQLServer", func(t *testing.T) {
+		testSQLServer(t, connStr, "sqlserver")
+	})
+
+	t.Run("DeprecatedMssql", func(t *testing.T) {
+		testSQLServer(t, connStr, "mssql")
+	})
 }
 
-func TestDeprecatedMssql(t *testing.T) {
-	testSQLServer(t, "mssql")
-}
-
-func testSQLServer(t *testing.T, dialect string) {
+func testSQLServer(t *testing.T, connStr string, dialect string) {
 	t.Helper()
-	db := openDB(t, dialect, os.Getenv("SQLSERVER_CONN_STRING"))
+	db := openDB(t, dialect, connStr)
 	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/sqlserver.sql", []byte("GO\n"))
 	testLoader(
 		t,
