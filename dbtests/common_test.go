@@ -14,25 +14,25 @@ import (
 )
 
 //go:embed testdata
-var fixtures embed.FS //nolint:unused
+var fixtures embed.FS
 
-func openDB(t *testing.T, dialect, connStr string) *sql.DB { //nolint:unused
+func openDB(t *testing.T, dialect, connStr string) *sql.DB {
 	t.Helper()
 	db, err := sql.Open(dialect, connStr)
 	if err != nil {
-		t.Errorf("failed to open database: %v", err)
+		t.Fatalf("failed to open database: %v", err)
 	}
 	t.Cleanup(func() {
 		_ = db.Close()
 	})
 
 	if err := db.Ping(); err != nil {
-		t.Errorf("failed to connect to database: %v", err)
+		t.Fatalf("failed to connect to database: %v", err)
 	}
 	return db
 }
 
-func loadSchemaInOneQuery(t *testing.T, db *sql.DB, schemaFilePath string) { //nolint:unused
+func loadSchemaInOneQuery(t *testing.T, db *sql.DB, schemaFilePath string) {
 	t.Helper()
 	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {
@@ -42,7 +42,7 @@ func loadSchemaInOneQuery(t *testing.T, db *sql.DB, schemaFilePath string) { //n
 	loadSchemaInBatches(t, db, [][]byte{schema})
 }
 
-func loadSchemaInBatchesBySplitter(t *testing.T, db *sql.DB, schemaFilePath string, splitter []byte) { //nolint:unused
+func loadSchemaInBatchesBySplitter(t *testing.T, db *sql.DB, schemaFilePath string, splitter []byte) {
 	t.Helper()
 	schema, err := os.ReadFile(schemaFilePath)
 	if err != nil {
@@ -53,7 +53,7 @@ func loadSchemaInBatchesBySplitter(t *testing.T, db *sql.DB, schemaFilePath stri
 	loadSchemaInBatches(t, db, batches)
 }
 
-func loadSchemaInBatches(t *testing.T, db *sql.DB, batches [][]byte) { //nolint:unused
+func loadSchemaInBatches(t *testing.T, db *sql.DB, batches [][]byte) {
 	t.Helper()
 	for _, b := range batches {
 		if len(b) == 0 {
@@ -66,7 +66,7 @@ func loadSchemaInBatches(t *testing.T, db *sql.DB, batches [][]byte) { //nolint:
 	}
 }
 
-func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...func(*testfixtures.Loader) error) { //nolint:unused
+func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...func(*testfixtures.Loader) error) {
 	t.Run("LoadFromDirectory", func(t *testing.T) {
 		if dialect == "spanner" {
 			t.Skip("Spanner does not support loading fixtures from a directory")
@@ -571,7 +571,7 @@ func testLoader(t *testing.T, db *sql.DB, dialect string, additionalOptions ...f
 	})
 }
 
-func assertFixturesLoaded(t *testing.T, db *sql.DB) { //nolint
+func assertFixturesLoaded(t *testing.T, db *sql.DB) {
 	assertCount(t, db, "posts", 2)
 	assertCount(t, db, "comments", 4)
 	assertCount(t, db, "tags", 3)
@@ -582,7 +582,7 @@ func assertFixturesLoaded(t *testing.T, db *sql.DB) { //nolint
 	assertCount(t, db, "transactions", 4)
 }
 
-func assertCount(t *testing.T, db *sql.DB, table string, expectedCount int) { //nolint
+func assertCount(t *testing.T, db *sql.DB, table string, expectedCount int) {
 	count := 0
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
 
