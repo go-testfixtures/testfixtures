@@ -609,7 +609,7 @@ Use `testfixtures --help` for all flags.
 ### Tests
 ```shell
 # Run all tests
-task test-all
+task test
 
 # Run linters
 task lint
