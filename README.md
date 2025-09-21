@@ -525,7 +525,7 @@ The YAML file could look like this:
 {{end}}
 ```
 
-## Generating fixtures for a existing database
+## Generating fixtures for an existing database
 
 The following code will generate a YAML file for each table of the database
 into a given folder. It may be useful to boostrap a test scenario from a sample
@@ -599,31 +599,28 @@ Use `testfixtures --help` for all flags.
 
 ## Contributing
 
-We recommend you to [install Task](https://taskfile.dev/installation/) and
-Docker before contributing to this package, since some stuff is automated
-using these tools.
+### Required tools
+* go 1.21 or newer
+* docker (for running tests)
+* [task](https://taskfile.dev/installation/) (for running tasks)
+* [golangci-lint](https://golangci-lint.run/docs/welcome/install/), the same version as in [CI](.github/workflows/lint.yml) (for running linters)
+* [GoReleaser](https://goreleaser.com/install/) (for CLI builds)
 
-It's recommended to use Docker Compose to run tests, since it runs tests for
-all supported databases once. To do that you just need to run:
+### Tests
+```shell
+# Run all tests
+task test-all
 
-```bash
-task docker
+# Run linters
+task lint
+
+# Check other possible tasks
+task
 ```
 
-But if you want to run tests locally, copy the `.sample.env` file as `.env`
-and edit it according to your database setup. You'll need to create a database
-(likely names `testfixtures_test`) before continuing. Then run the command
-for the database you want to run tests against:
-
-```bash
-task test:pg # PostgreSQL
-task test:crdb # CockroachDB
-task test:mysql # MySQL
-task test:sqlite # SQLite
-task test:sqlserver # Microsoft SQL Server
-```
-
-GitHub Actions (CI) runs the same Docker setup available locally.
+By default, tests will create disposable database containers using `docker`.
+You can also provide the database by yourself by specifying env variables,
+check [containers.go](./dbtests/containers.go) for details.
 
 ## Alternatives
 

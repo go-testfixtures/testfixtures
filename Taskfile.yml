@@ -12,6 +12,11 @@ tasks:
     cmds:
       - go list -f '{{"{{.Dir}}"}}' -m | xargs -I@ sh -c 'cd @ && pwd && golangci-lint run'
 
+  test:
+    desc: Runs all tests
+    cmds:
+      - go test work -v ./...
+
   test-cli:
     cmds:
       - ./testfixtures -d sqlite -c testdb.sqlite3 -D testdata/fixtures
@@ -20,64 +25,49 @@ tasks:
     desc: Test PostgreSQL
     cmds:
       - task: test-db
-        vars: {DATABASE: postgresql}
+        vars: {TEST_NAME: TestPostgreSQL}
 
   test:mysql:
     desc: Test MySQL
     cmds:
       - task: test-db
-        vars: {DATABASE: mysql}
+        vars: {TEST_NAME: TestMySQL}
 
   test:sqlite:
     desc: Test SQLite
     cmds:
       - task: test-db
-        vars: {DATABASE: sqlite}
+        vars: {TEST_NAME: TestSQLite}
 
   test:sqlserver:
     desc: Test SQLServer
     cmds:
       - task: test-db
-        vars: {DATABASE: sqlserver}
+        vars: {TEST_NAME: TestSQLServer}
 
   test:crdb:
     desc: Test CockroachDB
     cmds:
       - task: test-db
-        vars: {DATABASE: cockroachdb}
+        vars: {TEST_NAME: TestCockroachDB}
 
   test:clickhouse:
     desc: Test Clickhouse
     cmds:
       - task: test-db
-        vars: {DATABASE: clickhouse}
+        vars: {TEST_NAME: TestClickhouse}
 
   test:spanner:
     desc: Test Spanner with GoogleSQL dialect
     cmds:
       - task: test-db
-        vars: {DATABASE: spanner}
+        vars: {TEST_NAME: TestSpanner}
 
   test-db:
     cmds:
-      -  go test work -v -tags {{.DATABASE}} ./...
+      -  go test work -v -run {{.TEST_NAME}} ./...
 
   goreleaser:test:
     desc: Tests release process without publishing
     cmds:
       - goreleaser --snapshot --clean
-
-  docker:
-    cmds:
-      - task: docker:build
-      - task: docker:test
-
-  docker:build:
-    cmds:
-      - docker build -t testfixtures .
-
-  docker:test:
-    cmds:
-      - docker compose down -v --remove-orphans
-      #- docker compose run testfixtures sh -c 'go list -f {{"{{.Dir}}"}} -m  | xargs -I@ sh -c "cd @ && pwd && go test -v -tags \"postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner\" ./..."'
-      - docker compose run testfixtures sh -c 'go test -v -tags "postgresql sqlite mysql sqlserver cockroachdb clickhouse spanner" work ./...'

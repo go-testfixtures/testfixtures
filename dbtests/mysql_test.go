@@ -1,9 +1,6 @@
-//go:build mysql
-
 package dbtests
 
 import (
-	"os"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -11,13 +8,18 @@ import (
 )
 
 func TestMySQL(t *testing.T) {
-	db := openDB(t, "mysql", os.Getenv("MYSQL_CONN_STRING"))
-	loadSchemaInBatchesBySplitter(t, db, "testdata/schema/mysql.sql", []byte(";\n"))
-	testLoader(t, db, "mysql")
-}
+	t.Parallel()
+	connStr := createMySQLContainer(t)
 
-func TestMySQLWithMultipleStatementsSupport(t *testing.T) {
-	db := openDB(t, "mysql", os.Getenv("MYSQL_CONN_STRING")+"?multiStatements=true")
-	loadSchemaInOneQuery(t, db, "testdata/schema/mysql.sql")
-	testLoader(t, db, "mysql", testfixtures.AllowMultipleStatementsInOneQuery())
+	t.Run("Standard", func(t *testing.T) {
+		db := openDB(t, "mysql", connStr)
+		loadSchemaInBatchesBySplitter(t, db, "testdata/schema/mysql.sql", []byte(";\n"))
+		testLoader(t, db, "mysql")
+	})
+
+	t.Run("WithMultipleStatementsSupport", func(t *testing.T) {
+		db := openDB(t, "mysql", connStr+"?multiStatements=true")
+		loadSchemaInOneQuery(t, db, "testdata/schema/mysql.sql")
+		testLoader(t, db, "mysql", testfixtures.AllowMultipleStatementsInOneQuery())
+	})
 }
