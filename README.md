@@ -553,22 +553,13 @@ if err := dumper.Dump(); err != nil {
 > This was intended to run in small sample databases. It will likely break
 if run in a production/big database.
 
-## Gotchas
 
-### Parallel testing
+## Parallel testing
 
-This library doesn't yet support running tests in parallel! Running tests
-in parallel can result in random data being present in the database, which
-will likely cause tests to randomly/intermittently fail.
+By default, the library assumes the access to the database is **exclusive to a
+single test**, but there are multiple ways to set up your tests to work both fast and in parallel.
 
-This is specially tricky since it's not immediately clear that `go test ./...`
-run tests for each package in parallel. If more than one package use this
-library, you can face this issue. Please, use `go test -p 1 ./...` or run tests
-for each package in separated commands to fix this issue.
-
-If you're looking into being able to run tests in parallel you can try using
-testfixtures together with the [txdb][gotxdb] package, which allows wrapping
-each test run in a transaction.
+Check our [dbtests/examples.md](./dbtests/examples.md) for more details.
 
 ## CLI
 
