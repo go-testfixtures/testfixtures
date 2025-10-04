@@ -20,7 +20,6 @@ require (
 	github.com/peterldowns/pgtestdb v0.1.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
-	github.com/zeebo/assert v1.3.0
 )
 
 require (
