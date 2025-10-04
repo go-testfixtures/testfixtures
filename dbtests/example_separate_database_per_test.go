@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/go-testfixtures/testfixtures/v3"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeebo/assert"
 )
 
 func TestExampleSeparateDatabasePerTest(t *testing.T) {
