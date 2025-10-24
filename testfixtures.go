@@ -676,7 +676,8 @@ func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
 			if err != nil {
 				return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 			}
-			if err := l.processFileTemplate(fixture); err != nil {
+			fixture.content, err = l.preProcessContent(fixture.fileName, fixture.content)
+			if err != nil {
 				return nil, err
 			}
 			files = append(files, fixture)
@@ -700,7 +701,8 @@ func (l *Loader) fixturesFromFiles(fileNames ...string) ([]*fixtureFile, error) 
 		if err != nil {
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, fixture.path, err)
 		}
-		if err := l.processFileTemplate(fixture); err != nil {
+		fixture.content, err = l.preProcessContent(fixture.fileName, fixture.content)
+		if err != nil {
 			return nil, err
 		}
 		fixtureFiles = append(fixtureFiles, fixture)
@@ -751,7 +753,7 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 			return nil, fmt.Errorf(`testfixtures: could not read file "%s": %w`, f, err)
 		}
 
-		content, err = l.processTemplate(content)
+		content, err = l.preProcessContent(f, content)
 		if err != nil {
 			return nil, err
 		}
@@ -787,33 +789,22 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 	return fixtureFiles, nil
 }
 
-func (l *Loader) processFileTemplate(f *fixtureFile) error {
+func (l *Loader) preProcessContent(name string, content []byte) ([]byte, error) {
 	if !l.template {
-		return nil
+		return content, nil
 	}
-
-	var err error
-	f.content, err = l.processTemplate(f.content)
-	if err != nil {
-		return fmt.Errorf(`textfixtures: error on parsing template in %s: %w`, f.fileName, err)
-	}
-
-	return nil
-}
-
-func (l *Loader) processTemplate(content []byte) ([]byte, error) {
 	t := template.New("").
 		Funcs(l.templateFuncs).
 		Delims(l.templateLeftDelim, l.templateRightDelim).
 		Option(l.templateOptions...)
 	t, err := t.Parse(string(content))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`textfixtures: error on parsing template in %s: %w`, name, err)
 	}
 
 	var buffer bytes.Buffer
 	if err := t.Execute(&buffer, l.templateData); err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`textfixtures: error on execute template in %s: %w`, name, err)
 	}
 
 	return buffer.Bytes(), nil
