@@ -112,10 +112,10 @@ func (d *Dumper) dumpTable(table string) error {
 		return err
 	}
 
-	fixtures := make([]interface{}, 0, 10)
+	fixtures := make([]any, 0, 10)
 	for rows.Next() {
-		entries := make([]interface{}, len(columns))
-		entryPtrs := make([]interface{}, len(entries))
+		entries := make([]any, len(columns))
+		entryPtrs := make([]any, len(entries))
 		for i := range entries {
 			entryPtrs[i] = &entries[i]
 		}
@@ -123,7 +123,7 @@ func (d *Dumper) dumpTable(table string) error {
 			return err
 		}
 
-		entryMap := make(map[string]interface{}, len(entries))
+		entryMap := make(map[string]any, len(entries))
 		for i, column := range columns {
 			entryMap[column] = convertValue(entries[i])
 		}
@@ -158,7 +158,7 @@ func (d *Dumper) dumpTable(table string) error {
 	return nil
 }
 
-func convertValue(value interface{}) interface{} {
+func convertValue(value any) any {
 	switch v := value.(type) {
 	case []byte:
 		if utf8.Valid(v) {

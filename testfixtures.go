@@ -35,7 +35,7 @@ type Loader struct {
 	templateLeftDelim  string
 	templateRightDelim string
 	templateOptions    []string
-	templateData       interface{}
+	templateData       any
 
 	fs fs.FS
 }
@@ -49,7 +49,7 @@ type fixtureFile struct {
 
 type insertSQL struct {
 	sql    string
-	params []interface{}
+	params []any
 }
 
 var (
@@ -410,7 +410,7 @@ func TemplateOptions(options ...string) func(*Loader) error {
 // TemplateData allows you to specify which data will be available
 // when processing templates. Data is accesible by prefixing it with a "."
 // like {{.MyKey}}.
-func TemplateData(data interface{}) func(*Loader) error {
+func TemplateData(data any) func(*Loader) error {
 	return func(l *Loader) error {
 		if !l.template {
 			return fmt.Errorf(`testfixtures: the Template() options is required in order to use the TemplateData() option`)
@@ -532,7 +532,7 @@ type InsertError struct {
 	File   string
 	Index  int
 	SQL    string
-	Params []interface{}
+	Params []any
 }
 
 func (e *InsertError) Error() string {
@@ -546,12 +546,12 @@ func (e *InsertError) Error() string {
 	)
 }
 
-func (l *Loader) buildInterfacesSlice(records interface{}) ([]interface{}, error) {
+func (l *Loader) buildInterfacesSlice(records any) ([]any, error) {
 	switch records := records.(type) {
-	case []interface{}:
+	case []any:
 		return records, nil
-	case map[string]interface{}:
-		var result []interface{}
+	case map[string]any:
+		var result []any
 		for _, record := range records {
 			result = append(result, record)
 		}
@@ -563,7 +563,7 @@ func (l *Loader) buildInterfacesSlice(records interface{}) ([]interface{}, error
 
 func (l *Loader) buildInsertSQLs() error {
 	for _, f := range l.fixturesFiles {
-		var records interface{}
+		var records any
 		if err := yaml.Unmarshal(f.content, &records); err != nil {
 			return fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
 		}
@@ -576,7 +576,7 @@ func (l *Loader) buildInsertSQLs() error {
 		f.insertSQLs = make([]insertSQL, 0, len(result))
 
 		for _, record := range result {
-			recordMap, ok := record.(map[string]interface{})
+			recordMap, ok := record.(map[string]any)
 			if !ok {
 				return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 			}
@@ -605,7 +605,7 @@ func (f *fixtureFile) delete(tx *sql.Tx, h helper) error {
 	return nil
 }
 
-func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (sqlStr string, values []interface{}, err error) {
+func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]any) (sqlStr string, values []any, err error) {
 	var (
 		sqlColumns = make([]string, 0, len(record))
 		sqlValues  = make([]string, 0, len(record))
@@ -618,8 +618,8 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 		// if map or array, convert to json
 		switch v := value.(type) {
 		case string:
-			if strings.HasPrefix(v, "RAW=") {
-				sqlValues = append(sqlValues, strings.TrimPrefix(v, "RAW="))
+			if after, ok := strings.CutPrefix(v, "RAW="); ok {
+				sqlValues = append(sqlValues, after)
 				continue
 			}
 			if b, err := l.tryHexStringToBytes(v); err == nil {
@@ -627,7 +627,7 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]interface{}) (
 			} else if t, err := l.tryStrToDate(v); err == nil {
 				value = t
 			}
-		case []interface{}, map[string]interface{}:
+		case []any, map[string]any:
 			var bytes []byte
 			bytes, err = json.Marshal(recursiveToJSON(v))
 			if err != nil {
