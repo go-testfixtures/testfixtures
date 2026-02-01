@@ -10,13 +10,13 @@ var (
 	_ driver.Valuer = jsonMap{}
 )
 
-type jsonArray []interface{}
+type jsonArray []any
 
 func (a jsonArray) Value() (driver.Value, error) {
 	return json.Marshal(a)
 }
 
-type jsonMap map[string]interface{}
+type jsonMap map[string]any
 
 func (m jsonMap) Value() (driver.Value, error) {
 	return json.Marshal(m)
@@ -24,15 +24,15 @@ func (m jsonMap) Value() (driver.Value, error) {
 
 // Go refuses to convert map[interface{}]interface{} to JSON because JSON only support string keys
 // So it's necessary to recursively convert all map[interface]interface{} to map[string]interface{}
-func recursiveToJSON(v interface{}) (r interface{}) {
+func recursiveToJSON(v any) (r any) {
 	switch v := v.(type) {
-	case []interface{}:
+	case []any:
 		for i, e := range v {
 			v[i] = recursiveToJSON(e)
 		}
 		r = jsonArray(v)
-	case map[interface{}]interface{}:
-		newMap := make(map[string]interface{}, len(v))
+	case map[any]any:
+		newMap := make(map[string]any, len(v))
 		for k, e := range v {
 			newMap[k.(string)] = recursiveToJSON(e)
 		}
