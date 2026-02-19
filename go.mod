@@ -5,6 +5,6 @@ go 1.24.0
 toolchain go1.25.0
 
 require (
-	github.com/goccy/go-yaml v1.19.2
+	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/sync v0.19.0
 )
