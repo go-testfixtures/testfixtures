@@ -506,6 +506,7 @@ testfixtures.New(
         TemplateDelims("{{", "}}"),
         TemplateOptions("missingkey=zero"),
         TemplateData(...),
+        ...
 )
 ```
 
@@ -524,6 +525,8 @@ The YAML file could look like this:
   text: {{$post.Text}}
 {{end}}
 ```
+
+ **Important:** `Template()` and its related options need to be placed before the `Directory()`, `Files()` or `Paths()` methods.
 
 ## Generating fixtures for an existing database
 
