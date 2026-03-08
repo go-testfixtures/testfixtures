@@ -1,4 +1,4 @@
-package testfixtures // import "github.com/go-testfixtures/testfixtures/v3"
+package testfixtures
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/goccy/go-yaml"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/go-testfixtures/testfixtures/v3/shared"
 )
@@ -758,14 +758,40 @@ func (l *Loader) fixturesFromFilesMultiTables(fileNames ...string) ([]*fixtureFi
 			return nil, err
 		}
 
-		var tablesMap yaml.MapSlice
-		if err := yaml.UnmarshalWithOptions(content, &tablesMap, yaml.UseOrderedMap()); err != nil {
-			return nil, fmt.Errorf("testfixtures: could not unmarshal YAML: %w", err)
+		var node yaml.Node
+		if err := yaml.Unmarshal(content, &node); err != nil {
+			return nil, fmt.Errorf("testfixtures: could not unmarshal yaml: %w", err)
 		}
 
-		for _, item := range tablesMap {
-			table := item.Key.(string)
-			records := item.Value
+		if node.Kind == yaml.DocumentNode && len(node.Content) > 0 {
+			node = *node.Content[0]
+		}
+
+		if node.Kind != yaml.MappingNode {
+			return nil, fmt.Errorf("testfixtures: expected yaml mapping at root")
+		}
+
+		for i := 0; i < len(node.Content); i += 2 {
+			keyNode := node.Content[i]
+			valueNode := node.Content[i+1]
+
+			if keyNode.Kind != yaml.ScalarNode {
+				return nil, fmt.Errorf("testfixtures: expected scalar key in yaml mapping")
+			}
+
+			table := keyNode.Value
+
+			var buf bytes.Buffer
+			encoder := yaml.NewEncoder(&buf)
+			if err := encoder.Encode(valueNode); err != nil {
+				return nil, fmt.Errorf("testfixtures: could not encode value: %w", err)
+			}
+
+			var records any
+			if err := yaml.Unmarshal(buf.Bytes(), &records); err != nil {
+				return nil, fmt.Errorf("testfixtures: could not unmarshal value: %w", err)
+			}
+
 			result, err := l.buildInterfacesSlice(records)
 			if err != nil {
 				return nil, err
