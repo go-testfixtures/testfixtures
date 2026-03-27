@@ -38,6 +38,25 @@ type Loader struct {
 	templateData       any
 
 	fs fs.FS
+
+	// pendingSources stores fixture sources to be loaded after all options
+	// are processed, so that template configuration is available regardless
+	// of option ordering.
+	pendingSources []pendingSource
+}
+
+type pendingSourceKind int
+
+const (
+	sourceDirectory pendingSourceKind = iota + 1
+	sourceFiles
+	sourcePaths
+	sourceFilesMultiTables
+)
+
+type pendingSource struct {
+	kind  pendingSourceKind
+	paths []string
 }
 
 type fixtureFile struct {
@@ -80,6 +99,12 @@ func New(options ...func(*Loader) error) (*Loader, error) {
 	}
 	if l.helper == nil {
 		return nil, errDialectIsRequired
+	}
+
+	// Load fixture files after all options are processed, so that
+	// template configuration is available regardless of option ordering.
+	if err := l.loadPendingSources(); err != nil {
+		return nil, err
 	}
 
 	if err := l.helper.init(l.db); err != nil {
@@ -284,15 +309,10 @@ func SkipTableChecksumComputation() func(*Loader) error {
 // Directory informs Loader to load YAML files from a given directory.
 func Directory(dir string) func(*Loader) error {
 	return func(l *Loader) error {
-		_, ok := l.helper.(*spanner)
-		if ok {
-			return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Directory")
-		}
-		fixtures, err := l.fixturesFromDir(dir)
-		if err != nil {
-			return err
-		}
-		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		l.pendingSources = append(l.pendingSources, pendingSource{
+			kind:  sourceDirectory,
+			paths: []string{dir},
+		})
 		return nil
 	}
 }
@@ -300,11 +320,10 @@ func Directory(dir string) func(*Loader) error {
 // Files informs Loader to load a given set of YAML files.
 func Files(files ...string) func(*Loader) error {
 	return func(l *Loader) error {
-		fixtures, err := l.fixturesFromFiles(files...)
-		if err != nil {
-			return err
-		}
-		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		l.pendingSources = append(l.pendingSources, pendingSource{
+			kind:  sourceFiles,
+			paths: files,
+		})
 		return nil
 	}
 }
@@ -312,27 +331,21 @@ func Files(files ...string) func(*Loader) error {
 // Paths inform Loader to load a given set of YAML files and directories.
 func Paths(paths ...string) func(*Loader) error {
 	return func(l *Loader) error {
-		_, ok := l.helper.(*spanner)
-		if ok {
-			return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Paths")
-		}
-		fixtures, err := l.fixturesFromPaths(paths...)
-		if err != nil {
-			return err
-		}
-		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		l.pendingSources = append(l.pendingSources, pendingSource{
+			kind:  sourcePaths,
+			paths: paths,
+		})
 		return nil
 	}
 }
 
-// Files informs Loader to load a given set of YAML files as mutiple fixtures.
+// FilesMultiTables informs Loader to load a given set of YAML files as multiple fixtures.
 func FilesMultiTables(files ...string) func(*Loader) error {
 	return func(l *Loader) error {
-		fixtures, err := l.fixturesFromFilesMultiTables(files...)
-		if err != nil {
-			return err
-		}
-		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+		l.pendingSources = append(l.pendingSources, pendingSource{
+			kind:  sourceFilesMultiTables,
+			paths: files,
+		})
 		return nil
 	}
 }
@@ -655,6 +668,43 @@ func (l *Loader) buildInsertSQL(f *fixtureFile, record map[string]any) (sqlStr s
 		sqlColumns, sqlValues,
 	)
 	return
+}
+
+func (l *Loader) loadPendingSources() error {
+	_, isSpanner := l.helper.(*spanner)
+
+	for _, src := range l.pendingSources {
+		var (
+			fixtures []*fixtureFile
+			err      error
+		)
+		switch src.kind {
+		case sourceDirectory:
+			if isSpanner {
+				return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Directory")
+			}
+			fixtures, err = l.fixturesFromDir(src.paths[0])
+		case sourceFiles:
+			fixtures, err = l.fixturesFromFiles(src.paths...)
+		case sourcePaths:
+			if isSpanner {
+				return fmt.Errorf(shared.ErrorMessage_NotSupportedLoadingMethod, "Paths")
+			}
+			fixtures, err = l.fixturesFromPaths(src.paths...)
+		case sourceFilesMultiTables:
+			fixtures, err = l.fixturesFromFilesMultiTables(src.paths...)
+		default:
+			// should not happen as it is not exposed in the lib API
+			panic(fmt.Sprintf("testfixtures: unknown pending source kind: %d", src.kind))
+		}
+		if err != nil {
+			return err
+		}
+		l.fixturesFiles = append(l.fixturesFiles, fixtures...)
+	}
+
+	l.pendingSources = nil
+	return nil
 }
 
 func (l *Loader) fixturesFromDir(dir string) ([]*fixtureFile, error) {
