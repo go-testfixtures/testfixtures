@@ -79,8 +79,8 @@ const SpannerConstraintsQuery = `
 `
 
 const ErrorMessage_NotSupportedLoadingMethod = `
-testfixtures: %s is not supported for Spanner to ensure support for INTERLEAVED tables. 
+testfixtures: %s is not supported for Spanner to ensure support for INTERLEAVED tables.
 Use Files():
-  ensure the order of the files is correct, parents loaded before children or 
+  ensure the order of the files is correct, parents loaded before children or
 Use FilesMultiTables():
   and order your table keys in the yaml files from parent to child`
