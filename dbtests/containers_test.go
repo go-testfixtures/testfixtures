@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/log"
@@ -50,8 +49,8 @@ func createClickhouseContainer(t *testing.T) string {
 		WaitingFor: wait.ForAll(
 			wait.ForHTTP("/ping").WithPort(httpInterfacePort),
 			wait.ForListeningPort(targetPort),
-			wait.ForSQL(targetPort, "clickhouse", func(host string, port nat.Port) string {
-				return createConnString(host, port.Port())
+			wait.ForSQL(targetPort, "clickhouse", func(host string, port string) string {
+				return createConnString(host, port)
 			}),
 		).WithStartupTimeoutDefault(60 * time.Second),
 	}
@@ -82,8 +81,8 @@ func createCockroachDBContainer(t *testing.T) string {
 		WaitingFor: wait.ForAll(
 			wait.ForLog("CockroachDB node starting"),
 			wait.ForListeningPort(targetPort),
-			wait.ForSQL(targetPort, "postgres", func(host string, port nat.Port) string {
-				return createConnString(host, port.Port())
+			wait.ForSQL(targetPort, "postgres", func(host string, port string) string {
+				return createConnString(host, port)
 			}),
 		).WithStartupTimeoutDefault(60 * time.Second),
 	}
@@ -116,8 +115,8 @@ func createMySQLContainer(t *testing.T) string {
 			wait.ForLog("Temporary server stopped"),
 			wait.ForLog("ready for connections"),
 			wait.ForListeningPort(targetPort),
-			wait.ForSQL(targetPort, "mysql", func(host string, port nat.Port) string {
-				return createConnString(host, port.Port())
+			wait.ForSQL(targetPort, "mysql", func(host string, port string) string {
+				return createConnString(host, port)
 			}),
 		).WithStartupTimeoutDefault(60 * time.Second),
 	}
@@ -147,8 +146,8 @@ func createPostgreSQLContainer(t *testing.T) string {
 		WaitingFor: wait.ForAll(
 			wait.ForLog("database system is ready to accept connections"),
 			wait.ForListeningPort(targetPort),
-			wait.ForSQL(targetPort, "postgres", func(host string, port nat.Port) string {
-				return createConnString(host, port.Port())
+			wait.ForSQL(targetPort, "postgres", func(host string, port string) string {
+				return createConnString(host, port)
 			}),
 		).WithStartupTimeoutDefault(60 * time.Second),
 	}
@@ -193,8 +192,8 @@ func createSQLServerContainer(t *testing.T) string {
 		WaitingFor: wait.ForAll(
 			wait.ForLog("SQL Server is now ready for client connections"),
 			wait.ForListeningPort(targetPort),
-			wait.ForSQL(targetPort, "sqlserver", func(host string, port nat.Port) string {
-				return createConnString(host, port.Port())
+			wait.ForSQL(targetPort, "sqlserver", func(host string, port string) string {
+				return createConnString(host, port)
 			}),
 		).WithStartupTimeoutDefault(60 * time.Second),
 	}
@@ -250,8 +249,7 @@ func createGenericContainer(t *testing.T, req testcontainers.ContainerRequest, t
 
 func containerHostAndPort(t *testing.T, container testcontainers.Container, port string) (host string, mappedPort string) {
 	t.Helper()
-	natPort := nat.Port(port)
-	mappedPortObj, err := container.MappedPort(t.Context(), natPort)
+	mappedPortObj, err := container.MappedPort(t.Context(), port)
 	if err != nil {
 		t.Fatalf("failed to get mapped port for port %s: %v", port, err)
 	}
