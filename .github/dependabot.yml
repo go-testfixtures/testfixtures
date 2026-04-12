@@ -4,10 +4,7 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: weekly
-      day: saturday
-      time: '08:00'
-      timezone: America/Sao_Paulo
+      interval: monthly
     groups:
       all:
         patterns:
@@ -16,10 +13,7 @@ updates:
   - package-ecosystem: gomod
     directory: /dbtests
     schedule:
-      interval: weekly
-      day: saturday
-      time: '08:00'
-      timezone: America/Sao_Paulo
+      interval: monthly
     groups:
       all:
         patterns:
@@ -28,10 +22,7 @@ updates:
   - package-ecosystem: gomod
     directory: /cmd/testfixtures
     schedule:
-      interval: weekly
-      day: saturday
-      time: '08:00'
-      timezone: America/Sao_Paulo
+      interval: monthly
     groups:
       all:
         patterns:
