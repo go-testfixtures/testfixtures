@@ -3,11 +3,10 @@ package testfixtures
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/goccy/go-yaml"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestFixtureFile(t *testing.T) {
@@ -79,12 +78,15 @@ func TestLoadPendingSources(t *testing.T) {
 			},
 		}
 		err := l.loadPendingSources()
-		assert.EqualError(t, err, `
+		wantErr := `
 testfixtures: Directory is not supported for Spanner to ensure support for INTERLEAVED tables.
 Use Files():
   ensure the order of the files is correct, parents loaded before children or
 Use FilesMultiTables():
-  and order your table keys in the yaml files from parent to child`)
+  and order your table keys in the yaml files from parent to child`
+		if err == nil || err.Error() != wantErr {
+			t.Errorf("unexpected error\nwant: %s\ngot:  %v", wantErr, err)
+		}
 	})
 
 	t.Run("SpannerRejectsPaths", func(t *testing.T) {
@@ -100,12 +102,15 @@ Use FilesMultiTables():
 			},
 		}
 		err := l.loadPendingSources()
-		assert.EqualError(t, err, `
+		wantErr := `
 testfixtures: Paths is not supported for Spanner to ensure support for INTERLEAVED tables.
 Use Files():
   ensure the order of the files is correct, parents loaded before children or
 Use FilesMultiTables():
-  and order your table keys in the yaml files from parent to child`)
+  and order your table keys in the yaml files from parent to child`
+		if err == nil || err.Error() != wantErr {
+			t.Errorf("unexpected error\nwant: %s\ngot:  %v", wantErr, err)
+		}
 	})
 
 	t.Run("NoPendingSources", func(t *testing.T) {
@@ -118,8 +123,12 @@ Use FilesMultiTables():
 			fs:                 defaultFS{},
 		}
 		err := l.loadPendingSources()
-		require.NoError(t, err)
-		assert.Empty(t, l.fixturesFiles)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(l.fixturesFiles) != 0 {
+			t.Errorf("expected no fixture files, got %d", len(l.fixturesFiles))
+		}
 	})
 }
 
@@ -152,29 +161,57 @@ func TestLoadPendingSourcesTemplateOptionOrdering(t *testing.T) {
 	assertSingleTable := func(expected []item) func(*testing.T, *Loader) {
 		return func(t *testing.T, l *Loader) {
 			t.Helper()
-			require.Len(t, l.fixturesFiles, 1)
+			if got, want := len(l.fixturesFiles), 1; got != want {
+				t.Fatalf("fixturesFiles length = %d, want %d", got, want)
+			}
 			content := l.fixturesFiles[0].content
-			assert.NotContains(t, string(content), "{{")
+			if strings.Contains(string(content), "{{") {
+				t.Error("content still contains unresolved template marker \"{{\"")
+			}
 
 			var got []item
-			require.NoError(t, yaml.Unmarshal(content, &got))
-			assert.Equal(t, expected, got)
+			if err := yaml.Unmarshal(content, &got); err != nil {
+				t.Fatalf("yaml.Unmarshal: %v", err)
+			}
+			if len(got) != len(expected) {
+				t.Fatalf("got %d items, want %d", len(got), len(expected))
+			}
+			for i := range expected {
+				if got[i] != expected[i] {
+					t.Errorf("item[%d] = %+v, want %+v", i, got[i], expected[i])
+				}
+			}
 		}
 	}
 
 	assertMultiTable := func(expectedByFile map[string][]item) func(*testing.T, *Loader) {
 		return func(t *testing.T, l *Loader) {
 			t.Helper()
-			require.Len(t, l.fixturesFiles, len(expectedByFile))
+			if got, want := len(l.fixturesFiles), len(expectedByFile); got != want {
+				t.Fatalf("fixturesFiles length = %d, want %d", got, want)
+			}
 			for _, f := range l.fixturesFiles {
-				assert.NotContains(t, string(f.content), "{{")
+				if strings.Contains(string(f.content), "{{") {
+					t.Errorf("file %s: content still contains unresolved template marker \"{{\"", f.fileName)
+				}
 
 				expected, ok := expectedByFile[f.fileName]
-				require.True(t, ok, "unexpected fixture file name: %s", f.fileName)
+				if !ok {
+					t.Fatalf("unexpected fixture file name: %s", f.fileName)
+				}
 
 				var got []item
-				require.NoError(t, yaml.Unmarshal(f.content, &got))
-				assert.Equal(t, expected, got)
+				if err := yaml.Unmarshal(f.content, &got); err != nil {
+					t.Fatalf("file %s: yaml.Unmarshal: %v", f.fileName, err)
+				}
+				if len(got) != len(expected) {
+					t.Fatalf("file %s: got %d items, want %d", f.fileName, len(got), len(expected))
+				}
+				for i := range expected {
+					if got[i] != expected[i] {
+						t.Errorf("file %s: item[%d] = %+v, want %+v", f.fileName, i, got[i], expected[i])
+					}
+				}
 			}
 		}
 	}
@@ -271,7 +308,9 @@ func TestLoadPendingSourcesTemplateOptionOrdering(t *testing.T) {
 			assert: func(t *testing.T, l *Loader) {
 				t.Helper()
 				// Directory has 1 file (items.yml), Files adds 1 more
-				require.Len(t, l.fixturesFiles, 2)
+				if got, want := len(l.fixturesFiles), 2; got != want {
+					t.Fatalf("fixturesFiles length = %d, want %d", got, want)
+				}
 			},
 		},
 	}
@@ -284,7 +323,9 @@ func TestLoadPendingSourcesTemplateOptionOrdering(t *testing.T) {
 			}
 			fullOpts = append(fullOpts, tt.options...)
 			l, err := New(fullOpts...)
-			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("New(): %v", err)
+			}
 			tt.assert(t, l)
 		})
 	}
