@@ -1,8 +1,6 @@
 module github.com/go-testfixtures/testfixtures/dbtests/v3
 
-go 1.24.1
-
-toolchain go1.25.0
+go 1.25.9
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0

@@ -1,8 +1,6 @@
 module github.com/go-testfixtures/testfixtures/cmd/testfixtures/v3
 
-go 1.24.0
-
-toolchain go1.25.0
+go 1.25.9
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
