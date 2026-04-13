@@ -18,6 +18,8 @@ updates:
       all:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: github.com/testcontainers/testcontainers-go
 
   - package-ecosystem: gomod
     directory: /cmd/testfixtures
