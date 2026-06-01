@@ -3,7 +3,7 @@ module github.com/go-testfixtures/testfixtures/dbtests/v3
 go 1.25.9
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.45.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.46.0
 	github.com/DATA-DOG/go-txdb v0.2.1
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/docker/go-connections v0.7.0
