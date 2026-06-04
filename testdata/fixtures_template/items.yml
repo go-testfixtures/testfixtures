@@ -1,0 +1,4 @@
+{{range $id := $.Ids}}
+- id: {{$id}}
+  name: "item-{{$id}}"
+{{end}}

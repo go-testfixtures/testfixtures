@@ -1,0 +1,7 @@
+go 1.25.9
+
+use (
+	.
+	./cmd/testfixtures
+	./dbtests
+)

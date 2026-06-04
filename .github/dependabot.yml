@@ -1,0 +1,31 @@
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns:
+          - "*"
+
+  - package-ecosystem: gomod
+    directory: /dbtests
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: github.com/testcontainers/testcontainers-go
+
+  - package-ecosystem: gomod
+    directory: /cmd/testfixtures
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns:
+          - "*"

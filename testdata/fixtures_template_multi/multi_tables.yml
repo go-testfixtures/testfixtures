@@ -1,0 +1,9 @@
+items:
+{{range $id := $.Ids}}
+  - id: {{$id}}
+    name: "item-{{$id}}"
+{{end}}
+other_items:
+{{range $id := $.Ids}}
+  - id: {{$id}}
+{{end}}
