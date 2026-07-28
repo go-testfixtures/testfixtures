@@ -593,7 +593,7 @@ Use `testfixtures --help` for all flags.
 ### Required tools
 * go 1.21 or newer
 * docker (for running tests)
-* [task](https://taskfile.dev/installation/) (for running tasks)
+* [Task](https://taskfile.dev/docs/installation) (for running development tasks)
 * [golangci-lint](https://golangci-lint.run/docs/welcome/install/), the same version as in [CI](.github/workflows/lint.yml) (for running linters)
 * [GoReleaser](https://goreleaser.com/install/) (for CLI builds)
 
