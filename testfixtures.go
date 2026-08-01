@@ -171,6 +171,29 @@ func Dialect(dialect string, opts ...DialectOptions) func(*Loader) error {
 	}
 }
 
+type tableScanningBySearchPathRestricter interface {
+	restrictTableScanningBySearchPath()
+}
+
+// RestrictTableScanningBySearchPath limits database metadata discovery and
+// referential integrity operations to schemas in the connection's effective
+// search_path.
+//
+// The search_path must be configured for every connection in the pool,
+// typically through the connection string. PostgreSQL currently supports this
+// option.
+func RestrictTableScanningBySearchPath() func(*Loader) error {
+	return func(l *Loader) error {
+		h, ok := l.helper.(tableScanningBySearchPathRestricter)
+		if !ok {
+			return fmt.Errorf("testfixtures: RestrictTableScanningBySearchPath is not supported for this database")
+		}
+
+		h.restrictTableScanningBySearchPath()
+		return nil
+	}
+}
+
 func helperForDialect(dialect string) (helper, error) {
 	switch dialect {
 	case "postgres", "postgresql", "timescaledb", "pgx":
