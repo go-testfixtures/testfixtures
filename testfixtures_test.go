@@ -42,6 +42,37 @@ func TestRequiredOptions(t *testing.T) {
 	})
 }
 
+func TestRestrictTableScanningBySearchPath(t *testing.T) {
+	t.Run("postgresql", func(t *testing.T) {
+		loader := &Loader{}
+		if err := Dialect("postgresql")(loader); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if err := RestrictTableScanningBySearchPath()(loader); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		pgHelper, ok := loader.helper.(*postgreSQL)
+		if !ok {
+			t.Fatal("expected PostgreSQL helper")
+		}
+		if !pgHelper.restrictTableScanningBySearchPathEnabled {
+			t.Error("expected table scanning to be restricted by search_path")
+		}
+	})
+
+	t.Run("non_postgresql", func(t *testing.T) {
+		loader := &Loader{}
+		if err := Dialect("sqlite")(loader); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		err := RestrictTableScanningBySearchPath()(loader)
+		if err == nil {
+			t.Fatal("expected an error")
+		}
+	})
+}
+
 func TestQuoteKeyword(t *testing.T) {
 	tests := []struct {
 		helper   helper

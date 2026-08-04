@@ -15,10 +15,11 @@ import (
 type postgreSQL struct {
 	baseHelper
 
-	useAlterConstraint bool
-	useDropConstraint  bool
-	skipResetSequences bool
-	resetSequencesTo   int64
+	useAlterConstraint                       bool
+	useDropConstraint                        bool
+	restrictTableScanningBySearchPathEnabled bool
+	skipResetSequences                       bool
+	resetSequencesTo                         int64
 
 	tables                   []string
 	sequences                []string
@@ -28,6 +29,10 @@ type postgreSQL struct {
 
 	version                 int
 	tablesHasIdentityColumn map[string]bool
+}
+
+func (h *postgreSQL) restrictTableScanningBySearchPath() {
+	h.restrictTableScanningBySearchPathEnabled = true
 }
 
 type pgConstraint struct {
@@ -95,9 +100,10 @@ func (h *postgreSQL) tableNames(q shared.Queryable) ([]string, error) {
 		WHERE pg_class.relkind = 'r'
 		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal', 'pg_extension')
 		  AND pg_namespace.nspname NOT LIKE 'pg_toast%'
-		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%';
+		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%'
+		  AND (NOT $1 OR pg_namespace.nspname = ANY (current_schemas(false)));
 	`
-	rows, err := q.Query(sql)
+	rows, err := q.Query(sql, h.restrictTableScanningBySearchPathEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +131,10 @@ func (h *postgreSQL) getSequences(q shared.Queryable) ([]string, error) {
 		INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
 		WHERE pg_class.relkind = 'S'
 		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%'
+		  AND (NOT $1 OR pg_namespace.nspname = ANY (current_schemas(false)));
 	`
 
-	rows, err := q.Query(sql)
+	rows, err := q.Query(sql, h.restrictTableScanningBySearchPathEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +156,7 @@ func (h *postgreSQL) getSequences(q shared.Queryable) ([]string, error) {
 	return sequences, nil
 }
 
-func (*postgreSQL) getNonDeferrableConstraints(q shared.Queryable) ([]pgConstraint, error) {
+func (h *postgreSQL) getNonDeferrableConstraints(q shared.Queryable) ([]pgConstraint, error) {
 	var constraints []pgConstraint
 
 	const sql = `
@@ -159,8 +166,9 @@ func (*postgreSQL) getNonDeferrableConstraints(q shared.Queryable) ([]pgConstrai
 		  AND is_deferrable = 'NO'
 		  AND table_schema <> 'crdb_internal'
 		  AND table_schema NOT LIKE '\_timescaledb%'
-  	`
-	rows, err := q.Query(sql)
+		  AND (NOT $1 OR table_schema = ANY (current_schemas(false)));
+	`
+	rows, err := q.Query(sql, h.restrictTableScanningBySearchPathEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +199,10 @@ func (h *postgreSQL) getConstraints(q shared.Queryable) ([]pgConstraint, error) 
 		WHERE contype = 'f'
 		  AND pg_namespace.nspname NOT IN ('pg_catalog', 'information_schema', 'crdb_internal')
 		  AND pg_namespace.nspname NOT LIKE 'pg_toast%'
-		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%';
-		`
-	rows, err := q.Query(sql)
+		  AND pg_namespace.nspname NOT LIKE '\_timescaledb%'
+		  AND (NOT $1 OR pg_namespace.nspname = ANY (current_schemas(false)));
+	`
+	rows, err := q.Query(sql, h.restrictTableScanningBySearchPathEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -464,10 +473,11 @@ func (h *postgreSQL) buildTableHasIdentityColumn(q shared.Queryable) (map[string
       table_schema NOT IN ('pg_catalog', 'information_schema', 'crdb_internal') AND
       table_schema NOT LIKE 'pg_toast%' AND
       table_schema NOT LIKE '\_timescaledb%' AND
-      is_identity = 'YES'
+      is_identity = 'YES' AND
+      (NOT $1 OR table_schema = ANY (current_schemas(false)))
     GROUP BY table_name;`
 
-	rows, err := q.Query(query)
+	rows, err := q.Query(query, h.restrictTableScanningBySearchPathEnabled)
 	if err != nil {
 		return nil, err
 	}

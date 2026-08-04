@@ -354,6 +354,26 @@ testfixtures.New(
 
 ### PostgreSQL / TimescaleDB / CockroachDB
 
+#### Restricting table scanning by `search_path`
+
+By default, this package discovers tables, sequences, and constraints across all
+non-system schemas. To limit fixture operations to the schemas in PostgreSQL's
+effective `search_path`, enable `RestrictTableScanningBySearchPath` on the
+loader:
+
+```go
+testfixtures.New(
+        testfixtures.Database(db),
+        testfixtures.Dialect("postgres"),
+        testfixtures.RestrictTableScanningBySearchPath(),
+        testfixtures.Directory("testdata/fixtures"),
+)
+```
+
+Configure `search_path` in the connection string so every connection in the
+pool uses it. This allows parallel tests to share a database safely when each
+test uses a separate schema.
+
 This package has three approaches to disable foreign keys while importing fixtures
 for PostgreSQL databases:
 

@@ -21,18 +21,19 @@ func main() {
 	log.SetOutput(os.Stderr)
 
 	var (
-		versionFlag           bool
-		dialect               string
-		connString            string
-		dir                   string
-		files                 []string
-		paths                 []string
-		useDropContraint      bool
-		useAlterContraint     bool
-		skipResetSequences    bool
-		resetSequencesTo      int64
-		skipTestDatabaseCheck bool
-		dumpFlag              bool
+		versionFlag                       bool
+		dialect                           string
+		connString                        string
+		dir                               string
+		files                             []string
+		paths                             []string
+		useDropContraint                  bool
+		useAlterContraint                 bool
+		restrictTableScanningBySearchPath bool
+		skipResetSequences                bool
+		resetSequencesTo                  int64
+		skipTestDatabaseCheck             bool
+		dumpFlag                          bool
 	)
 
 	pflag.BoolVar(&versionFlag, "version", false, "show testfixtures version")
@@ -43,6 +44,7 @@ func main() {
 	pflag.StringSliceVarP(&paths, "paths", "p", nil, "a list of fixture paths to load (directory or file)")
 	pflag.BoolVar(&useDropContraint, "drop-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (CockroachDB only)")
 	pflag.BoolVar(&useAlterContraint, "alter-constraint", false, "use ALTER CONSTRAINT to disable referential integrity (PostgreSQL only)")
+	pflag.BoolVar(&restrictTableScanningBySearchPath, "restrict-table-scanning-by-search-path", false, "limit fixture operations to schemas in search_path (PostgreSQL only)")
 	pflag.BoolVar(&skipResetSequences, "no-reset-sequences", false, "skip reset of sequences after loading (PostgreSQL and MySQL/MariaDB only)")
 	pflag.Int64Var(&resetSequencesTo, "reset-sequences-to", 0, "sets the number sequences will be reset after loading fixtures (PostgreSQL and MySQL/MariaDB only, defaults to 10000)")
 	pflag.BoolVar(&skipTestDatabaseCheck, "dangerous-no-test-database-check", false, `skips check for "test" in database name (use with caution)`)
@@ -118,6 +120,9 @@ func main() {
 	options := []func(*testfixtures.Loader) error{
 		testfixtures.Database(db),
 		testfixtures.Dialect(dialect),
+	}
+	if restrictTableScanningBySearchPath {
+		options = append(options, testfixtures.RestrictTableScanningBySearchPath())
 	}
 	if dir != "" {
 		options = append(options, testfixtures.Directory(dir))
