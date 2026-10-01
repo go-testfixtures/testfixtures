@@ -1,6 +1,6 @@
 module github.com/go-testfixtures/testfixtures/cmd/testfixtures/v3
 
-go 1.25.9
+go 1.26.0
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
@@ -19,5 +19,5 @@ require (
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
 )
