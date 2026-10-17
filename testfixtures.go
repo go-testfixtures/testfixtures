@@ -37,6 +37,10 @@ type Loader struct {
 	templateOptions    []string
 	templateData       any
 
+	// labels maps the row labels found by the Labels() option to their ids.
+	// It is nil when the option is off.
+	labels map[string]int
+
 	fs fs.FS
 
 	// pendingSources stores fixture sources to be loaded after all options
@@ -575,6 +579,9 @@ func (l *Loader) buildInterfacesSlice(records any) ([]any, error) {
 }
 
 func (l *Loader) buildInsertSQLs() error {
+	// Parse every file first: a row may refer to a label defined in a file
+	// that is loaded after it.
+	parsed := make([][]map[string]any, 0, len(l.fixturesFiles))
 	for _, f := range l.fixturesFiles {
 		var records any
 		if err := yaml.Unmarshal(f.content, &records); err != nil {
@@ -586,14 +593,27 @@ func (l *Loader) buildInsertSQLs() error {
 			return err
 		}
 
-		f.insertSQLs = make([]insertSQL, 0, len(result))
-
+		rows := make([]map[string]any, 0, len(result))
 		for _, record := range result {
 			recordMap, ok := record.(map[string]any)
 			if !ok {
 				return fmt.Errorf("testfixtures: could not cast record: not a map[interface{}]interface{}")
 			}
+			rows = append(rows, recordMap)
+		}
+		parsed = append(parsed, rows)
+	}
 
+	if l.labels != nil {
+		if err := l.resolveLabels(l.fixturesFiles, parsed); err != nil {
+			return err
+		}
+	}
+
+	for i, f := range l.fixturesFiles {
+		f.insertSQLs = make([]insertSQL, 0, len(parsed[i]))
+
+		for _, recordMap := range parsed[i] {
 			sql, values, err := l.buildInsertSQL(f, recordMap)
 			if err != nil {
 				return err

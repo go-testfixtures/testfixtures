@@ -525,6 +525,38 @@ The YAML file could look like this:
 {{end}}
 ```
 
+## Labels
+
+Instead of choosing numeric ids by hand, rows can be named and refer to each
+other by name, like Rails fixtures. Enable it with `Labels()`:
+
+```go
+testfixtures.New(
+        ...
+        testfixtures.Labels(),
+)
+```
+
+```yaml
+# users.yml
+- id: alice
+  name: Alice
+
+# posts.yml
+- id: hello_world
+  author_id: alice
+```
+
+Every string in a column called `id` or ending in `_id` is a label: `id`
+defines it and the other columns refer to it. The loader gives each named row
+an integer id (counting up from 1 in load order) and replaces the labels
+before inserting. A label that is not defined, or defined twice, is an error.
+Numeric values are left alone, so do not use this for tables whose `id`/`*_id`
+columns hold strings (UUIDs). Write rows as a list, not a map, so ids are
+reproducible.
+
+In a test, `loader.ID("alice")` returns the id of the labelled row.
+
 ## Generating fixtures for an existing database
 
 The following code will generate a YAML file for each table of the database
