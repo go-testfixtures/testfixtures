@@ -626,8 +626,9 @@ database transaction for each functional test, so you can rollback to
 previous state between tests to have the same database state in all tests
 - [go-sqlmock][gosqlmock]: A mock for the sql.DB interface. This allow you to
 unit test database code without having to connect to a real database
-- [dbcleaner][dbcleaner] - Clean database for testing, inspired by
-database_cleaner for Ruby
+- [dbcleaner][dbcleaner] - Transaction, truncation and deletion strategies for
+database tests, inspired by database_cleaner for Ruby. Pairs with testfixtures:
+load the fixtures once per process and roll each test back to them
 
 [doc]: https://pkg.go.dev/github.com/go-testfixtures/testfixtures/v3?tab=doc
 [railstests]: http://guides.rubyonrails.org/testing.html#the-test-database
@@ -635,4 +636,4 @@ database_cleaner for Ruby
 [gosqlmock]: https://github.com/DATA-DOG/go-sqlmock
 [factorygo]: https://github.com/bluele/factory-go
 [fixtory]: https://github.com/k-yomo/fixtory
-[dbcleaner]: https://github.com/khaiql/dbcleaner
+[dbcleaner]: https://github.com/mokevnin/dbcleaner
